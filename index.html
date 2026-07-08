@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>Ladies in Drive — Painel Administrativo</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#d6336c">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LID CRM">
 <style>
 :root{
   color-scheme: light;
@@ -105,6 +112,46 @@ select,input[type=text],input[type=number],input[type=date],input[type=email],in
 #login-form .campo input{width:100%;}
 #login-erro{display:none; background:#fdecea; color:var(--red); font-size:12.5px; padding:8px 10px; border-radius:8px; margin-bottom:12px; text-align:left;}
 #login-carregando{display:none; color:var(--muted); font-size:12.5px; margin-top:4px;}
+.campo-senha{position:relative;}
+.campo-senha input{width:100%; padding-right:36px;}
+.campo-senha button{
+  position:absolute; right:4px; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer; font-size:16px; color:var(--muted); padding:4px 6px;
+}
+a.icon-btn{text-decoration:none; display:inline-block;}
+.pagehead{flex-wrap:wrap; gap:10px;}
+.dash-grid{display:grid; grid-template-columns:1.1fr 1fr; gap:20px;}
+.panel{overflow-x:auto;}
+.modal{max-width:92vw;}
+#login-form{max-width:92vw;}
+.topbar{display:none;}
+.sidebar-overlay{display:none;}
+@media (max-width:860px){
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(180deg,#d6336c,#b02358); color:#fff;
+    padding:12px 16px; position:sticky; top:0; z-index:40;
+  }
+  .topbar .topbar-brand{font-weight:700; font-size:15px;}
+  .topbar button{background:none; border:none; color:#fff; font-size:19px; cursor:pointer; padding:4px 8px;}
+  .app{flex-direction:column;}
+  .sidebar{
+    position:fixed; top:0; left:0; height:100vh; width:230px;
+    transform:translateX(-100%); transition:transform .25s ease; z-index:46;
+  }
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:45;
+  }
+  .sidebar-overlay.open{display:block;}
+  .main{padding:16px; max-width:100%;}
+  .cards{grid-template-columns:repeat(2,1fr);}
+  .dash-grid{grid-template-columns:1fr;}
+}
+@media (max-width:480px){
+  .cards{grid-template-columns:1fr;}
+  .formgrid{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
@@ -120,7 +167,10 @@ select,input[type=text],input[type=number],input[type=date],input[type=email],in
     </div>
     <div class="campo">
       <label>Senha</label>
-      <input type="password" id="login-senha" autocomplete="current-password" required>
+      <div class="campo-senha">
+        <input type="password" id="login-senha" autocomplete="current-password" required>
+        <button type="button" id="toggle-senha" aria-label="Mostrar senha">👁️</button>
+      </div>
     </div>
     <button type="submit" class="btn" style="width:100%;">Entrar</button>
     <div id="login-carregando">Entrando...</div>
@@ -128,7 +178,13 @@ select,input[type=text],input[type=number],input[type=date],input[type=email],in
 </div>
 
 <div class="app">
-  <div class="sidebar">
+  <div class="topbar">
+    <button type="button" id="btn-menu" aria-label="Abrir menu">☰</button>
+    <span class="topbar-brand">Ladies in Drive</span>
+    <button type="button" id="btn-logout-mobile" class="js-logout" aria-label="Sair">🚪</button>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <div class="sidebar" id="sidebar">
     <h1>Ladies in Drive<span>Painel administrativo</span></h1>
     <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
     <div class="nav-item" data-tab="leads">🧲 Leads</div>
@@ -137,7 +193,7 @@ select,input[type=text],input[type=number],input[type=date],input[type=email],in
     <div class="nav-item" data-tab="orcamentos">💰 Orçamentos</div>
     <div class="nav-item" data-tab="servicos">🔧 Serviços</div>
     <div class="nav-item" data-tab="config">⚙️ Dados</div>
-    <div class="nav-item nav-logout" id="btn-logout">🚪 Sair</div>
+    <div class="nav-item nav-logout js-logout" id="btn-logout">🚪 Sair</div>
   </div>
   <div class="main">
 
@@ -148,7 +204,7 @@ select,input[type=text],input[type=number],input[type=date],input[type=email],in
         <h3>Funil de atendimento</h3>
         <table><thead><tr id="funnel-head"></tr></thead><tbody><tr id="funnel-body"></tr></tbody></table>
       </div>
-      <div style="display:grid; grid-template-columns:1.1fr 1fr; gap:20px;">
+      <div class="dash-grid">
         <div class="panel">
           <h3>Serviços mais solicitados</h3>
           <div class="chartwrap"><canvas id="chart-servicos"></canvas></div>
@@ -182,7 +238,7 @@ select,input[type=text],input[type=number],input[type=date],input[type=email],in
       <div class="pagehead"><div><h2>Clientes</h2><p>Leads convertidos (etapa "Cliente ativo" ou "Fechado - Ganho")</p></div></div>
       <div class="panel">
         <table>
-          <thead><tr><th>Nome</th><th>Contato</th><th>Cidade</th><th>Serviços já solicitados</th><th>Etapa</th></tr></thead>
+          <thead><tr><th>Nome</th><th>Contato</th><th>Cidade</th><th>Serviços já solicitados</th><th>Etapa</th><th></th></tr></thead>
           <tbody id="clientes-body"></tbody>
         </table>
       </div>
@@ -344,6 +400,20 @@ const SERVICOS = [
 ];
 const CATEGORIAS = [...new Set(SERVICOS.map(s=>s.categoria))];
 
+function linkWhats(numero, mensagem){
+  if(!numero) return null;
+  let digits = String(numero).replace(/\D/g,'');
+  if(digits.length < 8) return null;
+  if(!digits.startsWith('55')) digits = '55' + digits;
+  const texto = mensagem ? ('?text=' + encodeURIComponent(mensagem)) : '';
+  return `https://wa.me/${digits}${texto}`;
+}
+function botaoWhats(numero, nome){
+  const link = linkWhats(numero, nome ? `Olá, ${nome.split(' ')[0]}! Aqui é a Jú, da Ladies in Drive.` : null);
+  if(!link) return '';
+  return `<a class="icon-btn" href="${link}" target="_blank" title="Chamar no WhatsApp" onclick="event.stopPropagation()">💬</a>`;
+}
+
 let leads = [];
 let parceiros = [];
 let orcamentos = [];
@@ -367,8 +437,27 @@ loginForm.addEventListener("submit", async (ev)=>{
   }
 });
 
-document.getElementById("btn-logout").addEventListener("click", async ()=>{
-  await sb.auth.signOut();
+document.querySelectorAll(".js-logout").forEach(el=>{
+  el.addEventListener("click", async ()=>{ await sb.auth.signOut(); });
+});
+
+document.getElementById("btn-menu").addEventListener("click", ()=>{
+  document.getElementById("sidebar").classList.add("open");
+  document.getElementById("sidebar-overlay").classList.add("open");
+});
+document.getElementById("sidebar-overlay").addEventListener("click", fecharMenu);
+function fecharMenu(){
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("sidebar-overlay").classList.remove("open");
+}
+
+document.getElementById("toggle-senha").addEventListener("click", ()=>{
+  const inp = document.getElementById("login-senha");
+  const btn = document.getElementById("toggle-senha");
+  const mostrando = inp.type === "text";
+  inp.type = mostrando ? "password" : "text";
+  btn.textContent = mostrando ? "👁️" : "🙈";
+  btn.setAttribute("aria-label", mostrando ? "Mostrar senha" : "Ocultar senha");
 });
 
 sb.auth.onAuthStateChange((event, session)=>{
@@ -402,6 +491,7 @@ document.querySelectorAll(".nav-item[data-tab]").forEach(el=>{
     el.classList.add("active");
     document.querySelectorAll("[id^=tab-]").forEach(t=>t.style.display="none");
     document.getElementById("tab-"+el.dataset.tab).style.display="block";
+    fecharMenu();
     renderAll();
   });
 });
@@ -462,7 +552,7 @@ function renderLeads(){
       <td><span class="tag ${ETAPA_CLASS[l.etapa]||''}">${l.etapa}</span></td>
       <td>${l.origem||"-"}</td>
       <td>${l.data||"-"}</td>
-      <td><button class="icon-btn" onclick="openLeadModal(${l.id})">✏️</button> <button class="icon-btn" onclick="deleteLead(${l.id})">🗑️</button></td>
+      <td>${botaoWhats(l.whatsapp, l.nome)} <button class="icon-btn" onclick="openLeadModal(${l.id})">✏️</button> <button class="icon-btn" onclick="deleteLead(${l.id})">🗑️</button></td>
     </tr>
   `).join("") || `<tr><td class="empty" colspan="8">Nenhum lead encontrado</td></tr>`;
 }
@@ -471,8 +561,8 @@ function renderClientes(){
   const clientes = leads.filter(l=>["Fechado - Ganho","Cliente ativo"].includes(l.etapa));
   document.getElementById("clientes-body").innerHTML = clientes.map(l=>{
     const qtdServicos = orcamentos.filter(o=>o.lead_id===l.id).length;
-    return `<tr><td>${l.nome}</td><td>${l.whatsapp||"-"}</td><td>${l.cidade||"-"}</td><td>${qtdServicos}</td><td><span class="tag ${ETAPA_CLASS[l.etapa]}">${l.etapa}</span></td></tr>`;
-  }).join("") || `<tr><td class="empty" colspan="5">Nenhum cliente convertido ainda</td></tr>`;
+    return `<tr><td>${l.nome}</td><td>${l.whatsapp||"-"}</td><td>${l.cidade||"-"}</td><td>${qtdServicos}</td><td><span class="tag ${ETAPA_CLASS[l.etapa]}">${l.etapa}</span></td><td>${botaoWhats(l.whatsapp, l.nome)}</td></tr>`;
+  }).join("") || `<tr><td class="empty" colspan="6">Nenhum cliente convertido ainda</td></tr>`;
 }
 
 function renderParceiros(){
@@ -484,7 +574,7 @@ function renderParceiros(){
       <td>${p.selo==="sim"?'<span class="badge-seal">✓ Ladies Approved</span>':'-'}</td>
       <td>${p.status}</td>
       <td>${p.contato||"-"}</td>
-      <td><button class="icon-btn" onclick="openParceiroModal(${p.id})">✏️</button> <button class="icon-btn" onclick="deleteParceiro(${p.id})">🗑️</button></td>
+      <td>${botaoWhats(p.contato, p.nome)} <button class="icon-btn" onclick="openParceiroModal(${p.id})">✏️</button> <button class="icon-btn" onclick="deleteParceiro(${p.id})">🗑️</button></td>
     </tr>
   `).join("") || `<tr><td class="empty" colspan="7">Nenhum parceiro cadastrado</td></tr>`;
 }
@@ -693,6 +783,10 @@ async function limparTudo(){
   await sb.from("leads").delete().gt("id", 0);
   await sb.from("parceiros").delete().gt("id", 0);
   await carregarDados();
+}
+
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
 </script>
 </body>
