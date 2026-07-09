@@ -149,6 +149,40 @@ a.icon-btn{text-decoration:none; display:inline-block;}
   .cards{grid-template-columns:repeat(2,1fr);}
   .dash-grid{grid-template-columns:1fr;}
 }
+@media (max-width:700px){
+  .main{padding:14px 12px;}
+  .panel{overflow-x:hidden; padding:14px;}
+  .pagehead h2{font-size:18px;}
+  /* Cada linha da tabela vira um cartão (rótulo à esquerda, valor à direita) */
+  table.tbl thead{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); border:0;}
+  table.tbl, table.tbl tbody{display:block; width:100%;}
+  table.tbl tr{
+    display:block; border:1px solid var(--border); border-radius:12px;
+    padding:4px 14px; margin-bottom:12px; background:#fff;
+  }
+  table.tbl td{
+    display:flex; justify-content:space-between; align-items:baseline; gap:14px;
+    padding:8px 0; border-bottom:1px solid #f4eaf0; text-align:right; min-width:0;
+  }
+  table.tbl tr td:last-child{border-bottom:none;}
+  table.tbl td::before{
+    content:attr(data-label); flex:0 0 40%; text-align:left;
+    font-weight:600; color:var(--muted); font-size:11px;
+    text-transform:uppercase; letter-spacing:.03em;
+  }
+  table.tbl td span, table.tbl td strong{min-width:0; overflow-wrap:anywhere;}
+  table.tbl td.acoes{justify-content:flex-end; padding-top:12px;}
+  table.tbl td.acoes::before{display:none;}
+  table.tbl td.acoes .icon-btn{font-size:20px; padding:2px 6px;}
+  table.tbl td.empty{display:block; text-align:center; border:none;}
+  table.tbl td.empty::before{display:none;}
+  table.tbl td.card-titulo{
+    display:block; text-align:left; padding:10px 0 9px; margin-bottom:2px;
+    border-bottom:1px solid var(--border); font-size:14.5px; font-weight:600;
+  }
+  table.tbl td.card-titulo::before{display:none;}
+  table.tbl td.card-titulo strong{font-weight:700;}
+}
 @media (max-width:480px){
   .cards{grid-template-columns:1fr;}
   .formgrid{grid-template-columns:1fr;}
@@ -203,7 +237,7 @@ a.icon-btn{text-decoration:none; display:inline-block;}
       <div class="cards" id="dash-cards"></div>
       <div class="panel">
         <h3>Funil de atendimento</h3>
-        <table><thead><tr id="funnel-head"></tr></thead><tbody><tr id="funnel-body"></tr></tbody></table>
+        <table class="tbl tbl-funil"><thead><tr id="funnel-head"></tr></thead><tbody><tr id="funnel-body"></tr></tbody></table>
       </div>
       <div class="dash-grid">
         <div class="panel">
@@ -212,7 +246,7 @@ a.icon-btn{text-decoration:none; display:inline-block;}
         </div>
         <div class="panel">
           <h3>Leads recentes</h3>
-          <table><thead><tr><th>Nome</th><th>Categoria</th><th>Etapa</th></tr></thead><tbody id="dash-leads-recentes"></tbody></table>
+          <table class="tbl"><thead><tr><th>Nome</th><th>Categoria</th><th>Etapa</th></tr></thead><tbody id="dash-leads-recentes"></tbody></table>
         </div>
       </div>
     </div>
@@ -228,7 +262,7 @@ a.icon-btn{text-decoration:none; display:inline-block;}
         <input type="text" id="filter-busca" placeholder="Buscar por nome..." oninput="renderLeads()">
       </div>
       <div class="panel">
-        <table>
+        <table class="tbl">
           <thead><tr><th>Nome</th><th>Contato</th><th>Categoria / Serviço</th><th>Urgência</th><th>Etapa</th><th>Origem</th><th>Entrada</th><th></th></tr></thead>
           <tbody id="leads-body"></tbody>
         </table>
@@ -238,7 +272,7 @@ a.icon-btn{text-decoration:none; display:inline-block;}
     <div id="tab-clientes" style="display:none;">
       <div class="pagehead"><div><h2>Clientes</h2><p>Leads convertidos (etapa "Cliente ativo" ou "Fechado - Ganho")</p></div></div>
       <div class="panel">
-        <table>
+        <table class="tbl">
           <thead><tr><th>Nome</th><th>Contato</th><th>Cidade</th><th>Serviços já solicitados</th><th>Etapa</th><th></th></tr></thead>
           <tbody id="clientes-body"></tbody>
         </table>
@@ -251,7 +285,7 @@ a.icon-btn{text-decoration:none; display:inline-block;}
         <button class="btn" onclick="openParceiroModal()">+ Novo parceiro</button>
       </div>
       <div class="panel">
-        <table>
+        <table class="tbl">
           <thead><tr><th>Nome</th><th>Categoria</th><th>Região</th><th>Selo Ladies Approved</th><th>Status</th><th>Contato</th><th></th></tr></thead>
           <tbody id="parceiros-body"></tbody>
         </table>
@@ -264,7 +298,7 @@ a.icon-btn{text-decoration:none; display:inline-block;}
         <button class="btn" onclick="openOrcamentoModal()">+ Novo orçamento</button>
       </div>
       <div class="panel">
-        <table>
+        <table class="tbl">
           <thead><tr><th>Lead/Cliente</th><th>Serviço</th><th>Parceiro</th><th>Valor cotado</th><th>Valor final</th><th>Status</th><th>Data</th><th></th></tr></thead>
           <tbody id="orcamentos-body"></tbody>
         </table>
@@ -274,7 +308,7 @@ a.icon-btn{text-decoration:none; display:inline-block;}
     <div id="tab-servicos" style="display:none;">
       <div class="pagehead"><div><h2>Catálogo de serviços</h2><p>Serviços oferecidos, quantas vezes foram pedidos e ticket médio</p></div></div>
       <div class="panel">
-        <table>
+        <table class="tbl">
           <thead><tr><th>Serviço</th><th>Categoria</th><th>Vezes solicitado</th><th>Ticket médio (orçamentos aceitos)</th></tr></thead>
           <tbody id="servicos-body"></tbody>
         </table>
@@ -556,6 +590,7 @@ function renderLeads(){
       <td>${botaoWhats(l.whatsapp, l.nome)} <button class="icon-btn" onclick="openLeadModal(${l.id})">✏️</button> <button class="icon-btn" onclick="deleteLead(${l.id})">🗑️</button></td>
     </tr>
   `).join("") || `<tr><td class="empty" colspan="8">Nenhum lead encontrado</td></tr>`;
+  aplicarRotulos();
 }
 
 function renderClientes(){
@@ -606,7 +641,26 @@ function renderServicos(){
   }).join("");
 }
 
-function renderAll(){ renderDashboard(); renderLeads(); renderClientes(); renderParceiros(); renderOrcamentos(); renderServicos(); }
+// Aplica rótulos (data-label) em cada célula a partir do cabeçalho da tabela,
+// para o layout de cartão no celular. Assim não precisa editar cada linha.
+function aplicarRotulos(){
+  document.querySelectorAll("table.tbl").forEach(tbl=>{
+    const heads = [...tbl.querySelectorAll("thead th")].map(th=>th.textContent.trim());
+    const usaTitulo = !tbl.classList.contains("tbl-funil");
+    tbl.querySelectorAll("tbody tr").forEach(tr=>{
+      const tds = [...tr.children];
+      if(tds.length === 1 && (tds[0].classList.contains("empty") || tds[0].hasAttribute("colspan"))) return;
+      tds.forEach((td, i)=>{
+        const label = heads[i] || "";
+        td.setAttribute("data-label", label);
+        td.classList.toggle("acoes", label === "");
+        td.classList.toggle("card-titulo", usaTitulo && i === 0);
+      });
+    });
+  });
+}
+
+function renderAll(){ renderDashboard(); renderLeads(); renderClientes(); renderParceiros(); renderOrcamentos(); renderServicos(); aplicarRotulos(); }
 
 // Lead modal
 let editingLeadId = null;
