@@ -199,6 +199,9 @@ a.icon-btn{text-decoration:none; display:inline-block;}
 .kanban-card .kc-top{font-weight:700; margin-bottom:2px;}
 .kanban-card .kc-tag{display:inline-block; margin-top:6px;}
 .kanban-vazio{color:var(--muted); font-size:12px; margin:0;}
+.chip-check{display:inline-flex; align-items:center; gap:5px; background:var(--pink-light); border:1px solid var(--border); border-radius:16px; padding:4px 10px; font-size:12px; cursor:pointer; user-select:none;}
+.chip-check input{margin:0;}
+.chip-check:has(input:checked){border-color:var(--pink); color:var(--pink); font-weight:600;}
 @media (max-width:1024px){
   .kanban{grid-template-columns:repeat(3,1fr); overflow-x:auto;}
 }
@@ -242,7 +245,7 @@ a.icon-btn{text-decoration:none; display:inline-block;}
     <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
     <div class="nav-item" data-tab="leads">🧲 Leads</div>
     <div class="nav-item" data-tab="clientes">💗 Clientes</div>
-    <div class="nav-item" data-tab="parceiros">🤝 Parceiros(as)</div>
+    <div class="nav-item" data-tab="parceiros">🤝 Parceiras (os)</div>
     <div class="nav-item" data-tab="orcamentos">💰 Orçamentos</div>
     <div class="nav-item" data-tab="transporte">🚗 Transporte</div>
     <div class="nav-item" data-tab="servicos">🔧 Serviços</div>
@@ -300,12 +303,12 @@ a.icon-btn{text-decoration:none; display:inline-block;}
 
     <div id="tab-parceiros" style="display:none;">
       <div class="pagehead">
-        <div><h2>Rede de Parceiros(as)</h2><p>Oficinas, guinchos, seguradoras e demais parceiros indicados</p></div>
-        <button class="btn" onclick="openParceiroModal()">+ Novo parceiro</button>
+        <div><h2>Rede de Parceiras (os)</h2><p>Oficinas, guinchos, seguradoras e demais parceiras(os) indicados</p></div>
+        <button class="btn" onclick="openParceiroModal()">+ Nova parceira (o)</button>
       </div>
       <div class="panel">
         <table class="tbl">
-          <thead><tr><th>Nome</th><th>Categoria</th><th>Região</th><th>Selo Ladies Approved</th><th>Status</th><th>Contato</th><th></th></tr></thead>
+          <thead><tr><th>Nome</th><th>Categorias</th><th>Região</th><th>Selo Ladies Approved</th><th>Status</th><th>Último contato</th><th></th></tr></thead>
           <tbody id="parceiros-body"></tbody>
         </table>
       </div>
@@ -447,17 +450,59 @@ a.icon-btn{text-decoration:none; display:inline-block;}
 
 <div class="modal-backdrop" id="parceiro-modal">
   <div class="modal">
-    <h3 id="parceiro-modal-title">Novo parceiro</h3>
+    <h3 id="parceiro-modal-title">Nova parceira (o)</h3>
     <div class="formgrid">
       <div class="full"><label>Nome *</label><input type="text" id="p-nome"></div>
-      <div><label>Categoria</label><select id="p-categoria"><option>Oficina mecânica</option><option>Autoelétrica</option><option>Lava-rápido / Estética</option><option>Guincho</option><option>Chaveiro</option><option>Seguradora</option><option>Loja de peças</option><option>Despachante</option><option>Funilaria/Pintura</option><option>Outro</option></select></div>
+      <div class="full">
+        <label>Categorias <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
+        <div id="p-categorias-wrap" style="display:flex; flex-wrap:wrap; gap:6px;">
+          <label class="chip-check"><input type="checkbox" value="Oficina mecânica"> Oficina mecânica</label>
+          <label class="chip-check"><input type="checkbox" value="Autoelétrica"> Autoelétrica</label>
+          <label class="chip-check"><input type="checkbox" value="Lava-rápido / Estética"> Lava-rápido / Estética</label>
+          <label class="chip-check"><input type="checkbox" value="Guincho"> Guincho</label>
+          <label class="chip-check"><input type="checkbox" value="Chaveiro"> Chaveiro</label>
+          <label class="chip-check"><input type="checkbox" value="Seguradora"> Seguradora</label>
+          <label class="chip-check"><input type="checkbox" value="Loja de peças"> Loja de peças</label>
+          <label class="chip-check"><input type="checkbox" value="Despachante"> Despachante</label>
+          <label class="chip-check"><input type="checkbox" value="Funilaria/Pintura"> Funilaria/Pintura</label>
+          <label class="chip-check"><input type="checkbox" value="Cursos"> Cursos</label>
+          <label class="chip-check"><input type="checkbox" value="Empresa de transporte"> Empresa de transporte</label>
+          <label class="chip-check"><input type="checkbox" value="Indústria"> Indústria</label>
+          <label class="chip-check"><input type="checkbox" value="Loja de carro"> Loja de carro</label>
+          <label class="chip-check"><input type="checkbox" value="Concessionária"> Concessionária</label>
+          <label class="chip-check"><input type="checkbox" value="Outro"> Outro</label>
+        </div>
+      </div>
       <div><label>Região atendida</label><input type="text" id="p-regiao"></div>
       <div><label>Selo Ladies Approved</label><select id="p-selo"><option value="sim">Sim</option><option value="nao">Não</option></select></div>
-      <div><label>Status</label><select id="p-status"><option>Ativo</option><option>Em análise</option><option>Pendente documentação</option><option>Inativo</option></select></div>
-      <div><label>Contato (WhatsApp/telefone)</label><input type="text" id="p-contato"></div>
+      <div><label>Status</label><select id="p-status"></select></div>
       <div><label>% comissão / acordo</label><input type="text" id="p-comissao"></div>
       <div class="full"><label>Notas</label><textarea id="p-notas" rows="2"></textarea></div>
     </div>
+
+    <div id="p-contatos-wrap" style="margin-top:18px;">
+      <h4 style="font-size:13px; margin:0 0 8px;">Celular / Telefone</h4>
+      <div id="p-contatos-lista"></div>
+      <div class="formgrid" style="margin-top:8px;">
+        <div><label>Tipo</label><select id="pc-tipo"><option>Celular</option><option>Fixo</option></select></div>
+        <div><label>Número</label><input type="text" id="pc-numero" placeholder="(51) 99999-9999"></div>
+        <div class="full"><label>Descrição <span style="font-weight:400; color:var(--muted);">(opcional)</span></label><input type="text" id="pc-descricao" placeholder="Ex: Marcelo, dono da oficina"></div>
+        <div style="display:flex; align-items:flex-end;"><button class="btn secondary small" type="button" onclick="addContatoParceiro()">+ Adicionar contato</button></div>
+      </div>
+    </div>
+
+    <div id="p-interacoes-wrap" style="margin-top:18px;">
+      <h4 style="font-size:13px; margin:0 0 8px; border-top:1px solid var(--border); padding-top:14px;">Histórico de conversas</h4>
+      <div id="p-interacoes-lista"></div>
+      <div class="formgrid" style="margin-top:8px;">
+        <div><label>Data</label><input type="date" id="pi-data"></div>
+        <div><label>Assunto</label><input type="text" id="pi-assunto"></div>
+        <div class="full"><label>Próximos passos</label><input type="text" id="pi-proximos"></div>
+        <div class="full"><label>Link do Google Drive <span style="font-weight:400; color:var(--muted);">(documentos da parceria)</span></label><input type="text" id="pi-link" placeholder="https://drive.google.com/..."></div>
+        <div style="display:flex; align-items:flex-end;"><button class="btn secondary small" type="button" onclick="addInteracaoParceiro()">+ Adicionar registro</button></div>
+      </div>
+    </div>
+
     <div class="modal-actions">
       <button class="btn ghost" onclick="closeModal('parceiro-modal')">Cancelar</button>
       <button class="btn" onclick="saveParceiro()">Salvar</button>
@@ -667,6 +712,8 @@ let clientesTransporte = [];
 let viagens = [];
 let avaliacoes = [];
 let pagamentosMotorista = [];
+let parceiroContatos = [];
+let parceiroInteracoes = [];
 
 // ===== AUTENTICAÇÃO =====
 const loginForm = document.getElementById("login-form");
@@ -734,13 +781,15 @@ async function carregarDados(){
 
   // Módulo de Transporte — tolerante a erro (ex: SQL ainda não rodado),
   // pra não travar o resto do painel enquanto isso.
-  const [rm, rd, rc, rv, ra, rp] = await Promise.all([
+  const [rm, rd, rc, rv, ra, rp, rpc, rpi] = await Promise.all([
     sb.from("motoristas").select("*").order("id"),
     sb.from("documentos_motorista").select("*").order("id"),
     sb.from("clientes_transporte").select("*").order("id"),
     sb.from("viagens").select("*").order("id"),
     sb.from("avaliacoes").select("*").order("id"),
     sb.from("pagamentos_motorista").select("*").order("id"),
+    sb.from("parceiro_contatos").select("*").order("id"),
+    sb.from("parceiro_interacoes").select("*").order("id"),
   ]);
   motoristas = rm.data || [];
   documentosMotorista = rd.data || [];
@@ -748,6 +797,8 @@ async function carregarDados(){
   viagens = rv.data || [];
   avaliacoes = ra.data || [];
   pagamentosMotorista = rp.data || [];
+  parceiroContatos = rpc.data || [];
+  parceiroInteracoes = rpi.data || [];
 
   renderAll();
 }
@@ -772,7 +823,7 @@ function renderDashboard(){
   const cards = document.getElementById("dash-cards");
   const totalLeads = leads.length;
   const totalClientes = leads.filter(l=>["Fechado - Ganho","Cliente ativo"].includes(l.etapa)).length;
-  const parceirosAtivos = parceiros.filter(p=>p.status==="Ativo").length;
+  const parceirosAtivos = parceiros.filter(p=>["Fechado - Ganho","Cliente ativo"].includes(p.status)).length;
   const orcAbertos = orcamentos.filter(o=>["Solicitado","Enviado"].includes(o.status)).length;
   cards.innerHTML = `
     <div class="card"><div class="num">${totalLeads}</div><div class="label">Leads no total</div></div>
@@ -834,18 +885,29 @@ function renderClientes(){
   }).join("") || `<tr><td class="empty" colspan="6">Nenhum cliente convertido ainda</td></tr>`;
 }
 
+function primeiroCelularParceiro(parceiroId){
+  const c = parceiroContatos.find(x=>x.parceiro_id===parceiroId && x.tipo==="Celular");
+  return c ? c.numero : null;
+}
+function ultimoContatoParceiro(parceiroId){
+  const datas = parceiroInteracoes.filter(i=>i.parceiro_id===parceiroId && i.data).map(i=>i.data);
+  if(!datas.length) return null;
+  return datas.sort().slice(-1)[0];
+}
 function renderParceiros(){
-  document.getElementById("parceiros-body").innerHTML = parceiros.map(p=>`
-    <tr>
+  document.getElementById("parceiros-body").innerHTML = parceiros.map(p=>{
+    const celular = primeiroCelularParceiro(p.id);
+    const ultimoContato = ultimoContatoParceiro(p.id);
+    return `<tr>
       <td>${p.nome}${p.exemplo?' <span style="color:var(--muted); font-size:11px;">(exemplo)</span>':''}</td>
-      <td>${p.categoria}</td>
+      <td>${p.categoria||"-"}</td>
       <td>${p.regiao||"-"}</td>
       <td>${p.selo==="sim"?'<span class="badge-seal">✓ Ladies Approved</span>':'-'}</td>
-      <td>${p.status}</td>
-      <td>${p.contato||"-"}</td>
-      <td>${botaoWhats(p.contato, p.nome)} <button class="icon-btn" onclick="openParceiroModal(${p.id})">✏️</button> <button class="icon-btn" onclick="deleteParceiro(${p.id})">🗑️</button></td>
-    </tr>
-  `).join("") || `<tr><td class="empty" colspan="7">Nenhum parceiro cadastrado</td></tr>`;
+      <td><span class="tag ${ETAPA_CLASS[p.status]||''}">${p.status||"-"}</span></td>
+      <td>${ultimoContato||"-"}</td>
+      <td>${botaoWhats(celular, p.nome)} <button class="icon-btn" onclick="openParceiroModal(${p.id})">✏️</button> <button class="icon-btn" onclick="deleteParceiro(${p.id})">🗑️</button></td>
+    </tr>`;
+  }).join("") || `<tr><td class="empty" colspan="7">Nenhuma parceira (o) cadastrada ainda</td></tr>`;
 }
 
 function renderOrcamentos(){
@@ -972,27 +1034,32 @@ async function deleteLead(id){
 let editingParceiroId = null;
 function openParceiroModal(id){
   editingParceiroId = id || null;
-  document.getElementById("parceiro-modal-title").textContent = id ? "Editar parceiro" : "Novo parceiro";
+  fillSelect(document.getElementById("p-status"), ETAPAS, "Novo lead");
+  document.getElementById("parceiro-modal-title").textContent = id ? "Editar parceira (o)" : "Nova parceira (o)";
   const p = parceiros.find(x=>x.id===id) || {};
   document.getElementById("p-nome").value = p.nome||"";
-  document.getElementById("p-categoria").value = p.categoria||"Oficina mecânica";
+  const categoriasMarcadas = (p.categoria||"").split(",").map(c=>c.trim()).filter(Boolean);
+  document.querySelectorAll("#p-categorias-wrap input[type=checkbox]").forEach(cb=>{
+    cb.checked = categoriasMarcadas.includes(cb.value);
+  });
   document.getElementById("p-regiao").value = p.regiao||"";
   document.getElementById("p-selo").value = p.selo||"nao";
-  document.getElementById("p-status").value = p.status||"Em análise";
-  document.getElementById("p-contato").value = p.contato||"";
+  document.getElementById("p-status").value = p.status||"Novo lead";
   document.getElementById("p-comissao").value = p.comissao||"";
   document.getElementById("p-notas").value = p.notas||"";
+  renderContatosParceiro();
+  renderInteracoesParceiro();
   document.getElementById("parceiro-modal").classList.add("open");
 }
 async function saveParceiro(){
   const nome = document.getElementById("p-nome").value.trim();
   if(!nome){ alert("Nome é obrigatório"); return; }
+  const categorias = [...document.querySelectorAll("#p-categorias-wrap input[type=checkbox]:checked")].map(cb=>cb.value);
   const payload = {
-    nome, categoria: document.getElementById("p-categoria").value,
+    nome, categoria: categorias.join(", "),
     regiao: document.getElementById("p-regiao").value,
     selo: document.getElementById("p-selo").value,
     status: document.getElementById("p-status").value,
-    contato: document.getElementById("p-contato").value,
     comissao: document.getElementById("p-comissao").value,
     notas: document.getElementById("p-notas").value,
   };
@@ -1004,10 +1071,109 @@ async function saveParceiro(){
   await carregarDados();
 }
 async function deleteParceiro(id){
-  if(!confirm("Excluir este parceiro?")) return;
+  if(!confirm("Excluir esta parceira (o)? Os contatos e o histórico de conversa dela(e) também são excluídos.")) return;
   const { error } = await sb.from("parceiros").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
   await carregarDados();
+}
+
+// Contatos (celular/fixo) do parceiro
+function renderContatosParceiro(){
+  const wrap = document.getElementById("p-contatos-lista");
+  const campos = document.querySelectorAll("#p-contatos-wrap select, #p-contatos-wrap input, #p-contatos-wrap button");
+  if(!editingParceiroId){
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Salve o cadastro primeiro para adicionar contatos.</p>`;
+    campos.forEach(el=>el.disabled = true);
+    return;
+  }
+  campos.forEach(el=>el.disabled = false);
+  const contatos = parceiroContatos.filter(c=>c.parceiro_id===editingParceiroId);
+  wrap.innerHTML = contatos.map(c=>`
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f4eaf0; font-size:12.5px;">
+      <span>${c.tipo}: ${c.numero||"-"}${c.descricao?" · "+c.descricao:""}</span>
+      <span>${c.tipo==="Celular"?botaoWhats(c.numero, null):""} <button class="icon-btn" type="button" onclick="deleteContatoParceiro(${c.id})">🗑️</button></span>
+    </div>
+  `).join("") || `<p style="color:var(--muted); font-size:12.5px;">Nenhum contato registrado ainda.</p>`;
+}
+async function addContatoParceiro(){
+  if(!editingParceiroId) return;
+  const numero = document.getElementById("pc-numero").value.trim();
+  if(!numero){ alert("Informe o número"); return; }
+  const payload = {
+    parceiro_id: editingParceiroId,
+    tipo: document.getElementById("pc-tipo").value,
+    numero,
+    descricao: document.getElementById("pc-descricao").value,
+  };
+  const { error } = await sb.from("parceiro_contatos").insert(payload);
+  if(error){ alert("Erro ao adicionar contato: " + error.message); return; }
+  const { data } = await sb.from("parceiro_contatos").select("*").order("id");
+  parceiroContatos = data || [];
+  document.getElementById("pc-numero").value = "";
+  document.getElementById("pc-descricao").value = "";
+  renderContatosParceiro();
+  renderParceiros();
+}
+async function deleteContatoParceiro(id){
+  if(!confirm("Excluir este contato?")) return;
+  const { error } = await sb.from("parceiro_contatos").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  const { data } = await sb.from("parceiro_contatos").select("*").order("id");
+  parceiroContatos = data || [];
+  renderContatosParceiro();
+  renderParceiros();
+}
+
+// Histórico de conversas (fluxo da parceria)
+function renderInteracoesParceiro(){
+  const wrap = document.getElementById("p-interacoes-lista");
+  const campos = document.querySelectorAll("#p-interacoes-wrap select, #p-interacoes-wrap input, #p-interacoes-wrap button");
+  if(!editingParceiroId){
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Salve o cadastro primeiro para registrar conversas.</p>`;
+    campos.forEach(el=>el.disabled = true);
+    return;
+  }
+  campos.forEach(el=>el.disabled = false);
+  const registros = parceiroInteracoes.filter(i=>i.parceiro_id===editingParceiroId).sort((a,b)=>(b.data||"").localeCompare(a.data||""));
+  wrap.innerHTML = registros.map(i=>`
+    <div style="padding:8px 0; border-bottom:1px solid #f4eaf0; font-size:12.5px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+        <strong>${i.data||"Sem data"} — ${i.assunto||"-"}</strong>
+        <button class="icon-btn" type="button" onclick="deleteInteracaoParceiro(${i.id})">🗑️</button>
+      </div>
+      ${i.proximos_passos?`<div style="color:var(--muted); margin-top:2px;">Próximos passos: ${i.proximos_passos}</div>`:""}
+      ${i.link_drive?`<div style="margin-top:2px;"><a href="${i.link_drive}" target="_blank">📁 Ver documentos</a></div>`:""}
+    </div>
+  `).join("") || `<p style="color:var(--muted); font-size:12.5px;">Nenhuma conversa registrada ainda.</p>`;
+}
+async function addInteracaoParceiro(){
+  if(!editingParceiroId) return;
+  const payload = {
+    parceiro_id: editingParceiroId,
+    data: document.getElementById("pi-data").value || null,
+    assunto: document.getElementById("pi-assunto").value,
+    proximos_passos: document.getElementById("pi-proximos").value,
+    link_drive: document.getElementById("pi-link").value,
+  };
+  const { error } = await sb.from("parceiro_interacoes").insert(payload);
+  if(error){ alert("Erro ao adicionar registro: " + error.message); return; }
+  const { data } = await sb.from("parceiro_interacoes").select("*").order("id");
+  parceiroInteracoes = data || [];
+  document.getElementById("pi-data").value = "";
+  document.getElementById("pi-assunto").value = "";
+  document.getElementById("pi-proximos").value = "";
+  document.getElementById("pi-link").value = "";
+  renderInteracoesParceiro();
+  renderParceiros();
+}
+async function deleteInteracaoParceiro(id){
+  if(!confirm("Excluir este registro?")) return;
+  const { error } = await sb.from("parceiro_interacoes").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  const { data } = await sb.from("parceiro_interacoes").select("*").order("id");
+  parceiroInteracoes = data || [];
+  renderInteracoesParceiro();
+  renderParceiros();
 }
 
 // Orcamento modal
