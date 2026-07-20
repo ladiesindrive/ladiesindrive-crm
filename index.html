@@ -187,6 +187,24 @@ a.icon-btn{text-decoration:none; display:inline-block;}
   .cards{grid-template-columns:1fr;}
   .formgrid{grid-template-columns:1fr;}
 }
+.subnav{display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;}
+.subnav-item{background:#fff; border:1px solid var(--border); color:var(--muted); padding:7px 14px; border-radius:20px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit;}
+.subnav-item:hover{color:var(--pink);}
+.subnav-item.active{background:var(--pink); border-color:var(--pink); color:#fff;}
+.kanban{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; align-items:start;}
+.kanban-col{background:#fdf6f9; border:1px solid var(--border); border-radius:10px; padding:10px; min-width:0;}
+.kanban-col h4{margin:0 0 10px; font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; display:flex; justify-content:space-between;}
+.kanban-card{background:#fff; border:1px solid var(--border); border-radius:8px; padding:10px; margin-bottom:8px; cursor:pointer; font-size:12.5px;}
+.kanban-card:hover{border-color:var(--pink);}
+.kanban-card .kc-top{font-weight:700; margin-bottom:2px;}
+.kanban-card .kc-tag{display:inline-block; margin-top:6px;}
+.kanban-vazio{color:var(--muted); font-size:12px; margin:0;}
+@media (max-width:1024px){
+  .kanban{grid-template-columns:repeat(3,1fr); overflow-x:auto;}
+}
+@media (max-width:700px){
+  .kanban{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
@@ -226,6 +244,7 @@ a.icon-btn{text-decoration:none; display:inline-block;}
     <div class="nav-item" data-tab="clientes">💗 Clientes</div>
     <div class="nav-item" data-tab="parceiros">🤝 Parceiros(as)</div>
     <div class="nav-item" data-tab="orcamentos">💰 Orçamentos</div>
+    <div class="nav-item" data-tab="transporte">🚗 Transporte</div>
     <div class="nav-item" data-tab="servicos">🔧 Serviços</div>
     <div class="nav-item" data-tab="config">⚙️ Dados</div>
     <div class="nav-item nav-logout js-logout" id="btn-logout">🚪 Sair</div>
@@ -302,6 +321,75 @@ a.icon-btn{text-decoration:none; display:inline-block;}
           <thead><tr><th>Lead/Cliente</th><th>Serviço</th><th>Parceiro</th><th>Valor cotado</th><th>Valor final</th><th>Status</th><th>Data</th><th></th></tr></thead>
           <tbody id="orcamentos-body"></tbody>
         </table>
+      </div>
+    </div>
+
+    <div id="tab-transporte" style="display:none;">
+      <div class="pagehead"><div><h2>Transporte</h2><p>Motoristas, clientes de viagem, viagens e avaliações</p></div></div>
+      <div class="subnav">
+        <button type="button" class="subnav-item active" data-subtab="motoristas" onclick="mostrarSubTab('motoristas')">Motoristas</button>
+        <button type="button" class="subnav-item" data-subtab="clientes-transporte" onclick="mostrarSubTab('clientes-transporte')">Clientes</button>
+        <button type="button" class="subnav-item" data-subtab="viagens" onclick="mostrarSubTab('viagens')">Viagens</button>
+        <button type="button" class="subnav-item" data-subtab="avaliacoes" onclick="mostrarSubTab('avaliacoes')">Avaliações</button>
+      </div>
+
+      <div id="subtab-motoristas">
+        <div class="pagehead">
+          <div><h2 style="font-size:16px;">Motoristas</h2><p>Captação, cadastro e status das motoristas parceiras</p></div>
+          <button class="btn" onclick="openMotoristaModal()">+ Nova motorista</button>
+        </div>
+        <div class="panel">
+          <table class="tbl tbl-funil"><thead><tr id="motorista-funnel-head"></tr></thead><tbody><tr id="motorista-funnel-body"></tr></tbody></table>
+        </div>
+        <div class="filters">
+          <select id="filter-motorista-status" onchange="renderTransporteMotoristas()"><option value="">Todos os status</option></select>
+        </div>
+        <div class="panel">
+          <table class="tbl">
+            <thead><tr><th>Nome</th><th>Contato</th><th>Região / Veículo</th><th>Documentos</th><th>Status</th><th>Avaliação</th><th></th></tr></thead>
+            <tbody id="motoristas-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="subtab-clientes-transporte" style="display:none;">
+        <div class="pagehead">
+          <div><h2 style="font-size:16px;">Clientes de viagem</h2><p>Quem solicita viagens particulares (separado dos leads de compra/venda/manutenção)</p></div>
+          <button class="btn" onclick="openClienteTransporteModal()">+ Nova cliente</button>
+        </div>
+        <div class="filters">
+          <select id="filter-cliente-segmento" onchange="renderTransporteClientes()"><option value="">Todos os segmentos</option></select>
+        </div>
+        <div class="panel">
+          <table class="tbl">
+            <thead><tr><th>Nome</th><th>Contato</th><th>Região</th><th>Segmento</th><th>Aniversário</th><th></th></tr></thead>
+            <tbody id="clientes-transporte-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="subtab-viagens" style="display:none;">
+        <div class="pagehead">
+          <div><h2 style="font-size:16px;">Viagens</h2><p>Do pedido até a conclusão e o pagamento à motorista</p></div>
+          <button class="btn" onclick="openViagemModal()">+ Nova viagem</button>
+        </div>
+        <div class="filters">
+          <select id="filter-viagem-tipo" onchange="renderTransporteViagens()"><option value="">Todos os tipos</option></select>
+        </div>
+        <div class="kanban" id="kanban-viagens"></div>
+      </div>
+
+      <div id="subtab-avaliacoes" style="display:none;">
+        <div class="pagehead">
+          <div><h2 style="font-size:16px;">Avaliações</h2><p>Notas mútuas entre motoristas e clientes, por viagem</p></div>
+          <button class="btn" onclick="openAvaliacaoModal()">+ Nova avaliação</button>
+        </div>
+        <div class="panel">
+          <table class="tbl">
+            <thead><tr><th>Viagem</th><th>Motorista</th><th>Cliente</th><th>Nota motorista</th><th>Nota cliente</th><th>Visível</th><th></th></tr></thead>
+            <tbody id="avaliacoes-body"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -396,6 +484,119 @@ a.icon-btn{text-decoration:none; display:inline-block;}
   </div>
 </div>
 
+<div class="modal-backdrop" id="motorista-modal">
+  <div class="modal">
+    <h3 id="motorista-modal-title">Nova motorista</h3>
+    <div class="formgrid">
+      <div class="full"><label>Nome *</label><input type="text" id="mt-nome"></div>
+      <div><label>WhatsApp</label><input type="text" id="mt-whatsapp"></div>
+      <div><label>E-mail</label><input type="text" id="mt-email"></div>
+      <div><label>Região</label><input type="text" id="mt-regiao"></div>
+      <div><label>Veículo</label><input type="text" id="mt-veiculo"></div>
+      <div><label>Categoria da CNH</label><select id="mt-cnh-categoria"><option value="">-</option><option>B</option><option>D</option><option>Outra</option></select></div>
+      <div><label>Validade da CNH</label><input type="date" id="mt-cnh-validade"></div>
+      <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="mt-cnh-ear" style="width:auto;"> Já tem o EAR</label></div>
+      <div><label>Antecedentes — data</label><input type="date" id="mt-antecedentes-data"></div>
+      <div><label>Antecedentes — status</label><select id="mt-antecedentes-status"><option value="">-</option><option>Pendente</option><option>Aprovado</option><option>Reprovado</option></select></div>
+      <div><label>Status</label><select id="mt-status"></select></div>
+      <div><label>Origem</label><select id="mt-origem"><option>Site</option><option>Instagram</option><option>Facebook</option><option>Networking</option><option>Indicação</option><option>Outro</option></select></div>
+    </div>
+
+    <div id="mt-documentos-wrap" style="margin-top:18px;">
+      <h4 style="font-size:13px; margin:0 0 8px;">Documentos</h4>
+      <div id="mt-documentos-lista"></div>
+      <div class="formgrid" style="margin-top:8px;">
+        <div><label>Tipo de documento</label><select id="mt-doc-tipo"><option>CNH</option><option>CNH EAR</option><option>Antecedentes Criminais</option><option>Curso ConduApp (16h)</option><option>Curso Transporte Infantil (50h CONTRAN)</option><option>Outro</option></select></div>
+        <div><label>Validade</label><input type="date" id="mt-doc-validade"></div>
+        <div><label>Status</label><select id="mt-doc-status"><option>Pendente</option><option>Verificado</option><option>Vencido</option></select></div>
+        <div style="display:flex; align-items:flex-end;"><button class="btn secondary small" type="button" onclick="addDocumentoMotorista()">+ Adicionar documento</button></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal('motorista-modal')">Cancelar</button>
+      <button class="btn" onclick="saveMotorista()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="cliente-transporte-modal">
+  <div class="modal">
+    <h3 id="cliente-transporte-modal-title">Nova cliente de viagem</h3>
+    <div class="formgrid">
+      <div class="full"><label>Nome *</label><input type="text" id="ct-nome"></div>
+      <div><label>WhatsApp</label><input type="text" id="ct-whatsapp"></div>
+      <div><label>E-mail</label><input type="text" id="ct-email"></div>
+      <div><label>Região</label><input type="text" id="ct-regiao"></div>
+      <div><label>Aniversário</label><input type="date" id="ct-aniversario"></div>
+      <div><label>Segmento</label><select id="ct-segmento"><option value="">-</option><option>Frequente</option><option>Ocasional</option><option>Empresarial</option></select></div>
+      <div><label>Origem</label><select id="ct-origem"><option>Indicação</option><option>Instagram</option><option>Facebook</option><option>Site</option><option>Outro</option></select></div>
+      <div class="full"><label>Familiares que também viajam (crianças, idosos etc.)</label><textarea id="ct-familiares" rows="2"></textarea></div>
+      <div class="full"><label>Notas</label><textarea id="ct-notas" rows="2"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal('cliente-transporte-modal')">Cancelar</button>
+      <button class="btn" onclick="saveClienteTransporte()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="viagem-modal">
+  <div class="modal">
+    <h3 id="viagem-modal-title">Nova viagem</h3>
+    <div class="formgrid">
+      <div class="full"><label>Cliente</label><select id="vg-cliente"></select></div>
+      <div class="full"><label>Motorista</label><select id="vg-motorista"></select></div>
+      <div><label>Tipo de serviço</label><select id="vg-tipo-servico"></select></div>
+      <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-motorista-preferida" style="width:auto;"> Motorista preferida da cliente</label></div>
+      <div><label>Canal de recepção</label><select id="vg-canal"></select></div>
+      <div><label>Status</label><select id="vg-status"></select></div>
+      <div class="full"><label>Endereço de origem</label><input type="text" id="vg-origem-endereco"></div>
+      <div class="full"><label>Endereço de destino</label><input type="text" id="vg-destino-endereco"></div>
+      <div><label>Data e hora</label><input type="datetime-local" id="vg-data-hora"></div>
+      <div><label>Link de acompanhamento</label><input type="text" id="vg-link"></div>
+      <div><label>Preço cotado (R$)</label><input type="number" id="vg-preco-cotado"></div>
+      <div><label>Preço final (R$)</label><input type="number" id="vg-preco-final"></div>
+      <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-preparacao" style="width:auto;"> Preparação pré-viagem confirmada</label></div>
+      <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-saida" style="width:auto;"> Saída do veículo confirmada</label></div>
+      <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-grupo-whats" style="width:auto;"> Grupo de WhatsApp criado</label></div>
+    </div>
+
+    <h4 style="font-size:13px; margin:18px 0 8px; border-top:1px solid var(--border); padding-top:14px;">💰 Pagamento à motorista</h4>
+    <div class="formgrid">
+      <div><label>Valor repassado (R$)</label><input type="number" id="vg-pg-valor"></div>
+      <div><label>Comissão da plataforma (R$)</label><input type="number" id="vg-pg-comissao"></div>
+      <div><label>Forma de pagamento</label><select id="vg-pg-forma"><option value="">-</option><option>Pix</option><option>Dinheiro</option><option>Transferência</option><option>Outro</option></select></div>
+      <div><label>Status do pagamento</label><select id="vg-pg-status"><option>Pendente</option><option>Pago</option></select></div>
+      <div><label>Data do pagamento</label><input type="date" id="vg-pg-data"></div>
+      <div class="full"><label>Notas (incentivo, reembolso etc.)</label><textarea id="vg-pg-notas" rows="2"></textarea></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" id="btn-excluir-viagem" style="color:var(--red); border-color:var(--red); margin-right:auto; display:none;" onclick="deleteViagem()">Excluir</button>
+      <button class="btn ghost" onclick="closeModal('viagem-modal')">Cancelar</button>
+      <button class="btn" onclick="saveViagem()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="avaliacao-modal">
+  <div class="modal">
+    <h3 id="avaliacao-modal-title">Nova avaliação</h3>
+    <div class="formgrid">
+      <div class="full"><label>Viagem</label><select id="av-viagem"></select></div>
+      <div><label>Nota da motorista (recebida)</label><input type="number" id="av-nota-motorista" min="1" max="5" step="0.5"></div>
+      <div><label>Nota da cliente (recebida)</label><input type="number" id="av-nota-cliente" min="1" max="5" step="0.5"></div>
+      <div class="full"><label>Comentário</label><textarea id="av-comentario" rows="2"></textarea></div>
+      <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="av-visivel" style="width:auto;"> Nota visível (liberada)</label></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal('avaliacao-modal')">Cancelar</button>
+      <button class="btn" onclick="saveAvaliacao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -435,6 +636,14 @@ const SERVICOS = [
 ];
 const CATEGORIAS = [...new Set(SERVICOS.map(s=>s.categoria))];
 
+const MOTORISTA_ETAPAS = ["Candidatura recebida","Em entrevista","Documentos pendentes","Em treinamento","Ativa","Inativa","Recusada"];
+const MOTORISTA_ETAPA_CLASS = {"Candidatura recebida":"novo","Em entrevista":"contato","Documentos pendentes":"urg-media","Em treinamento":"negociacao","Ativa":"ativo","Inativa":"perdido","Recusada":"perdido"};
+const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Idoso"];
+const CANAL_RECEPCAO = ["Telefone","Redes sociais","Site","E-mail"];
+const VIAGEM_STATUS = ["Solicitada","Confirmada","Em andamento","Concluída","Cancelada"];
+const VIAGEM_STATUS_CLASS = {"Solicitada":"orc-sol","Confirmada":"negociacao","Em andamento":"contato","Concluída":"ganho","Cancelada":"perdido"};
+const SEGMENTO_CLIENTE = ["Frequente","Ocasional","Empresarial"];
+
 function linkWhats(numero, mensagem){
   if(!numero) return null;
   let digits = String(numero).replace(/\D/g,'');
@@ -452,6 +661,12 @@ function botaoWhats(numero, nome){
 let leads = [];
 let parceiros = [];
 let orcamentos = [];
+let motoristas = [];
+let documentosMotorista = [];
+let clientesTransporte = [];
+let viagens = [];
+let avaliacoes = [];
+let pagamentosMotorista = [];
 
 // ===== AUTENTICAÇÃO =====
 const loginForm = document.getElementById("login-form");
@@ -516,6 +731,24 @@ async function carregarDados(){
   leads = leadsData || [];
   parceiros = parceirosData || [];
   orcamentos = orcamentosData || [];
+
+  // Módulo de Transporte — tolerante a erro (ex: SQL ainda não rodado),
+  // pra não travar o resto do painel enquanto isso.
+  const [rm, rd, rc, rv, ra, rp] = await Promise.all([
+    sb.from("motoristas").select("*").order("id"),
+    sb.from("documentos_motorista").select("*").order("id"),
+    sb.from("clientes_transporte").select("*").order("id"),
+    sb.from("viagens").select("*").order("id"),
+    sb.from("avaliacoes").select("*").order("id"),
+    sb.from("pagamentos_motorista").select("*").order("id"),
+  ]);
+  motoristas = rm.data || [];
+  documentosMotorista = rd.data || [];
+  clientesTransporte = rc.data || [];
+  viagens = rv.data || [];
+  avaliacoes = ra.data || [];
+  pagamentosMotorista = rp.data || [];
+
   renderAll();
 }
 
@@ -660,7 +893,13 @@ function aplicarRotulos(){
   });
 }
 
-function renderAll(){ renderDashboard(); renderLeads(); renderClientes(); renderParceiros(); renderOrcamentos(); renderServicos(); aplicarRotulos(); }
+function renderAll(){ renderDashboard(); renderLeads(); renderClientes(); renderParceiros(); renderOrcamentos(); renderServicos(); renderTransporteMotoristas(); renderTransporteClientes(); renderTransporteViagens(); renderTransporteAvaliacoes(); aplicarRotulos(); }
+
+function mostrarSubTab(nome){
+  document.querySelectorAll("#tab-transporte .subnav-item").forEach(b=>b.classList.toggle("active", b.dataset.subtab===nome));
+  document.querySelectorAll("#tab-transporte [id^=subtab-]").forEach(p=>p.style.display="none");
+  document.getElementById("subtab-"+nome).style.display="block";
+}
 
 // Lead modal
 let editingLeadId = null;
@@ -812,6 +1051,377 @@ async function saveOrcamento(){
 async function deleteOrcamento(id){
   if(!confirm("Excluir este orçamento?")) return;
   const { error } = await sb.from("orcamentos").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  await carregarDados();
+}
+
+// ===== TRANSPORTE: MOTORISTAS =====
+function documentosPendentesCount(motoristaId){
+  return documentosMotorista.filter(d=>d.motorista_id===motoristaId && d.status_verificacao!=="Verificado").length;
+}
+function mediaAvaliacaoMotorista(motoristaId){
+  const viagensDoMotorista = viagens.filter(v=>v.motorista_id===motoristaId).map(v=>v.id);
+  const notas = avaliacoes.filter(a=>a.visivel && viagensDoMotorista.includes(a.viagem_id) && a.nota_motorista!=null).map(a=>Number(a.nota_motorista));
+  if(!notas.length) return null;
+  return (notas.reduce((s,n)=>s+n,0)/notas.length).toFixed(1);
+}
+function renderTransporteMotoristas(){
+  document.getElementById("motorista-funnel-head").innerHTML = MOTORISTA_ETAPAS.map(e=>`<th>${e}</th>`).join("");
+  document.getElementById("motorista-funnel-body").innerHTML = MOTORISTA_ETAPAS.map(e=>{
+    const n = motoristas.filter(m=>m.status===e).length;
+    return `<td style="font-size:18px; font-weight:700; color:var(--pink);">${n}</td>`;
+  }).join("");
+
+  const fs = document.getElementById("filter-motorista-status");
+  if(!fs.dataset.filled){ fillSelect(fs, ["",...MOTORISTA_ETAPAS], ""); fs.querySelector("option").textContent="Todos os status"; fs.dataset.filled=1; }
+  const statusF = fs.value;
+  const filtradas = motoristas.filter(m=>!statusF || m.status===statusF);
+
+  document.getElementById("motoristas-body").innerHTML = filtradas.map(m=>{
+    const pend = documentosPendentesCount(m.id);
+    const media = mediaAvaliacaoMotorista(m.id);
+    return `<tr>
+      <td><strong>${m.nome}</strong></td>
+      <td>${m.whatsapp||"-"}</td>
+      <td>${m.regiao||"-"}${m.veiculo?"<br><span style='color:var(--muted); font-size:12px;'>"+m.veiculo+"</span>":""}</td>
+      <td>${pend>0?`<span class="tag urg-alta">${pend} pendente${pend>1?"s":""}</span>`:'<span class="tag urg-baixa">Em dia</span>'}</td>
+      <td><span class="tag ${MOTORISTA_ETAPA_CLASS[m.status]||''}">${m.status}</span></td>
+      <td>${media?media+" ★":"-"}</td>
+      <td>${botaoWhats(m.whatsapp, m.nome)} <button class="icon-btn" onclick="openMotoristaModal(${m.id})">✏️</button> <button class="icon-btn" onclick="deleteMotorista(${m.id})">🗑️</button></td>
+    </tr>`;
+  }).join("") || `<tr><td class="empty" colspan="7">Nenhuma motorista cadastrada ainda</td></tr>`;
+}
+
+let editingMotoristaId = null;
+function openMotoristaModal(id){
+  editingMotoristaId = id || null;
+  fillSelect(document.getElementById("mt-status"), MOTORISTA_ETAPAS, "Candidatura recebida");
+  document.getElementById("motorista-modal-title").textContent = id ? "Editar motorista" : "Nova motorista";
+  const m = motoristas.find(x=>x.id===id) || {};
+  document.getElementById("mt-nome").value = m.nome||"";
+  document.getElementById("mt-whatsapp").value = m.whatsapp||"";
+  document.getElementById("mt-email").value = m.email||"";
+  document.getElementById("mt-regiao").value = m.regiao||"";
+  document.getElementById("mt-veiculo").value = m.veiculo||"";
+  document.getElementById("mt-cnh-categoria").value = m.cnh_categoria||"";
+  document.getElementById("mt-cnh-validade").value = m.cnh_validade||"";
+  document.getElementById("mt-cnh-ear").checked = !!m.cnh_ear;
+  document.getElementById("mt-antecedentes-data").value = m.antecedentes_data||"";
+  document.getElementById("mt-antecedentes-status").value = m.antecedentes_status||"";
+  document.getElementById("mt-status").value = m.status||"Candidatura recebida";
+  document.getElementById("mt-origem").value = m.origem||"Site";
+  renderDocumentosMotorista();
+  document.getElementById("motorista-modal").classList.add("open");
+}
+function renderDocumentosMotorista(){
+  const wrap = document.getElementById("mt-documentos-lista");
+  const campos = document.querySelectorAll("#mt-documentos-wrap select, #mt-documentos-wrap input, #mt-documentos-wrap button");
+  if(!editingMotoristaId){
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Salve o cadastro primeiro para adicionar documentos.</p>`;
+    campos.forEach(el=>el.disabled = true);
+    return;
+  }
+  campos.forEach(el=>el.disabled = false);
+  const docs = documentosMotorista.filter(d=>d.motorista_id===editingMotoristaId);
+  wrap.innerHTML = docs.map(d=>`
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f4eaf0; font-size:12.5px;">
+      <span>${d.tipo_documento}${d.validade?" · até "+d.validade:""} <span class="tag ${d.status_verificacao==='Verificado'?'ativo':d.status_verificacao==='Vencido'?'perdido':'urg-media'}">${d.status_verificacao}</span></span>
+      <button class="icon-btn" type="button" onclick="deleteDocumentoMotorista(${d.id})">🗑️</button>
+    </div>
+  `).join("") || `<p style="color:var(--muted); font-size:12.5px;">Nenhum documento registrado ainda.</p>`;
+}
+async function addDocumentoMotorista(){
+  if(!editingMotoristaId) return;
+  const payload = {
+    motorista_id: editingMotoristaId,
+    tipo_documento: document.getElementById("mt-doc-tipo").value,
+    validade: document.getElementById("mt-doc-validade").value || null,
+    status_verificacao: document.getElementById("mt-doc-status").value,
+  };
+  const { error } = await sb.from("documentos_motorista").insert(payload);
+  if(error){ alert("Erro ao adicionar documento: " + error.message); return; }
+  const { data } = await sb.from("documentos_motorista").select("*").order("id");
+  documentosMotorista = data || [];
+  document.getElementById("mt-doc-validade").value = "";
+  renderDocumentosMotorista();
+  renderTransporteMotoristas();
+}
+async function deleteDocumentoMotorista(id){
+  if(!confirm("Excluir este documento?")) return;
+  const { error } = await sb.from("documentos_motorista").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  const { data } = await sb.from("documentos_motorista").select("*").order("id");
+  documentosMotorista = data || [];
+  renderDocumentosMotorista();
+  renderTransporteMotoristas();
+}
+async function saveMotorista(){
+  const nome = document.getElementById("mt-nome").value.trim();
+  if(!nome){ alert("Nome é obrigatório"); return; }
+  const payload = {
+    nome,
+    whatsapp: document.getElementById("mt-whatsapp").value,
+    email: document.getElementById("mt-email").value,
+    regiao: document.getElementById("mt-regiao").value,
+    veiculo: document.getElementById("mt-veiculo").value,
+    cnh_categoria: document.getElementById("mt-cnh-categoria").value || null,
+    cnh_validade: document.getElementById("mt-cnh-validade").value || null,
+    cnh_ear: document.getElementById("mt-cnh-ear").checked,
+    antecedentes_data: document.getElementById("mt-antecedentes-data").value || null,
+    antecedentes_status: document.getElementById("mt-antecedentes-status").value || null,
+    status: document.getElementById("mt-status").value,
+    origem: document.getElementById("mt-origem").value,
+  };
+  const { error } = editingMotoristaId
+    ? await sb.from("motoristas").update(payload).eq("id", editingMotoristaId)
+    : await sb.from("motoristas").insert(payload);
+  if(error){ alert("Erro ao salvar: " + error.message); return; }
+  closeModal("motorista-modal");
+  await carregarDados();
+}
+async function deleteMotorista(id){
+  if(!confirm('Excluir esta motorista? Os documentos dela também são excluídos; viagens ligadas a ela ficam sem motorista definida (não são apagadas).')) return;
+  const { error } = await sb.from("motoristas").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  await carregarDados();
+}
+
+// ===== TRANSPORTE: CLIENTES DE VIAGEM =====
+function renderTransporteClientes(){
+  const fs = document.getElementById("filter-cliente-segmento");
+  if(!fs.dataset.filled){ fillSelect(fs, ["",...SEGMENTO_CLIENTE], ""); fs.querySelector("option").textContent="Todos os segmentos"; fs.dataset.filled=1; }
+  const segF = fs.value;
+  const filtradas = clientesTransporte.filter(c=>!segF || c.segmento===segF);
+  document.getElementById("clientes-transporte-body").innerHTML = filtradas.map(c=>`
+    <tr>
+      <td><strong>${c.nome}</strong></td>
+      <td>${c.whatsapp||"-"}</td>
+      <td>${c.regiao||"-"}</td>
+      <td>${c.segmento?`<span class="tag novo">${c.segmento}</span>`:"-"}</td>
+      <td>${c.aniversario||"-"}</td>
+      <td>${botaoWhats(c.whatsapp, c.nome)} <button class="icon-btn" onclick="openClienteTransporteModal(${c.id})">✏️</button> <button class="icon-btn" onclick="deleteClienteTransporte(${c.id})">🗑️</button></td>
+    </tr>
+  `).join("") || `<tr><td class="empty" colspan="6">Nenhuma cliente de viagem cadastrada ainda</td></tr>`;
+}
+let editingClienteTransporteId = null;
+function openClienteTransporteModal(id){
+  editingClienteTransporteId = id || null;
+  document.getElementById("cliente-transporte-modal-title").textContent = id ? "Editar cliente" : "Nova cliente de viagem";
+  const c = clientesTransporte.find(x=>x.id===id) || {};
+  document.getElementById("ct-nome").value = c.nome||"";
+  document.getElementById("ct-whatsapp").value = c.whatsapp||"";
+  document.getElementById("ct-email").value = c.email||"";
+  document.getElementById("ct-regiao").value = c.regiao||"";
+  document.getElementById("ct-aniversario").value = c.aniversario||"";
+  document.getElementById("ct-segmento").value = c.segmento||"";
+  document.getElementById("ct-origem").value = c.origem||"Indicação";
+  document.getElementById("ct-familiares").value = c.familiares||"";
+  document.getElementById("ct-notas").value = c.notas||"";
+  document.getElementById("cliente-transporte-modal").classList.add("open");
+}
+async function saveClienteTransporte(){
+  const nome = document.getElementById("ct-nome").value.trim();
+  if(!nome){ alert("Nome é obrigatório"); return; }
+  const payload = {
+    nome,
+    whatsapp: document.getElementById("ct-whatsapp").value,
+    email: document.getElementById("ct-email").value,
+    regiao: document.getElementById("ct-regiao").value,
+    aniversario: document.getElementById("ct-aniversario").value || null,
+    segmento: document.getElementById("ct-segmento").value || null,
+    origem: document.getElementById("ct-origem").value,
+    familiares: document.getElementById("ct-familiares").value,
+    notas: document.getElementById("ct-notas").value,
+  };
+  const { error } = editingClienteTransporteId
+    ? await sb.from("clientes_transporte").update(payload).eq("id", editingClienteTransporteId)
+    : await sb.from("clientes_transporte").insert(payload);
+  if(error){ alert("Erro ao salvar: " + error.message); return; }
+  closeModal("cliente-transporte-modal");
+  await carregarDados();
+}
+async function deleteClienteTransporte(id){
+  if(!confirm("Excluir esta cliente? As viagens ligadas a ela ficam sem cliente definido (não são apagadas).")) return;
+  const { error } = await sb.from("clientes_transporte").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  await carregarDados();
+}
+
+// ===== TRANSPORTE: VIAGENS (KANBAN) =====
+function labelViagem(v){
+  const cliente = clientesTransporte.find(c=>c.id===v.cliente_id);
+  const motorista = motoristas.find(m=>m.id===v.motorista_id);
+  const data = v.data_hora ? new Date(v.data_hora).toLocaleDateString("pt-BR") : "sem data";
+  return `#${v.id} · ${data} · ${cliente?cliente.nome:"sem cliente"} / ${motorista?motorista.nome:"sem motorista"}`;
+}
+function renderTransporteViagens(){
+  const ft = document.getElementById("filter-viagem-tipo");
+  if(!ft.dataset.filled){ fillSelect(ft, ["",...TIPO_SERVICO_VIAGEM], ""); ft.querySelector("option").textContent="Todos os tipos"; ft.dataset.filled=1; }
+  const tipoF = ft.value;
+  const filtradas = viagens.filter(v=>!tipoF || v.tipo_servico===tipoF);
+
+  document.getElementById("kanban-viagens").innerHTML = VIAGEM_STATUS.map(status=>{
+    const doColuna = filtradas.filter(v=>v.status===status);
+    return `<div class="kanban-col">
+      <h4>${status}<span>${doColuna.length}</span></h4>
+      ${doColuna.map(v=>{
+        const cliente = clientesTransporte.find(c=>c.id===v.cliente_id);
+        const motorista = motoristas.find(m=>m.id===v.motorista_id);
+        return `<div class="kanban-card" onclick="openViagemModal(${v.id})">
+          <div class="kc-top">${cliente?cliente.nome:"Cliente não definido"}</div>
+          <div style="color:var(--muted);">${motorista?motorista.nome:"Sem motorista"}</div>
+          <div style="color:var(--muted); font-size:11.5px; margin-top:4px;">${v.data_hora?new Date(v.data_hora).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}):"Sem data"}</div>
+          ${v.tipo_servico?`<span class="tag novo kc-tag">${v.tipo_servico}</span>`:""}
+        </div>`;
+      }).join("") || `<p class="kanban-vazio">Vazio</p>`}
+    </div>`;
+  }).join("");
+}
+let editingViagemId = null;
+function openViagemModal(id){
+  editingViagemId = id || null;
+  document.getElementById("vg-cliente").innerHTML = `<option value="">-</option>` + clientesTransporte.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
+  document.getElementById("vg-motorista").innerHTML = `<option value="">-</option>` + motoristas.map(m=>`<option value="${m.id}">${m.nome}</option>`).join("");
+  fillSelect(document.getElementById("vg-tipo-servico"), TIPO_SERVICO_VIAGEM, "Padrão");
+  fillSelect(document.getElementById("vg-canal"), CANAL_RECEPCAO, "Telefone");
+  fillSelect(document.getElementById("vg-status"), VIAGEM_STATUS, "Solicitada");
+  document.getElementById("viagem-modal-title").textContent = id ? "Editar viagem" : "Nova viagem";
+  const v = viagens.find(x=>x.id===id) || {};
+  if(v.cliente_id) document.getElementById("vg-cliente").value = v.cliente_id;
+  if(v.motorista_id) document.getElementById("vg-motorista").value = v.motorista_id;
+  document.getElementById("vg-tipo-servico").value = v.tipo_servico||"Padrão";
+  document.getElementById("vg-motorista-preferida").checked = !!v.motorista_preferida;
+  document.getElementById("vg-canal").value = v.canal_recepcao||"Telefone";
+  document.getElementById("vg-status").value = v.status||"Solicitada";
+  document.getElementById("vg-origem-endereco").value = v.origem_endereco||"";
+  document.getElementById("vg-destino-endereco").value = v.destino_endereco||"";
+  document.getElementById("vg-data-hora").value = v.data_hora ? v.data_hora.slice(0,16) : "";
+  document.getElementById("vg-link").value = v.link_acompanhamento||"";
+  document.getElementById("vg-preco-cotado").value = v.preco_cotado ?? "";
+  document.getElementById("vg-preco-final").value = v.preco_final ?? "";
+  document.getElementById("vg-preparacao").checked = !!v.preparacao_confirmada;
+  document.getElementById("vg-saida").checked = !!v.saida_confirmada;
+  document.getElementById("vg-grupo-whats").checked = !!v.grupo_whatsapp_criado;
+
+  const pg = pagamentosMotorista.find(p=>p.viagem_id===id) || {};
+  document.getElementById("vg-pg-valor").value = pg.valor_repassado ?? "";
+  document.getElementById("vg-pg-comissao").value = pg.comissao_plataforma ?? "";
+  document.getElementById("vg-pg-forma").value = pg.forma_pagamento || "";
+  document.getElementById("vg-pg-status").value = pg.status || "Pendente";
+  document.getElementById("vg-pg-data").value = pg.data_pagamento || "";
+  document.getElementById("vg-pg-notas").value = pg.notas || "";
+
+  document.getElementById("btn-excluir-viagem").style.display = id ? "inline-block" : "none";
+  document.getElementById("viagem-modal").classList.add("open");
+}
+async function saveViagem(){
+  const payload = {
+    cliente_id: Number(document.getElementById("vg-cliente").value) || null,
+    motorista_id: Number(document.getElementById("vg-motorista").value) || null,
+    tipo_servico: document.getElementById("vg-tipo-servico").value,
+    motorista_preferida: document.getElementById("vg-motorista-preferida").checked,
+    canal_recepcao: document.getElementById("vg-canal").value,
+    status: document.getElementById("vg-status").value,
+    origem_endereco: document.getElementById("vg-origem-endereco").value,
+    destino_endereco: document.getElementById("vg-destino-endereco").value,
+    data_hora: document.getElementById("vg-data-hora").value || null,
+    link_acompanhamento: document.getElementById("vg-link").value,
+    preco_cotado: document.getElementById("vg-preco-cotado").value === "" ? null : Number(document.getElementById("vg-preco-cotado").value),
+    preco_final: document.getElementById("vg-preco-final").value === "" ? null : Number(document.getElementById("vg-preco-final").value),
+    preparacao_confirmada: document.getElementById("vg-preparacao").checked,
+    saida_confirmada: document.getElementById("vg-saida").checked,
+    grupo_whatsapp_criado: document.getElementById("vg-grupo-whats").checked,
+  };
+
+  let viagemId = editingViagemId;
+  if(viagemId){
+    const { error } = await sb.from("viagens").update(payload).eq("id", viagemId);
+    if(error){ alert("Erro ao salvar viagem: " + error.message); return; }
+  } else {
+    const { data, error } = await sb.from("viagens").insert(payload).select();
+    if(error){ alert("Erro ao salvar viagem: " + error.message); return; }
+    viagemId = data[0].id;
+  }
+
+  const pgPayload = {
+    viagem_id: viagemId,
+    valor_repassado: document.getElementById("vg-pg-valor").value === "" ? null : Number(document.getElementById("vg-pg-valor").value),
+    comissao_plataforma: document.getElementById("vg-pg-comissao").value === "" ? null : Number(document.getElementById("vg-pg-comissao").value),
+    forma_pagamento: document.getElementById("vg-pg-forma").value || null,
+    status: document.getElementById("vg-pg-status").value,
+    data_pagamento: document.getElementById("vg-pg-data").value || null,
+    notas: document.getElementById("vg-pg-notas").value,
+  };
+  const temDadoPagamento = pgPayload.valor_repassado != null || pgPayload.comissao_plataforma != null || pgPayload.forma_pagamento || pgPayload.data_pagamento || pgPayload.notas;
+  if(temDadoPagamento){
+    const existente = pagamentosMotorista.find(p=>p.viagem_id===viagemId);
+    const { error } = existente
+      ? await sb.from("pagamentos_motorista").update(pgPayload).eq("id", existente.id)
+      : await sb.from("pagamentos_motorista").insert(pgPayload);
+    if(error){ alert("Erro ao salvar pagamento: " + error.message); return; }
+  }
+
+  closeModal("viagem-modal");
+  await carregarDados();
+}
+async function deleteViagem(){
+  if(!editingViagemId) return;
+  if(!confirm("Excluir esta viagem? Isso também apaga o pagamento e as avaliações ligados a ela.")) return;
+  const { error } = await sb.from("viagens").delete().eq("id", editingViagemId);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  closeModal("viagem-modal");
+  await carregarDados();
+}
+
+// ===== TRANSPORTE: AVALIAÇÕES =====
+function renderTransporteAvaliacoes(){
+  document.getElementById("avaliacoes-body").innerHTML = avaliacoes.map(a=>{
+    const viagem = viagens.find(v=>v.id===a.viagem_id);
+    const motorista = viagem ? motoristas.find(m=>m.id===viagem.motorista_id) : null;
+    const cliente = viagem ? clientesTransporte.find(c=>c.id===viagem.cliente_id) : null;
+    return `<tr>
+      <td>${viagem ? (viagem.data_hora ? new Date(viagem.data_hora).toLocaleDateString("pt-BR") : "Viagem #"+viagem.id) : "-"}</td>
+      <td>${motorista?motorista.nome:"-"}</td>
+      <td>${cliente?cliente.nome:"-"}</td>
+      <td>${a.nota_motorista ?? "-"}</td>
+      <td>${a.nota_cliente ?? "-"}</td>
+      <td>${a.visivel?'<span class="tag ativo">Visível</span>':'<span class="tag urg-media">Oculta</span>'}</td>
+      <td><button class="icon-btn" onclick="openAvaliacaoModal(${a.id})">✏️</button> <button class="icon-btn" onclick="deleteAvaliacao(${a.id})">🗑️</button></td>
+    </tr>`;
+  }).join("") || `<tr><td class="empty" colspan="7">Nenhuma avaliação registrada ainda</td></tr>`;
+}
+let editingAvaliacaoId = null;
+function openAvaliacaoModal(id){
+  editingAvaliacaoId = id || null;
+  document.getElementById("av-viagem").innerHTML = viagens.map(v=>`<option value="${v.id}">${labelViagem(v)}</option>`).join("") || `<option value="">Nenhuma viagem cadastrada ainda</option>`;
+  document.getElementById("avaliacao-modal-title").textContent = id ? "Editar avaliação" : "Nova avaliação";
+  const a = avaliacoes.find(x=>x.id===id) || {};
+  if(a.viagem_id) document.getElementById("av-viagem").value = a.viagem_id;
+  document.getElementById("av-nota-motorista").value = a.nota_motorista ?? "";
+  document.getElementById("av-nota-cliente").value = a.nota_cliente ?? "";
+  document.getElementById("av-comentario").value = a.comentario || "";
+  document.getElementById("av-visivel").checked = !!a.visivel;
+  document.getElementById("avaliacao-modal").classList.add("open");
+}
+async function saveAvaliacao(){
+  if(!viagens.length){ alert("Cadastre pelo menos uma viagem antes."); return; }
+  const payload = {
+    viagem_id: Number(document.getElementById("av-viagem").value) || null,
+    nota_motorista: document.getElementById("av-nota-motorista").value === "" ? null : Number(document.getElementById("av-nota-motorista").value),
+    nota_cliente: document.getElementById("av-nota-cliente").value === "" ? null : Number(document.getElementById("av-nota-cliente").value),
+    comentario: document.getElementById("av-comentario").value,
+    visivel: document.getElementById("av-visivel").checked,
+  };
+  const { error } = editingAvaliacaoId
+    ? await sb.from("avaliacoes").update(payload).eq("id", editingAvaliacaoId)
+    : await sb.from("avaliacoes").insert(payload);
+  if(error){ alert("Erro ao salvar: " + error.message); return; }
+  closeModal("avaliacao-modal");
+  await carregarDados();
+}
+async function deleteAvaliacao(id){
+  if(!confirm("Excluir esta avaliação?")) return;
+  const { error } = await sb.from("avaliacoes").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
   await carregarDados();
 }
