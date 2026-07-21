@@ -261,6 +261,7 @@ tr.tr-click:hover{background:#fff7fa;}
     <div class="nav-item" data-tab="parceiros">🤝 Parceiras (os)</div>
     <div class="nav-item" data-tab="orcamentos">💰 Orçamentos</div>
     <div class="nav-item" data-tab="transporte">🚗 Transporte</div>
+    <div class="nav-item" data-tab="financeiro">💵 Financeiro</div>
     <div class="nav-item" data-tab="servicos">🔧 Serviços</div>
     <div class="nav-item" data-tab="config">⚙️ Dados</div>
     <div class="nav-item nav-logout js-logout" id="btn-logout">🚪 Sair</div>
@@ -283,6 +284,11 @@ tr.tr-click:hover{background:#fff7fa;}
           <a href="https://business.facebook.com/events_manager2/list/pixel/1547418116918632" target="_blank">📣 Meta Events Manager</a>
           <a href="https://clarity.microsoft.com/projects/view/xjd308la6r/dashboard" target="_blank">🖱️ Microsoft Clarity</a>
         </div>
+      </div>
+      <div class="panel">
+        <h3>🎂 Aniversários próximos</h3>
+        <p style="color:var(--muted); font-size:12.5px; margin:-6px 0 12px;">De hoje até o fim do mês que vem</p>
+        <table class="tbl"><thead><tr><th>Nome</th><th>Tipo</th><th>Data</th></tr></thead><tbody id="dash-aniversarios"></tbody></table>
       </div>
       <div class="dash-grid">
         <div class="panel">
@@ -419,6 +425,78 @@ tr.tr-click:hover{background:#fff7fa;}
       </div>
     </div>
 
+    <div id="tab-financeiro" style="display:none;">
+      <div class="pagehead"><div><h2>Financeiro</h2><p>Contas a receber, contas a pagar, metas e o resumo de faturamento/lucro</p></div></div>
+      <div class="subnav">
+        <button type="button" class="subnav-item active" data-subtab="receber" onclick="mostrarSubTabFinanceiro('receber')">Contas a Receber</button>
+        <button type="button" class="subnav-item" data-subtab="pagar" onclick="mostrarSubTabFinanceiro('pagar')">Contas a Pagar</button>
+        <button type="button" class="subnav-item" data-subtab="metas" onclick="mostrarSubTabFinanceiro('metas')">Metas</button>
+        <button type="button" class="subnav-item" data-subtab="resumo" onclick="mostrarSubTabFinanceiro('resumo')">Resumo</button>
+      </div>
+
+      <div id="subtab-receber">
+        <div class="filters">
+          <select id="filter-receber-status" onchange="renderContasReceber()"><option value="">Todos os status</option><option>Pendente</option><option>Pago</option></select>
+        </div>
+        <div class="panel">
+          <table class="tbl">
+            <thead><tr id="thead-receber"></tr></thead>
+            <tbody id="receber-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="subtab-pagar" style="display:none;">
+        <div class="pagehead">
+          <div><p style="margin:0; color:var(--muted); font-size:12.5px;">Despesas gerais cadastradas aqui + pagamentos de motorista já registrados em Transporte → Viagens.</p></div>
+          <button class="btn" onclick="openContaPagarModal()">+ Nova despesa</button>
+        </div>
+        <div class="panel">
+          <table class="tbl">
+            <thead><tr id="thead-pagar"></tr></thead>
+            <tbody id="pagar-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="subtab-metas" style="display:none;">
+        <div class="panel" style="max-width:460px;">
+          <h3>Meta do mês</h3>
+          <div class="formgrid">
+            <div><label>Mês</label><select id="mf-mes"></select></div>
+            <div><label>Ano</label><input type="number" id="mf-ano"></div>
+            <div><label>Meta de faturamento (R$)</label><input type="number" id="mf-faturamento"></div>
+            <div><label>Meta de lucro (R$)</label><input type="number" id="mf-lucro"></div>
+          </div>
+          <div class="modal-actions" style="justify-content:flex-start; margin-top:14px;">
+            <button class="btn" onclick="saveMeta()">Salvar meta</button>
+          </div>
+        </div>
+        <div class="panel">
+          <table class="tbl">
+            <thead><tr><th>Mês/Ano</th><th>Meta faturamento</th><th>Meta lucro</th><th></th></tr></thead>
+            <tbody id="metas-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="subtab-resumo" style="display:none;">
+        <div class="filters">
+          <select id="filter-resumo-ano" onchange="renderResumoFinanceiro()"></select>
+        </div>
+        <div class="panel">
+          <table class="tbl">
+            <thead><tr><th>Mês</th><th>Faturamento</th><th>Meta</th><th>Despesas</th><th>Lucro</th><th>Meta lucro</th></tr></thead>
+            <tbody id="resumo-body"></tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <h3>Faturamento × Lucro no ano</h3>
+          <div class="chartwrap"><canvas id="chart-resumo"></canvas></div>
+        </div>
+      </div>
+    </div>
+
     <div id="tab-servicos" style="display:none;">
       <div class="pagehead"><div><h2>Catálogo de serviços</h2><p>Serviços oferecidos, quantas vezes foram pedidos e ticket médio</p></div></div>
       <div class="panel">
@@ -445,7 +523,10 @@ tr.tr-click:hover{background:#fff7fa;}
 
 <div class="modal-backdrop" id="lead-modal">
   <div class="modal">
-    <h3 id="lead-modal-title">Novo lead</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="lead-modal-title" style="margin:0;">Novo lead</h3>
+      <button class="icon-btn" type="button" onclick="closeModal('lead-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
+    </div>
     <div class="formgrid">
       <div><label>Nome *</label><input type="text" id="f-nome"></div>
       <div><label>WhatsApp *</label><input type="text" id="f-whatsapp"></div>
@@ -459,10 +540,27 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Urgência</label><select id="f-urgencia"><option>Urgente</option><option>Essa semana</option><option>Sem pressa</option></select></div>
       <div class="full"><label>Descrição</label><textarea id="f-descricao" rows="2"></textarea></div>
       <div><label>Etapa</label><select id="f-etapa"></select></div>
-      <div><label>Origem</label><select id="f-origem"><option>Instagram</option><option>Facebook</option><option>Google</option><option>Indicação</option><option>Outro</option></select></div>
+      <div><label>Origem</label><select id="f-origem" onchange="toggleOrigemOutro()"><option>Instagram</option><option>Facebook</option><option>Google</option><option>Indicação</option><option>Grupo de networking</option><option>Outro</option></select></div>
+      <div id="f-origem-outro-wrap" style="display:none;"><label>Qual?</label><input type="text" id="f-origem-outro" placeholder="Descreva a origem"></div>
       <div><label>Data de entrada</label><input type="date" id="f-data"></div>
+      <div><label>Aniversário</label><input type="date" id="f-aniversario"></div>
       <div><label>Responsável</label><input type="text" id="f-responsavel" value="Jú"></div>
       <div class="full"><label>Notas internas</label><textarea id="f-notas" rows="2"></textarea></div>
+    </div>
+
+    <div id="f-vendas-wrap" style="margin-top:18px;">
+      <h4 style="font-size:13px; margin:0 0 8px; border-top:1px solid var(--border); padding-top:14px;">Vendas</h4>
+      <div id="f-vendas-lista"></div>
+      <div class="formgrid" style="margin-top:8px;">
+        <div class="full"><label>Serviço/produto contratado</label><input type="text" id="fv-servico" placeholder="Ex: Peugeot 208 Allure"></div>
+        <div><label>Preço unitário (R$)</label><input type="number" id="fv-preco-unitario"></div>
+        <div><label>Preço total (R$)</label><input type="number" id="fv-preco-total"></div>
+        <div><label>Forma de pagamento</label><select id="fv-forma-pagamento"><option value="">-</option><option>Pix</option><option>Dinheiro</option><option>Cartão</option><option>Transferência</option><option>Financiamento</option><option>Outro</option></select></div>
+        <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="fv-parcelado" style="width:auto;" onchange="toggleVendaParcelado()"> É parcelado?</label></div>
+        <div id="fv-num-parcelas-wrap" style="display:none;"><label>Quantas vezes</label><input type="number" id="fv-num-parcelas" min="2" value="2"></div>
+        <div><label>Data prevista (1ª/única parcela)</label><input type="date" id="fv-data-prevista"></div>
+        <div style="display:flex; align-items:flex-end;"><button class="btn secondary small" type="button" onclick="addVenda()">+ Registrar venda</button></div>
+      </div>
     </div>
 
     <div id="f-interacoes-wrap" style="margin-top:18px;">
@@ -477,7 +575,7 @@ tr.tr-click:hover{background:#fff7fa;}
     </div>
 
     <div class="modal-actions">
-      <button class="btn ghost" onclick="closeModal('lead-modal')">Cancelar</button>
+      <button class="btn ghost" onclick="closeModal('lead-modal')">Sair</button>
       <button class="btn" onclick="saveLead()">Salvar</button>
     </div>
   </div>
@@ -485,7 +583,10 @@ tr.tr-click:hover{background:#fff7fa;}
 
 <div class="modal-backdrop" id="parceiro-modal">
   <div class="modal">
-    <h3 id="parceiro-modal-title">Nova parceira (o)</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="parceiro-modal-title" style="margin:0;">Nova parceira (o)</h3>
+      <button class="icon-btn" type="button" onclick="closeModal('parceiro-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
+    </div>
     <div class="formgrid">
       <div class="full"><label>Nome *</label><input type="text" id="p-nome"></div>
       <div class="full">
@@ -511,6 +612,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Região atendida</label><input type="text" id="p-regiao"></div>
       <div><label>Selo Ladies Approved</label><select id="p-selo"><option value="sim">Sim</option><option value="nao">Não</option></select></div>
       <div><label>Status</label><select id="p-status"></select></div>
+      <div><label>Aniversário</label><input type="date" id="p-aniversario"></div>
       <div><label>% comissão / acordo</label><input type="text" id="p-comissao"></div>
       <div class="full"><label>Notas</label><textarea id="p-notas" rows="2"></textarea></div>
     </div>
@@ -549,7 +651,7 @@ tr.tr-click:hover{background:#fff7fa;}
     </div>
 
     <div class="modal-actions">
-      <button class="btn ghost" onclick="closeModal('parceiro-modal')">Cancelar</button>
+      <button class="btn ghost" onclick="closeModal('parceiro-modal')">Sair</button>
       <button class="btn" onclick="saveParceiro()">Salvar</button>
     </div>
   </div>
@@ -557,7 +659,10 @@ tr.tr-click:hover{background:#fff7fa;}
 
 <div class="modal-backdrop" id="orcamento-modal">
   <div class="modal">
-    <h3 id="orcamento-modal-title">Novo orçamento</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="orcamento-modal-title" style="margin:0;">Novo orçamento</h3>
+      <button class="icon-btn" type="button" onclick="closeModal('orcamento-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
+    </div>
     <div class="formgrid">
       <div class="full"><label>Lead/Cliente</label><select id="o-lead"></select></div>
       <div class="full"><label>Serviço</label><select id="o-servico"></select></div>
@@ -568,7 +673,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Data</label><input type="date" id="o-data"></div>
     </div>
     <div class="modal-actions">
-      <button class="btn ghost" onclick="closeModal('orcamento-modal')">Cancelar</button>
+      <button class="btn ghost" onclick="closeModal('orcamento-modal')">Sair</button>
       <button class="btn" onclick="saveOrcamento()">Salvar</button>
     </div>
   </div>
@@ -576,7 +681,10 @@ tr.tr-click:hover{background:#fff7fa;}
 
 <div class="modal-backdrop" id="motorista-modal">
   <div class="modal">
-    <h3 id="motorista-modal-title">Nova motorista</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="motorista-modal-title" style="margin:0;">Nova motorista</h3>
+      <button class="icon-btn" type="button" onclick="closeModal('motorista-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
+    </div>
     <div class="formgrid">
       <div class="full"><label>Nome *</label><input type="text" id="mt-nome"></div>
       <div><label>WhatsApp</label><input type="text" id="mt-whatsapp"></div>
@@ -604,7 +712,7 @@ tr.tr-click:hover{background:#fff7fa;}
     </div>
 
     <div class="modal-actions">
-      <button class="btn ghost" onclick="closeModal('motorista-modal')">Cancelar</button>
+      <button class="btn ghost" onclick="closeModal('motorista-modal')">Sair</button>
       <button class="btn" onclick="saveMotorista()">Salvar</button>
     </div>
   </div>
@@ -612,7 +720,10 @@ tr.tr-click:hover{background:#fff7fa;}
 
 <div class="modal-backdrop" id="cliente-transporte-modal">
   <div class="modal">
-    <h3 id="cliente-transporte-modal-title">Nova cliente de viagem</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="cliente-transporte-modal-title" style="margin:0;">Nova cliente de viagem</h3>
+      <button class="icon-btn" type="button" onclick="closeModal('cliente-transporte-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
+    </div>
     <div class="formgrid">
       <div class="full"><label>Nome *</label><input type="text" id="ct-nome"></div>
       <div><label>WhatsApp</label><input type="text" id="ct-whatsapp"></div>
@@ -625,7 +736,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div class="full"><label>Notas</label><textarea id="ct-notas" rows="2"></textarea></div>
     </div>
     <div class="modal-actions">
-      <button class="btn ghost" onclick="closeModal('cliente-transporte-modal')">Cancelar</button>
+      <button class="btn ghost" onclick="closeModal('cliente-transporte-modal')">Sair</button>
       <button class="btn" onclick="saveClienteTransporte()">Salvar</button>
     </div>
   </div>
@@ -633,7 +744,10 @@ tr.tr-click:hover{background:#fff7fa;}
 
 <div class="modal-backdrop" id="viagem-modal">
   <div class="modal">
-    <h3 id="viagem-modal-title">Nova viagem</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="viagem-modal-title" style="margin:0;">Nova viagem</h3>
+      <button class="icon-btn" type="button" onclick="closeModal('viagem-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
+    </div>
     <div class="formgrid">
       <div class="full"><label>Cliente</label><select id="vg-cliente"></select></div>
       <div class="full"><label>Motorista</label><select id="vg-motorista"></select></div>
@@ -664,7 +778,7 @@ tr.tr-click:hover{background:#fff7fa;}
 
     <div class="modal-actions">
       <button class="btn ghost" id="btn-excluir-viagem" style="color:var(--red); border-color:var(--red); margin-right:auto; display:none;" onclick="deleteViagem()">Excluir</button>
-      <button class="btn ghost" onclick="closeModal('viagem-modal')">Cancelar</button>
+      <button class="btn ghost" onclick="closeModal('viagem-modal')">Sair</button>
       <button class="btn" onclick="saveViagem()">Salvar</button>
     </div>
   </div>
@@ -672,7 +786,10 @@ tr.tr-click:hover{background:#fff7fa;}
 
 <div class="modal-backdrop" id="avaliacao-modal">
   <div class="modal">
-    <h3 id="avaliacao-modal-title">Nova avaliação</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="avaliacao-modal-title" style="margin:0;">Nova avaliação</h3>
+      <button class="icon-btn" type="button" onclick="closeModal('avaliacao-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
+    </div>
     <div class="formgrid">
       <div class="full"><label>Viagem</label><select id="av-viagem"></select></div>
       <div><label>Nota da motorista (recebida)</label><input type="number" id="av-nota-motorista" min="1" max="5" step="0.5"></div>
@@ -681,8 +798,52 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="av-visivel" style="width:auto;"> Nota visível (liberada)</label></div>
     </div>
     <div class="modal-actions">
-      <button class="btn ghost" onclick="closeModal('avaliacao-modal')">Cancelar</button>
+      <button class="btn ghost" onclick="closeModal('avaliacao-modal')">Sair</button>
       <button class="btn" onclick="saveAvaliacao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="parcela-modal">
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="parcela-modal-title" style="margin:0;">Editar parcela</h3>
+      <button class="icon-btn" type="button" onclick="closeModal('parcela-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
+    </div>
+    <div class="formgrid">
+      <div class="full" id="pz-info" style="font-size:13px; color:var(--muted);"></div>
+      <div><label>Valor (R$)</label><input type="number" id="pz-valor"></div>
+      <div><label>Forma de pagamento</label><select id="pz-forma-pagamento"><option value="">-</option><option>Pix</option><option>Dinheiro</option><option>Cartão</option><option>Transferência</option><option>Financiamento</option><option>Outro</option></select></div>
+      <div><label>Data prevista</label><input type="date" id="pz-data-prevista"></div>
+      <div><label>Data realizada</label><input type="date" id="pz-data-realizada"></div>
+      <div><label>Status</label><select id="pz-status"><option>Pendente</option><option>Pago</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal('parcela-modal')">Sair</button>
+      <button class="btn" onclick="saveParcela()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="conta-pagar-modal">
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="conta-pagar-modal-title" style="margin:0;">Nova despesa</h3>
+      <button class="icon-btn" type="button" onclick="closeModal('conta-pagar-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
+    </div>
+    <div class="formgrid">
+      <div class="full"><label>Descrição *</label><input type="text" id="cp-descricao"></div>
+      <div><label>Categoria</label><input type="text" id="cp-categoria" placeholder="Ex: Aluguel, Ferramentas, Comissão"></div>
+      <div><label>Valor (R$)</label><input type="number" id="cp-valor"></div>
+      <div><label>Parceira (o) ligada</label><select id="cp-parceiro"><option value="">-</option></select></div>
+      <div><label>Vencimento</label><input type="date" id="cp-vencimento"></div>
+      <div><label>Data de pagamento</label><input type="date" id="cp-data-pagamento"></div>
+      <div><label>Status</label><select id="cp-status"><option>Pendente</option><option>Pago</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btn-excluir-conta-pagar" style="color:var(--red); border-color:var(--red); margin-right:auto; display:none;" onclick="deleteContaPagar()">Excluir</button>
+      <button class="btn ghost" onclick="closeModal('conta-pagar-modal')">Sair</button>
+      <button class="btn" onclick="saveContaPagar()">Salvar</button>
     </div>
   </div>
 </div>
@@ -719,6 +880,7 @@ const SERVICOS = [
   {nome:"Vistoria Cautelar", categoria:"Proteção, Compra e Burocracia"},
   {nome:"Consultoria de Compra e Venda (Car Hunter)", categoria:"Proteção, Compra e Burocracia"},
   {nome:"Compra de veículo do estoque LID", categoria:"Compra e Venda"},
+  {nome:"Compra de outro veículo", categoria:"Compra e Venda"},
   {nome:"Venda do meu carro", categoria:"Compra e Venda"},
   {nome:"Viagem particular", categoria:"Viagem"},
   {nome:"Análise de orçamento", categoria:"Consultoria"},
@@ -815,6 +977,10 @@ let parceiroContatos = [];
 let parceiroInteracoes = [];
 let parceiroEnderecos = [];
 let leadInteracoes = [];
+let vendas = [];
+let vendaParcelas = [];
+let contasPagar = [];
+let metasFinanceiras = [];
 
 // ===== AUTENTICAÇÃO =====
 const loginForm = document.getElementById("login-form");
@@ -882,7 +1048,7 @@ async function carregarDados(){
 
   // Módulo de Transporte — tolerante a erro (ex: SQL ainda não rodado),
   // pra não travar o resto do painel enquanto isso.
-  const [rm, rd, rc, rv, ra, rp, rpc, rpi, rpe, rli] = await Promise.all([
+  const [rm, rd, rc, rv, ra, rp, rpc, rpi, rpe, rli, rvd, rvp, rcp, rmf] = await Promise.all([
     sb.from("motoristas").select("*").order("id"),
     sb.from("documentos_motorista").select("*").order("id"),
     sb.from("clientes_transporte").select("*").order("id"),
@@ -893,6 +1059,10 @@ async function carregarDados(){
     sb.from("parceiro_interacoes").select("*").order("id"),
     sb.from("parceiro_enderecos").select("*").order("id"),
     sb.from("lead_interacoes").select("*").order("id"),
+    sb.from("vendas").select("*").order("id"),
+    sb.from("venda_parcelas").select("*").order("id"),
+    sb.from("contas_pagar").select("*").order("id"),
+    sb.from("metas_financeiras").select("*").order("id"),
   ]);
   motoristas = rm.data || [];
   documentosMotorista = rd.data || [];
@@ -904,6 +1074,10 @@ async function carregarDados(){
   parceiroInteracoes = rpi.data || [];
   parceiroEnderecos = rpe.data || [];
   leadInteracoes = rli.data || [];
+  vendas = rvd.data || [];
+  vendaParcelas = rvp.data || [];
+  contasPagar = rcp.data || [];
+  metasFinanceiras = rmf.data || [];
 
   renderAll();
 }
@@ -956,6 +1130,35 @@ function renderDashboard(){
     data:{ labels: sorted.map(s=>s[0]), datasets:[{ label:"Vezes solicitado", data: sorted.map(s=>s[1]), backgroundColor:"#d6336c", borderRadius:6 }] },
     options:{ responsive:true, maintainAspectRatio:false, indexAxis:"y", plugins:{legend:{display:false}}, scales:{x:{ticks:{stepSize:1}}} }
   });
+  renderAniversariosDashboard();
+}
+
+function proximoAniversario(dataStr){
+  if(!dataStr) return null;
+  const nasc = new Date(dataStr+"T00:00:00");
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  let prox = new Date(hoje.getFullYear(), nasc.getMonth(), nasc.getDate());
+  if(prox < hoje) prox = new Date(hoje.getFullYear()+1, nasc.getMonth(), nasc.getDate());
+  return prox;
+}
+function renderAniversariosDashboard(){
+  const el = document.getElementById("dash-aniversarios");
+  if(!el) return;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const fimProximoMes = new Date(hoje.getFullYear(), hoje.getMonth()+2, 0);
+  const candidatos = [
+    ...leads.map(l=>({nome:l.nome, tipo:"Lead", aniversario:l.aniversario})),
+    ...parceiros.map(p=>({nome:p.nome, tipo:"Parceira (o)", aniversario:p.aniversario})),
+    ...clientesTransporte.map(c=>({nome:c.nome, tipo:"Cliente de viagem", aniversario:c.aniversario})),
+  ];
+  const proximos = candidatos
+    .filter(c=>c.aniversario)
+    .map(c=>({...c, proxima: proximoAniversario(c.aniversario)}))
+    .filter(c=>c.proxima && c.proxima >= hoje && c.proxima <= fimProximoMes)
+    .sort((a,b)=>a.proxima-b.proxima);
+  el.innerHTML = proximos.map(c=>`
+    <tr><td>${c.nome}</td><td>${c.tipo}</td><td>${c.proxima.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})}</td></tr>
+  `).join("") || `<tr><td class="empty" colspan="3">Nenhum aniversário nessa janela</td></tr>`;
 }
 
 function renderLeads(){
@@ -1092,11 +1295,17 @@ function aplicarRotulos(){
   });
 }
 
-function renderAll(){ renderDashboard(); renderLeads(); renderClientes(); renderParceiros(); renderOrcamentos(); renderServicos(); renderTransporteMotoristas(); renderTransporteClientes(); renderTransporteViagens(); renderTransporteAvaliacoes(); aplicarRotulos(); }
+function renderAll(){ renderDashboard(); renderLeads(); renderClientes(); renderParceiros(); renderOrcamentos(); renderServicos(); renderTransporteMotoristas(); renderTransporteClientes(); renderTransporteViagens(); renderTransporteAvaliacoes(); renderContasReceber(); renderContasPagar(); renderMetas(); renderResumoFinanceiro(); aplicarRotulos(); }
 
 function mostrarSubTab(nome){
   document.querySelectorAll("#tab-transporte .subnav-item").forEach(b=>b.classList.toggle("active", b.dataset.subtab===nome));
   document.querySelectorAll("#tab-transporte [id^=subtab-]").forEach(p=>p.style.display="none");
+  document.getElementById("subtab-"+nome).style.display="block";
+}
+
+function mostrarSubTabFinanceiro(nome){
+  document.querySelectorAll("#tab-financeiro .subnav-item").forEach(b=>b.classList.toggle("active", b.dataset.subtab===nome));
+  document.querySelectorAll("#tab-financeiro [id^=subtab-]").forEach(p=>p.style.display="none");
   document.getElementById("subtab-"+nome).style.display="block";
 }
 
@@ -1122,12 +1331,26 @@ function openLeadModal(id){
   document.getElementById("f-urgencia").value = l.urgencia||"Essa semana";
   document.getElementById("f-descricao").value = l.descricao||"";
   document.getElementById("f-etapa").value = l.etapa||"Novo lead";
-  document.getElementById("f-origem").value = l.origem||"Instagram";
+  const origensPadrao = ["Instagram","Facebook","Google","Indicação","Grupo de networking"];
+  if(l.origem && !origensPadrao.includes(l.origem)){
+    document.getElementById("f-origem").value = "Outro";
+    document.getElementById("f-origem-outro").value = l.origem;
+  } else {
+    document.getElementById("f-origem").value = l.origem||"Instagram";
+    document.getElementById("f-origem-outro").value = "";
+  }
+  toggleOrigemOutro();
   document.getElementById("f-data").value = l.data||new Date().toISOString().slice(0,10);
+  document.getElementById("f-aniversario").value = l.aniversario||"";
   document.getElementById("f-responsavel").value = l.responsavel||"Jú";
   document.getElementById("f-notas").value = l.notas||"";
+  renderVendasLead();
   renderInteracoesLead();
   document.getElementById("lead-modal").classList.add("open");
+}
+function toggleOrigemOutro(){
+  const sel = document.getElementById("f-origem");
+  document.getElementById("f-origem-outro-wrap").style.display = sel.value === "Outro" ? "block" : "none";
 }
 function fillServicoOptions(selected){
   const cat = document.getElementById("f-categoria").value;
@@ -1149,8 +1372,11 @@ async function saveLead(){
     urgencia: document.getElementById("f-urgencia").value,
     descricao: document.getElementById("f-descricao").value,
     etapa: document.getElementById("f-etapa").value,
-    origem: document.getElementById("f-origem").value,
+    origem: document.getElementById("f-origem").value === "Outro"
+      ? (document.getElementById("f-origem-outro").value.trim() || "Outro")
+      : document.getElementById("f-origem").value,
     data: document.getElementById("f-data").value || null,
+    aniversario: document.getElementById("f-aniversario").value || null,
     responsavel: document.getElementById("f-responsavel").value,
     notas: document.getElementById("f-notas").value,
   };
@@ -1166,6 +1392,102 @@ async function deleteLead(id){
   const { error } = await sb.from("leads").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
   await carregarDados();
+}
+
+// Vendas do lead/cliente (gera as parcelas em Contas a Receber)
+function somarMeses(dataStr, n){
+  if(!dataStr) return null;
+  const d = new Date(dataStr+"T00:00:00");
+  d.setMonth(d.getMonth()+n);
+  return d.toISOString().slice(0,10);
+}
+function toggleVendaParcelado(){
+  document.getElementById("fv-num-parcelas-wrap").style.display = document.getElementById("fv-parcelado").checked ? "block" : "none";
+}
+function renderVendasLead(){
+  const wrap = document.getElementById("f-vendas-lista");
+  const campos = document.querySelectorAll("#f-vendas-wrap select, #f-vendas-wrap input, #f-vendas-wrap button");
+  if(!editingLeadId){
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Salve o cadastro primeiro para registrar vendas.</p>`;
+    campos.forEach(el=>el.disabled = true);
+    return;
+  }
+  campos.forEach(el=>el.disabled = false);
+  toggleVendaParcelado();
+  const vendasDoLead = vendas.filter(v=>v.lead_id===editingLeadId);
+  wrap.innerHTML = vendasDoLead.map(v=>{
+    const parcelas = vendaParcelas.filter(p=>p.venda_id===v.id);
+    const pagas = parcelas.filter(p=>p.status==="Pago").length;
+    return `
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f4eaf0; font-size:12.5px;">
+      <span><strong>${v.servico_produto||"-"}</strong> — R$ ${Number(v.preco_total||0).toLocaleString("pt-BR")} <span style="color:var(--muted);">${v.parcelado?`· ${pagas}/${parcelas.length} parcelas pagas`:`· ${pagas?"Pago":"Pendente"}`}</span></span>
+      <button class="icon-btn" type="button" onclick="deleteVenda(${v.id})">🗑️</button>
+    </div>`;
+  }).join("") || `<p style="color:var(--muted); font-size:12.5px;">Nenhuma venda registrada ainda.</p>`;
+}
+async function addVenda(){
+  if(!editingLeadId) return;
+  const servico = document.getElementById("fv-servico").value.trim();
+  if(!servico){ alert("Informe o serviço/produto"); return; }
+  const precoTotal = Number(document.getElementById("fv-preco-total").value) || 0;
+  const parcelado = document.getElementById("fv-parcelado").checked;
+  const numParcelas = parcelado ? Math.max(2, Number(document.getElementById("fv-num-parcelas").value) || 2) : 1;
+  const formaPagamento = document.getElementById("fv-forma-pagamento").value;
+  const dataPrevista = document.getElementById("fv-data-prevista").value;
+
+  const payload = {
+    lead_id: editingLeadId,
+    servico_produto: servico,
+    preco_unitario: document.getElementById("fv-preco-unitario").value === "" ? null : Number(document.getElementById("fv-preco-unitario").value),
+    preco_total: precoTotal,
+    forma_pagamento: formaPagamento,
+    parcelado,
+    num_parcelas: numParcelas,
+  };
+  const { data, error } = await sb.from("vendas").insert(payload).select();
+  if(error){ alert("Erro ao registrar venda: " + error.message); return; }
+  const vendaId = data[0].id;
+
+  const valorParcela = Math.round((precoTotal / numParcelas) * 100) / 100;
+  const parcelasPayload = [];
+  for(let i=1; i<=numParcelas; i++){
+    parcelasPayload.push({
+      venda_id: vendaId,
+      numero_parcela: i,
+      valor: i===numParcelas ? Math.round((precoTotal - valorParcela*(numParcelas-1))*100)/100 : valorParcela,
+      forma_pagamento: formaPagamento,
+      data_prevista: somarMeses(dataPrevista, i-1),
+      status: "Pendente",
+    });
+  }
+  const { error: errorParcelas } = await sb.from("venda_parcelas").insert(parcelasPayload);
+  if(errorParcelas){ alert("Venda registrada, mas houve erro ao gerar as parcelas: " + errorParcelas.message); }
+
+  document.getElementById("fv-servico").value = "";
+  document.getElementById("fv-preco-unitario").value = "";
+  document.getElementById("fv-preco-total").value = "";
+  document.getElementById("fv-forma-pagamento").value = "";
+  document.getElementById("fv-parcelado").checked = false;
+  document.getElementById("fv-num-parcelas").value = 2;
+  document.getElementById("fv-data-prevista").value = "";
+
+  const { data: vd } = await sb.from("vendas").select("*").order("id");
+  vendas = vd || [];
+  const { data: vp } = await sb.from("venda_parcelas").select("*").order("id");
+  vendaParcelas = vp || [];
+  renderVendasLead();
+  renderContasReceber();
+}
+async function deleteVenda(id){
+  if(!confirm("Excluir esta venda? Todas as parcelas ligadas a ela também são excluídas.")) return;
+  const { error } = await sb.from("vendas").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  const { data: vd } = await sb.from("vendas").select("*").order("id");
+  vendas = vd || [];
+  const { data: vp } = await sb.from("venda_parcelas").select("*").order("id");
+  vendaParcelas = vp || [];
+  renderVendasLead();
+  renderContasReceber();
 }
 
 // Histórico de conversas do lead/cliente
@@ -1230,6 +1552,7 @@ function openParceiroModal(id){
   document.getElementById("p-regiao").value = p.regiao||"";
   document.getElementById("p-selo").value = p.selo||"nao";
   document.getElementById("p-status").value = p.status||"Prospecto";
+  document.getElementById("p-aniversario").value = p.aniversario||"";
   document.getElementById("p-comissao").value = p.comissao||"";
   document.getElementById("p-notas").value = p.notas||"";
   renderContatosParceiro();
@@ -1246,6 +1569,7 @@ async function saveParceiro(){
     regiao: document.getElementById("p-regiao").value,
     selo: document.getElementById("p-selo").value,
     status: document.getElementById("p-status").value,
+    aniversario: document.getElementById("p-aniversario").value || null,
     comissao: document.getElementById("p-comissao").value,
     notas: document.getElementById("p-notas").value,
   };
@@ -1834,6 +2158,280 @@ async function deleteAvaliacao(id){
   const { error } = await sb.from("avaliacoes").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
   await carregarDados();
+}
+
+// ===== FINANCEIRO: CONTAS A RECEBER (parcelas das vendas) =====
+function labelVendaParcela(p){
+  const venda = vendas.find(v=>v.id===p.venda_id);
+  const lead = venda ? leads.find(l=>l.id===venda.lead_id) : null;
+  return { lead, venda };
+}
+function renderContasReceber(){
+  const fs = document.getElementById("filter-receber-status");
+  if(!fs) return;
+  renderCabecalho("thead-receber", [
+    {label:"Cliente", campo:null}, {label:"Serviço", campo:null}, {label:"Parcela", campo:null},
+    {label:"Valor", campo:"valor", tipo:"numero"}, {label:"Forma", campo:"forma_pagamento"},
+    {label:"Data prevista", campo:"data_prevista"}, {label:"Data realizada", campo:"data_realizada"},
+    {label:"Status", campo:"status"}, {label:"", campo:null}
+  ], "receber");
+  const statusF = fs.value;
+  const lista = aplicarOrdenacao("receber", vendaParcelas.filter(p=>!statusF || p.status===statusF));
+  document.getElementById("receber-body").innerHTML = lista.map(p=>{
+    const { lead, venda } = labelVendaParcela(p);
+    return `<tr class="tr-click" onclick="openParcelaModal(${p.id})">
+      <td>${lead?lead.nome:"-"}</td>
+      <td>${venda?venda.servico_produto:"-"}</td>
+      <td>${p.numero_parcela||1}/${venda?venda.num_parcelas:1}</td>
+      <td>R$ ${Number(p.valor||0).toLocaleString("pt-BR")}</td>
+      <td>${p.forma_pagamento||"-"}</td>
+      <td>${p.data_prevista||"-"}</td>
+      <td>${p.data_realizada||"-"}</td>
+      <td><span class="tag ${p.status==='Pago'?'ativo':'urg-media'}">${p.status}</span></td>
+      <td onclick="event.stopPropagation()">${p.status!=='Pago'?`<button class="icon-btn" title="Marcar como pago" onclick="marcarParcelaPaga(${p.id})">✅</button>`:''} <button class="icon-btn" onclick="openParcelaModal(${p.id})">✏️</button></td>
+    </tr>`;
+  }).join("") || `<tr><td class="empty" colspan="9">Nenhuma parcela registrada ainda</td></tr>`;
+}
+async function marcarParcelaPaga(id){
+  const hoje = new Date().toISOString().slice(0,10);
+  const { error } = await sb.from("venda_parcelas").update({status:"Pago", data_realizada:hoje}).eq("id", id);
+  if(error){ alert("Erro ao marcar como pago: " + error.message); return; }
+  await carregarDados();
+}
+let editingParcelaId = null;
+function openParcelaModal(id){
+  editingParcelaId = id;
+  const p = vendaParcelas.find(x=>x.id===id);
+  if(!p) return;
+  const { lead, venda } = labelVendaParcela(p);
+  document.getElementById("parcela-modal-title").textContent = `Parcela ${p.numero_parcela||1}/${venda?venda.num_parcelas:1}`;
+  document.getElementById("pz-info").textContent = `${lead?lead.nome:"-"} · ${venda?venda.servico_produto:"-"}`;
+  document.getElementById("pz-valor").value = p.valor ?? "";
+  document.getElementById("pz-forma-pagamento").value = p.forma_pagamento || "";
+  document.getElementById("pz-data-prevista").value = p.data_prevista || "";
+  document.getElementById("pz-data-realizada").value = p.data_realizada || "";
+  document.getElementById("pz-status").value = p.status || "Pendente";
+  document.getElementById("parcela-modal").classList.add("open");
+}
+async function saveParcela(){
+  if(!editingParcelaId) return;
+  const payload = {
+    valor: document.getElementById("pz-valor").value === "" ? null : Number(document.getElementById("pz-valor").value),
+    forma_pagamento: document.getElementById("pz-forma-pagamento").value || null,
+    data_prevista: document.getElementById("pz-data-prevista").value || null,
+    data_realizada: document.getElementById("pz-data-realizada").value || null,
+    status: document.getElementById("pz-status").value,
+  };
+  const { error } = await sb.from("venda_parcelas").update(payload).eq("id", editingParcelaId);
+  if(error){ alert("Erro ao salvar: " + error.message); return; }
+  closeModal("parcela-modal");
+  await carregarDados();
+}
+
+// ===== FINANCEIRO: CONTAS A PAGAR (despesas + pagamentos de motorista) =====
+function listaContasAPagarUnificada(){
+  const despesas = contasPagar.map(c=>({
+    origem: "Despesa", id: c.id, viagemId: null,
+    descricao: c.descricao, categoria: c.categoria,
+    valor: c.valor, vencimento: c.vencimento, data_pagamento: c.data_pagamento, status: c.status,
+  }));
+  const motoristasPag = pagamentosMotorista.map(p=>{
+    const viagem = viagens.find(v=>v.id===p.viagem_id);
+    const motorista = viagem ? motoristas.find(m=>m.id===viagem.motorista_id) : null;
+    return {
+      origem: "Motorista", id: p.id, viagemId: p.viagem_id,
+      descricao: "Pagamento — " + (motorista?motorista.nome:"motorista") + (viagem?" (viagem #"+viagem.id+")":""),
+      categoria: "Motorista", valor: p.valor_repassado, vencimento: null,
+      data_pagamento: p.data_pagamento, status: p.status || "Pendente",
+    };
+  });
+  return [...despesas, ...motoristasPag];
+}
+function renderContasPagar(){
+  const theadEl = document.getElementById("thead-pagar");
+  if(!theadEl) return;
+  theadEl.innerHTML = `<th>Origem</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Vencimento</th><th>Pagamento</th><th>Status</th><th></th>`;
+  const lista = listaContasAPagarUnificada();
+  document.getElementById("pagar-body").innerHTML = lista.map(c=>`
+    <tr class="tr-click" onclick="${c.origem==='Despesa'?`openContaPagarModal(${c.id})`:`abrirViagemDoPagamento(${c.viagemId})`}">
+      <td><span class="tag ${c.origem==='Despesa'?'novo':'negociacao'}">${c.origem}</span></td>
+      <td>${c.descricao||"-"}</td>
+      <td>${c.categoria||"-"}</td>
+      <td>${c.valor!=null?"R$ "+Number(c.valor).toLocaleString("pt-BR"):"-"}</td>
+      <td>${c.vencimento||"-"}</td>
+      <td>${c.data_pagamento||"-"}</td>
+      <td><span class="tag ${c.status==='Pago'?'ativo':'urg-media'}">${c.status}</span></td>
+      <td onclick="event.stopPropagation()">${c.origem==='Despesa'?`<button class="icon-btn" onclick="openContaPagarModal(${c.id})">✏️</button>`:''}</td>
+    </tr>
+  `).join("") || `<tr><td class="empty" colspan="8">Nenhuma conta a pagar registrada ainda</td></tr>`;
+}
+function abrirViagemDoPagamento(viagemId){
+  if(!viagemId) return;
+  document.querySelector('[data-tab="transporte"]').click();
+  mostrarSubTab('viagens');
+  openViagemModal(viagemId);
+}
+let editingContaPagarId = null;
+function openContaPagarModal(id){
+  editingContaPagarId = id || null;
+  document.getElementById("cp-parceiro").innerHTML = `<option value="">-</option>` + parceiros.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("");
+  document.getElementById("conta-pagar-modal-title").textContent = id ? "Editar despesa" : "Nova despesa";
+  const c = contasPagar.find(x=>x.id===id) || {};
+  document.getElementById("cp-descricao").value = c.descricao||"";
+  document.getElementById("cp-categoria").value = c.categoria||"";
+  document.getElementById("cp-valor").value = c.valor ?? "";
+  document.getElementById("cp-parceiro").value = c.parceiro_id||"";
+  document.getElementById("cp-vencimento").value = c.vencimento||"";
+  document.getElementById("cp-data-pagamento").value = c.data_pagamento||"";
+  document.getElementById("cp-status").value = c.status||"Pendente";
+  document.getElementById("btn-excluir-conta-pagar").style.display = id ? "inline-block" : "none";
+  document.getElementById("conta-pagar-modal").classList.add("open");
+}
+async function saveContaPagar(){
+  const descricao = document.getElementById("cp-descricao").value.trim();
+  if(!descricao){ alert("Descrição é obrigatória"); return; }
+  const payload = {
+    descricao,
+    categoria: document.getElementById("cp-categoria").value,
+    valor: document.getElementById("cp-valor").value === "" ? null : Number(document.getElementById("cp-valor").value),
+    parceiro_id: Number(document.getElementById("cp-parceiro").value) || null,
+    vencimento: document.getElementById("cp-vencimento").value || null,
+    data_pagamento: document.getElementById("cp-data-pagamento").value || null,
+    status: document.getElementById("cp-status").value,
+  };
+  const { error } = editingContaPagarId
+    ? await sb.from("contas_pagar").update(payload).eq("id", editingContaPagarId)
+    : await sb.from("contas_pagar").insert(payload);
+  if(error){ alert("Erro ao salvar: " + error.message); return; }
+  closeModal("conta-pagar-modal");
+  await carregarDados();
+}
+async function deleteContaPagar(){
+  if(!editingContaPagarId) return;
+  if(!confirm("Excluir esta despesa?")) return;
+  const { error } = await sb.from("contas_pagar").delete().eq("id", editingContaPagarId);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  closeModal("conta-pagar-modal");
+  await carregarDados();
+}
+
+// ===== FINANCEIRO: METAS =====
+function nomeMes(n){
+  const nomes = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  return nomes[(n||1)-1]||"-";
+}
+function renderMetas(){
+  const mesSel = document.getElementById("mf-mes");
+  if(!mesSel) return;
+  if(!mesSel.dataset.filled){
+    const nomesMeses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    mesSel.innerHTML = nomesMeses.map((n,i)=>`<option value="${i+1}">${n}</option>`).join("");
+    mesSel.dataset.filled = 1;
+    document.getElementById("mf-ano").value = new Date().getFullYear();
+  }
+  document.getElementById("metas-body").innerHTML = [...metasFinanceiras].sort((a,b)=> (b.ano-a.ano) || (b.mes-a.mes)).map(m=>`
+    <tr>
+      <td>${nomeMes(m.mes)}/${m.ano}</td>
+      <td>R$ ${Number(m.meta_faturamento||0).toLocaleString("pt-BR")}</td>
+      <td>R$ ${Number(m.meta_lucro||0).toLocaleString("pt-BR")}</td>
+      <td><button class="icon-btn" onclick="editarMeta(${m.id})">✏️</button> <button class="icon-btn" onclick="deleteMeta(${m.id})">🗑️</button></td>
+    </tr>
+  `).join("") || `<tr><td class="empty" colspan="4">Nenhuma meta cadastrada ainda</td></tr>`;
+}
+function editarMeta(id){
+  const m = metasFinanceiras.find(x=>x.id===id);
+  if(!m) return;
+  document.getElementById("mf-mes").value = m.mes;
+  document.getElementById("mf-ano").value = m.ano;
+  document.getElementById("mf-faturamento").value = m.meta_faturamento ?? "";
+  document.getElementById("mf-lucro").value = m.meta_lucro ?? "";
+}
+async function saveMeta(){
+  const mes = Number(document.getElementById("mf-mes").value);
+  const ano = Number(document.getElementById("mf-ano").value);
+  if(!ano){ alert("Informe o ano"); return; }
+  const payload = {
+    mes, ano,
+    meta_faturamento: document.getElementById("mf-faturamento").value === "" ? null : Number(document.getElementById("mf-faturamento").value),
+    meta_lucro: document.getElementById("mf-lucro").value === "" ? null : Number(document.getElementById("mf-lucro").value),
+  };
+  const existente = metasFinanceiras.find(m=>m.mes===mes && m.ano===ano);
+  const { error } = existente
+    ? await sb.from("metas_financeiras").update(payload).eq("id", existente.id)
+    : await sb.from("metas_financeiras").insert(payload);
+  if(error){ alert("Erro ao salvar meta: " + error.message); return; }
+  document.getElementById("mf-faturamento").value = "";
+  document.getElementById("mf-lucro").value = "";
+  await carregarDados();
+}
+async function deleteMeta(id){
+  if(!confirm("Excluir esta meta?")) return;
+  const { error } = await sb.from("metas_financeiras").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  await carregarDados();
+}
+
+// ===== FINANCEIRO: RESUMO (Faturamento × Lucro, mensal/anual) =====
+function resumoFinanceiroMes(mes, ano){
+  const faturamento = vendaParcelas
+    .filter(p=>p.data_realizada && new Date(p.data_realizada+"T00:00:00").getFullYear()===ano && new Date(p.data_realizada+"T00:00:00").getMonth()+1===mes)
+    .reduce((s,p)=>s+Number(p.valor||0),0);
+  const despesasGerais = contasPagar
+    .filter(c=>c.status==='Pago' && c.data_pagamento && new Date(c.data_pagamento+"T00:00:00").getFullYear()===ano && new Date(c.data_pagamento+"T00:00:00").getMonth()+1===mes)
+    .reduce((s,c)=>s+Number(c.valor||0),0);
+  const despesasMotoristas = pagamentosMotorista
+    .filter(p=>p.status==='Pago' && p.data_pagamento && new Date(p.data_pagamento+"T00:00:00").getFullYear()===ano && new Date(p.data_pagamento+"T00:00:00").getMonth()+1===mes)
+    .reduce((s,p)=>s+Number(p.valor_repassado||0),0);
+  const despesas = despesasGerais + despesasMotoristas;
+  const lucro = faturamento - despesas;
+  const meta = metasFinanceiras.find(m=>m.mes===mes && m.ano===ano) || {};
+  return { mes, faturamento, despesas, lucro, metaFaturamento: meta.meta_faturamento, metaLucro: meta.meta_lucro };
+}
+function renderResumoFinanceiro(){
+  const selAno = document.getElementById("filter-resumo-ano");
+  if(!selAno) return;
+  if(!selAno.dataset.filled){
+    const anoAtual = new Date().getFullYear();
+    const anos = [anoAtual-1, anoAtual, anoAtual+1];
+    selAno.innerHTML = anos.map(a=>`<option value="${a}" ${a===anoAtual?"selected":""}>${a}</option>`).join("");
+    selAno.dataset.filled = 1;
+  }
+  const ano = Number(selAno.value);
+  const linhas = Array.from({length:12},(_,i)=>resumoFinanceiroMes(i+1, ano));
+  const totalFat = linhas.reduce((s,l)=>s+l.faturamento,0);
+  const totalDesp = linhas.reduce((s,l)=>s+l.despesas,0);
+  const totalLucro = totalFat - totalDesp;
+  document.getElementById("resumo-body").innerHTML = linhas.map(l=>`
+    <tr>
+      <td>${nomeMes(l.mes)}</td>
+      <td>R$ ${l.faturamento.toLocaleString("pt-BR")}</td>
+      <td>${l.metaFaturamento!=null?"R$ "+Number(l.metaFaturamento).toLocaleString("pt-BR"):"-"}</td>
+      <td>R$ ${l.despesas.toLocaleString("pt-BR")}</td>
+      <td style="color:${l.lucro>=0?'var(--green)':'var(--red)'};">R$ ${l.lucro.toLocaleString("pt-BR")}</td>
+      <td>${l.metaLucro!=null?"R$ "+Number(l.metaLucro).toLocaleString("pt-BR"):"-"}</td>
+    </tr>
+  `).join("") + `
+    <tr style="font-weight:700;">
+      <td>Total ${ano}</td><td>R$ ${totalFat.toLocaleString("pt-BR")}</td><td>-</td>
+      <td>R$ ${totalDesp.toLocaleString("pt-BR")}</td>
+      <td style="color:${totalLucro>=0?'var(--green)':'var(--red)'};">R$ ${totalLucro.toLocaleString("pt-BR")}</td><td>-</td>
+    </tr>`;
+
+  const ctx = document.getElementById("chart-resumo");
+  if(ctx){
+    if(window._chartResumo) window._chartResumo.destroy();
+    window._chartResumo = new Chart(ctx, {
+      type:"bar",
+      data:{
+        labels: linhas.map(l=>nomeMes(l.mes)),
+        datasets:[
+          { label:"Faturamento", data: linhas.map(l=>l.faturamento), backgroundColor:"#d6336c", borderRadius:6 },
+          { label:"Lucro", data: linhas.map(l=>l.lucro), backgroundColor:"#2f9e5b", borderRadius:6 },
+        ]
+      },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:true}} }
+    });
+  }
 }
 
 function closeModal(id){ document.getElementById(id).classList.remove("open"); }
