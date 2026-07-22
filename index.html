@@ -260,6 +260,7 @@ tr.tr-click:hover{background:#fff7fa;}
     <div class="nav-item" data-tab="clientes">💗 Clientes</div>
     <div class="nav-item" data-tab="parceiros">🤝 Parceiras (os)</div>
     <div class="nav-item" data-tab="orcamentos">💰 Orçamentos</div>
+    <div class="nav-item" data-tab="pecas">🔩 Peças</div>
     <div class="nav-item" data-tab="transporte">🚗 Transporte</div>
     <div class="nav-item" data-tab="financeiro">💵 Financeiro</div>
     <div class="nav-item" data-tab="servicos">🔧 Serviços</div>
@@ -352,6 +353,22 @@ tr.tr-click:hover{background:#fff7fa;}
         <table class="tbl">
           <thead><tr id="thead-orcamentos"></tr></thead>
           <tbody id="orcamentos-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-pecas" style="display:none;">
+      <div class="pagehead">
+        <div><h2>Peças</h2><p>Pedidos de busca/intermediação de autopeças e as tentativas com cada loja</p></div>
+        <button class="btn" onclick="openPedidoModal()">+ Novo pedido</button>
+      </div>
+      <div class="filters">
+        <select id="filter-status-peca" onchange="renderPecas()"><option value="">Todos os status</option></select>
+      </div>
+      <div class="panel">
+        <table class="tbl">
+          <thead><tr id="thead-pecas"></tr></thead>
+          <tbody id="pecas-body"></tbody>
         </table>
       </div>
     </div>
@@ -577,6 +594,46 @@ tr.tr-click:hover{background:#fff7fa;}
     <div class="modal-actions">
       <button class="btn ghost" onclick="closeModal('lead-modal')">Sair</button>
       <button class="btn" onclick="saveLead()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="pedido-modal">
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="pedido-modal-title" style="margin:0;">Novo pedido</h3>
+      <button class="icon-btn" type="button" onclick="closeModal('pedido-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
+    </div>
+    <div class="formgrid">
+      <div class="full"><label>Peça *</label><input type="text" id="fp-peca" placeholder="Ex: Coxim superior do motor (lado direito)"></div>
+      <div><label>Carro</label><input type="text" id="fp-carro" placeholder="Ex: Toyota RAV4 2007"></div>
+      <div><label>Status</label><select id="fp-status"></select></div>
+      <div><label>Cliente</label><input type="text" id="fp-cliente-nome"></div>
+      <div><label>WhatsApp do cliente</label><input type="text" id="fp-cliente-whatsapp"></div>
+      <div><label>Origem</label><input type="text" id="fp-origem" placeholder="Ex: Grupo Mulheres V8"></div>
+      <div class="full"><label>Notas</label><textarea id="fp-notas" rows="2"></textarea></div>
+    </div>
+
+    <div id="fp-tentativas-wrap" style="margin-top:18px;">
+      <h4 style="font-size:13px; margin:0 0 8px; border-top:1px solid var(--border); padding-top:14px;">Tentativas por loja</h4>
+      <div id="fp-tentativas-lista"></div>
+      <div class="formgrid" style="margin-top:8px;">
+        <div><label>Loja</label><input type="text" id="ft-loja-nome"></div>
+        <div><label>Contato da loja</label><input type="text" id="ft-loja-contato"></div>
+        <div><label>Data do contato</label><input type="date" id="ft-data-contato"></div>
+        <div><label>Tem em estoque?</label><select id="ft-tem-estoque"><option value="">-</option><option>Sim</option><option>Não</option><option>Vai verificar</option></select></div>
+        <div><label>Valor (R$)</label><input type="number" id="ft-valor"></div>
+        <div><label>Prazo (se encomenda)</label><input type="text" id="ft-prazo"></div>
+        <div><label>Topou falar de comissão?</label><select id="ft-topou-comissao"><option value="">-</option><option>Sim</option><option>Não</option><option>A negociar</option></select></div>
+        <div><label>Garantia</label><input type="text" id="ft-garantia"></div>
+        <div class="full"><label>Observação</label><input type="text" id="ft-observacao"></div>
+        <div style="display:flex; align-items:flex-end;"><button class="btn secondary small" type="button" onclick="addTentativa()">+ Registrar tentativa</button></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal('pedido-modal')">Sair</button>
+      <button class="btn" onclick="savePedido()">Salvar</button>
     </div>
   </div>
 </div>
@@ -900,6 +957,8 @@ const SEGMENTO_CLIENTE = ["Frequente","Ocasional","Empresarial"];
 // (Processo_Parceiros_LadiesInDrive.docx), não o funil de leads.
 const PARCEIRO_ETAPAS = ["Prospecto","Qualificado","Abordado","Em negociação","Parceiro ativo","Descartado"];
 const PARCEIRO_ETAPA_CLASS = {"Prospecto":"novo","Qualificado":"contato","Abordado":"orc-sol","Em negociação":"negociacao","Parceiro ativo":"ativo","Descartado":"perdido"};
+const STATUS_PECA = ["Aberto","Em busca","Encontrado","Não encontrado","Encerrado"];
+const STATUS_PECA_CLASS = {"Aberto":"novo","Em busca":"contato","Encontrado":"ganho","Não encontrado":"perdido","Encerrado":"ativo"};
 
 // ===== ORDENAÇÃO DE TABELAS (clicar no cabeçalho da coluna) =====
 let sortState = {};
@@ -981,6 +1040,8 @@ let vendas = [];
 let vendaParcelas = [];
 let contasPagar = [];
 let metasFinanceiras = [];
+let pecasPedidos = [];
+let pecasTentativas = [];
 
 // ===== AUTENTICAÇÃO =====
 const loginForm = document.getElementById("login-form");
@@ -1048,7 +1109,7 @@ async function carregarDados(){
 
   // Módulo de Transporte — tolerante a erro (ex: SQL ainda não rodado),
   // pra não travar o resto do painel enquanto isso.
-  const [rm, rd, rc, rv, ra, rp, rpc, rpi, rpe, rli, rvd, rvp, rcp, rmf] = await Promise.all([
+  const [rm, rd, rc, rv, ra, rp, rpc, rpi, rpe, rli, rvd, rvp, rcp, rmf, rpp, rpt] = await Promise.all([
     sb.from("motoristas").select("*").order("id"),
     sb.from("documentos_motorista").select("*").order("id"),
     sb.from("clientes_transporte").select("*").order("id"),
@@ -1063,6 +1124,8 @@ async function carregarDados(){
     sb.from("venda_parcelas").select("*").order("id"),
     sb.from("contas_pagar").select("*").order("id"),
     sb.from("metas_financeiras").select("*").order("id"),
+    sb.from("pecas_pedidos").select("*").order("id"),
+    sb.from("pecas_tentativas").select("*").order("id"),
   ]);
   motoristas = rm.data || [];
   documentosMotorista = rd.data || [];
@@ -1078,6 +1141,8 @@ async function carregarDados(){
   vendaParcelas = rvp.data || [];
   contasPagar = rcp.data || [];
   metasFinanceiras = rmf.data || [];
+  pecasPedidos = rpp.data || [];
+  pecasTentativas = rpt.data || [];
 
   renderAll();
 }
@@ -1262,6 +1327,29 @@ function renderOrcamentos(){
   }).join("") || `<tr><td class="empty" colspan="8">Nenhum orçamento registrado</td></tr>`;
 }
 
+function renderPecas(){
+  const fs = document.getElementById("filter-status-peca");
+  if(!fs.dataset.filled){ fillSelect(fs, ["",...STATUS_PECA], ""); fs.querySelector("option").textContent="Todos os status"; fs.dataset.filled=1; }
+  const statusF = fs.value;
+  renderCabecalho("thead-pecas", [
+    {label:"Peça", campo:"peca"}, {label:"Carro", campo:"carro"}, {label:"Cliente", campo:"cliente_nome"},
+    {label:"Origem", campo:"origem"}, {label:"Tentativas", campo:null}, {label:"Status", campo:"status"}, {label:"", campo:null}
+  ], "pecas");
+  const filtered = aplicarOrdenacao("pecas", pecasPedidos.filter(p=>!statusF || p.status===statusF));
+  document.getElementById("pecas-body").innerHTML = filtered.map(p=>{
+    const qtd = pecasTentativas.filter(t=>t.pedido_id===p.id).length;
+    return `<tr class="tr-click" onclick="openPedidoModal(${p.id})">
+      <td><strong>${p.peca}</strong></td>
+      <td>${p.carro||"-"}</td>
+      <td>${p.cliente_nome||"-"}${p.cliente_whatsapp?" "+numeroClicavel(p.cliente_whatsapp):""}</td>
+      <td>${p.origem||"-"}</td>
+      <td>${qtd}</td>
+      <td><span class="tag ${STATUS_PECA_CLASS[p.status]||''}">${p.status}</span></td>
+      <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openPedidoModal(${p.id})">✏️</button> <button class="icon-btn" onclick="deletePedido(${p.id})">🗑️</button></td>
+    </tr>`;
+  }).join("") || `<tr><td class="empty" colspan="7">Nenhum pedido de peça registrado</td></tr>`;
+}
+
 function renderServicos(){
   renderCabecalho("thead-servicos", [
     {label:"Serviço", campo:"nome"}, {label:"Categoria", campo:"categoria"},
@@ -1295,7 +1383,7 @@ function aplicarRotulos(){
   });
 }
 
-function renderAll(){ renderDashboard(); renderLeads(); renderClientes(); renderParceiros(); renderOrcamentos(); renderServicos(); renderTransporteMotoristas(); renderTransporteClientes(); renderTransporteViagens(); renderTransporteAvaliacoes(); renderContasReceber(); renderContasPagar(); renderMetas(); renderResumoFinanceiro(); aplicarRotulos(); }
+function renderAll(){ renderDashboard(); renderLeads(); renderClientes(); renderParceiros(); renderOrcamentos(); renderPecas(); renderServicos(); renderTransporteMotoristas(); renderTransporteClientes(); renderTransporteViagens(); renderTransporteAvaliacoes(); renderContasReceber(); renderContasPagar(); renderMetas(); renderResumoFinanceiro(); aplicarRotulos(); }
 
 function mostrarSubTab(nome){
   document.querySelectorAll("#tab-transporte .subnav-item").forEach(b=>b.classList.toggle("active", b.dataset.subtab===nome));
@@ -1392,6 +1480,110 @@ async function deleteLead(id){
   const { error } = await sb.from("leads").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
   await carregarDados();
+}
+
+// Pedidos de peças e tentativas por loja
+let editingPedidoId = null;
+function openPedidoModal(id){
+  editingPedidoId = id || null;
+  fillSelect(document.getElementById("fp-status"), STATUS_PECA, "Aberto");
+  document.getElementById("pedido-modal-title").textContent = id ? "Editar pedido" : "Novo pedido";
+  const p = pecasPedidos.find(x=>x.id===id) || {};
+  document.getElementById("fp-peca").value = p.peca||"";
+  document.getElementById("fp-carro").value = p.carro||"";
+  document.getElementById("fp-status").value = p.status||"Aberto";
+  document.getElementById("fp-cliente-nome").value = p.cliente_nome||"";
+  document.getElementById("fp-cliente-whatsapp").value = p.cliente_whatsapp||"";
+  document.getElementById("fp-origem").value = p.origem||"";
+  document.getElementById("fp-notas").value = p.notas||"";
+  renderTentativasPedido();
+  document.getElementById("pedido-modal").classList.add("open");
+}
+async function savePedido(){
+  const peca = document.getElementById("fp-peca").value.trim();
+  if(!peca){ alert("Peça é obrigatória"); return; }
+  const payload = {
+    peca, carro: document.getElementById("fp-carro").value,
+    status: document.getElementById("fp-status").value,
+    cliente_nome: document.getElementById("fp-cliente-nome").value,
+    cliente_whatsapp: document.getElementById("fp-cliente-whatsapp").value,
+    origem: document.getElementById("fp-origem").value,
+    notas: document.getElementById("fp-notas").value,
+  };
+  const { error } = editingPedidoId
+    ? await sb.from("pecas_pedidos").update(payload).eq("id", editingPedidoId)
+    : await sb.from("pecas_pedidos").insert(payload);
+  if(error){ alert("Erro ao salvar: " + error.message); return; }
+  closeModal("pedido-modal");
+  await carregarDados();
+}
+async function deletePedido(id){
+  if(!confirm("Excluir este pedido? As tentativas registradas também são excluídas.")) return;
+  const { error } = await sb.from("pecas_pedidos").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  await carregarDados();
+}
+function renderTentativasPedido(){
+  const wrap = document.getElementById("fp-tentativas-lista");
+  const campos = document.querySelectorAll("#fp-tentativas-wrap select, #fp-tentativas-wrap input, #fp-tentativas-wrap button");
+  if(!editingPedidoId){
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Salve o pedido primeiro para registrar tentativas com lojas.</p>`;
+    campos.forEach(el=>el.disabled = true);
+    return;
+  }
+  campos.forEach(el=>el.disabled = false);
+  const registros = pecasTentativas.filter(t=>t.pedido_id===editingPedidoId).sort((a,b)=>(b.data_contato||"").localeCompare(a.data_contato||""));
+  wrap.innerHTML = registros.map(t=>`
+    <div style="padding:8px 0; border-bottom:1px solid #f4eaf0; font-size:12.5px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+        <strong>${t.data_contato||"Sem data"} — ${t.loja_nome||"-"}</strong>
+        <button class="icon-btn" type="button" onclick="deleteTentativa(${t.id})">🗑️</button>
+      </div>
+      <div style="color:var(--muted); margin-top:2px;">
+        Estoque: ${t.tem_estoque||"-"} · Valor: ${t.valor!=null?"R$ "+Number(t.valor).toLocaleString("pt-BR"):"-"} · Prazo: ${t.prazo||"-"} · Comissão: ${t.topou_comissao||"-"}${t.garantia?" · Garantia: "+t.garantia:""}
+      </div>
+      ${t.observacao?`<div style="color:var(--muted); margin-top:2px;">${t.observacao}</div>`:""}
+    </div>
+  `).join("") || `<p style="color:var(--muted); font-size:12.5px;">Nenhuma tentativa registrada ainda.</p>`;
+}
+async function addTentativa(){
+  if(!editingPedidoId) return;
+  const payload = {
+    pedido_id: editingPedidoId,
+    loja_nome: document.getElementById("ft-loja-nome").value,
+    loja_contato: document.getElementById("ft-loja-contato").value,
+    data_contato: document.getElementById("ft-data-contato").value || null,
+    tem_estoque: document.getElementById("ft-tem-estoque").value,
+    valor: document.getElementById("ft-valor").value === "" ? null : Number(document.getElementById("ft-valor").value),
+    prazo: document.getElementById("ft-prazo").value,
+    topou_comissao: document.getElementById("ft-topou-comissao").value,
+    garantia: document.getElementById("ft-garantia").value,
+    observacao: document.getElementById("ft-observacao").value,
+  };
+  const { error } = await sb.from("pecas_tentativas").insert(payload);
+  if(error){ alert("Erro ao adicionar tentativa: " + error.message); return; }
+  const { data } = await sb.from("pecas_tentativas").select("*").order("id");
+  pecasTentativas = data || [];
+  document.getElementById("ft-loja-nome").value = "";
+  document.getElementById("ft-loja-contato").value = "";
+  document.getElementById("ft-data-contato").value = "";
+  document.getElementById("ft-tem-estoque").value = "";
+  document.getElementById("ft-valor").value = "";
+  document.getElementById("ft-prazo").value = "";
+  document.getElementById("ft-topou-comissao").value = "";
+  document.getElementById("ft-garantia").value = "";
+  document.getElementById("ft-observacao").value = "";
+  renderTentativasPedido();
+  renderPecas();
+}
+async function deleteTentativa(id){
+  if(!confirm("Excluir esta tentativa?")) return;
+  const { error } = await sb.from("pecas_tentativas").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  const { data } = await sb.from("pecas_tentativas").select("*").order("id");
+  pecasTentativas = data || [];
+  renderTentativasPedido();
+  renderPecas();
 }
 
 // Vendas do lead/cliente (gera as parcelas em Contas a Receber)
