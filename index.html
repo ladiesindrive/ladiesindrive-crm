@@ -1476,6 +1476,8 @@ async function saveLead(){
   if(isNew){
     editingLeadId = data[0].id;
     document.getElementById("lead-modal-title").textContent = "Editar lead";
+    if(document.getElementById("fv-servico").value.trim()) await addVenda();
+    if(document.getElementById("fi-assunto").value.trim()) await addInteracaoLead();
   }
   await carregarDados();
   if(isNew){ renderVendasLead(); renderInteracoesLead(); }
@@ -1524,6 +1526,7 @@ async function savePedido(){
   if(isNew){
     editingPedidoId = data[0].id;
     document.getElementById("pedido-modal-title").textContent = "Editar pedido";
+    if(document.getElementById("ft-loja-nome").value.trim()) await addTentativa();
   }
   await carregarDados();
   if(isNew){ renderTentativasPedido(); }
@@ -1537,9 +1540,9 @@ async function deletePedido(id){
 }
 function renderTentativasPedido(){
   const wrap = document.getElementById("fp-tentativas-lista");
-  const campos = document.querySelectorAll("#fp-tentativas-wrap select, #fp-tentativas-wrap input, #fp-tentativas-wrap button");
+  const campos = document.querySelectorAll("#fp-tentativas-wrap button");
   if(!editingPedidoId){
-    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Salve o pedido primeiro para registrar tentativas com lojas.</p>`;
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Pode preencher a 1ª tentativa aqui: ela é salva junto quando você clicar em "Salvar" no pedido.</p>`;
     campos.forEach(el=>el.disabled = true);
     return;
   }
@@ -1610,9 +1613,9 @@ function toggleVendaParcelado(){
 }
 function renderVendasLead(){
   const wrap = document.getElementById("f-vendas-lista");
-  const campos = document.querySelectorAll("#f-vendas-wrap select, #f-vendas-wrap input, #f-vendas-wrap button");
+  const campos = document.querySelectorAll("#f-vendas-wrap button");
   if(!editingLeadId){
-    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Salve o cadastro primeiro para registrar vendas.</p>`;
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Pode preencher a 1ª venda aqui: ela é salva junto quando você clicar em "Salvar" no cadastro.</p>`;
     campos.forEach(el=>el.disabled = true);
     return;
   }
@@ -1697,9 +1700,9 @@ async function deleteVenda(id){
 // Histórico de conversas do lead/cliente
 function renderInteracoesLead(){
   const wrap = document.getElementById("f-interacoes-lista");
-  const campos = document.querySelectorAll("#f-interacoes-wrap select, #f-interacoes-wrap input, #f-interacoes-wrap button");
+  const campos = document.querySelectorAll("#f-interacoes-wrap button");
   if(!editingLeadId){
-    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Salve o cadastro primeiro para registrar conversas.</p>`;
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Pode preencher a 1ª conversa aqui: ela é salva junto quando você clicar em "Salvar" no cadastro.</p>`;
     campos.forEach(el=>el.disabled = true);
     return;
   }
@@ -1785,6 +1788,9 @@ async function saveParceiro(){
   if(isNew){
     editingParceiroId = data[0].id;
     document.getElementById("parceiro-modal-title").textContent = "Editar parceira (o)";
+    if(document.getElementById("pc-numero").value.trim()) await addContatoParceiro();
+    if(document.getElementById("pe-endereco").value.trim()) await addEnderecoParceiro();
+    if(document.getElementById("pi-assunto").value.trim()) await addInteracaoParceiro();
   }
   await carregarDados();
   if(isNew){ renderContatosParceiro(); renderEnderecosParceiro(); renderInteracoesParceiro(); }
@@ -1800,9 +1806,9 @@ async function deleteParceiro(id){
 // Contatos (celular/fixo) do parceiro
 function renderContatosParceiro(){
   const wrap = document.getElementById("p-contatos-lista");
-  const campos = document.querySelectorAll("#p-contatos-wrap select, #p-contatos-wrap input, #p-contatos-wrap button");
+  const campos = document.querySelectorAll("#p-contatos-wrap button");
   if(!editingParceiroId){
-    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Salve o cadastro primeiro para adicionar contatos.</p>`;
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Pode preencher o 1º contato aqui: ele é salvo junto quando você clicar em "Salvar" no cadastro.</p>`;
     campos.forEach(el=>el.disabled = true);
     return;
   }
@@ -1847,9 +1853,9 @@ async function deleteContatoParceiro(id){
 // Endereços (loja, oficina, empresa etc.) do parceiro
 function renderEnderecosParceiro(){
   const wrap = document.getElementById("p-enderecos-lista");
-  const campos = document.querySelectorAll("#p-enderecos-wrap select, #p-enderecos-wrap input, #p-enderecos-wrap button");
+  const campos = document.querySelectorAll("#p-enderecos-wrap button");
   if(!editingParceiroId){
-    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Salve o cadastro primeiro para adicionar endereços.</p>`;
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Pode preencher o 1º endereço aqui: ele é salvo junto quando você clicar em "Salvar" no cadastro.</p>`;
     campos.forEach(el=>el.disabled = true);
     return;
   }
@@ -1891,9 +1897,9 @@ async function deleteEnderecoParceiro(id){
 // Histórico de conversas (fluxo da parceria)
 function renderInteracoesParceiro(){
   const wrap = document.getElementById("p-interacoes-lista");
-  const campos = document.querySelectorAll("#p-interacoes-wrap select, #p-interacoes-wrap input, #p-interacoes-wrap button");
+  const campos = document.querySelectorAll("#p-interacoes-wrap button");
   if(!editingParceiroId){
-    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Salve o cadastro primeiro para registrar conversas.</p>`;
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Pode preencher a 1ª conversa aqui: ela é salva junto quando você clicar em "Salvar" no cadastro.</p>`;
     campos.forEach(el=>el.disabled = true);
     return;
   }
@@ -2049,9 +2055,9 @@ function openMotoristaModal(id){
 }
 function renderDocumentosMotorista(){
   const wrap = document.getElementById("mt-documentos-lista");
-  const campos = document.querySelectorAll("#mt-documentos-wrap select, #mt-documentos-wrap input, #mt-documentos-wrap button");
+  const campos = document.querySelectorAll("#mt-documentos-wrap button");
   if(!editingMotoristaId){
-    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Salve o cadastro primeiro para adicionar documentos.</p>`;
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Pode preencher o 1º documento aqui: ele é salvo junto quando você clicar em "Salvar" no cadastro.</p>`;
     campos.forEach(el=>el.disabled = true);
     return;
   }
@@ -2114,6 +2120,7 @@ async function saveMotorista(){
   if(isNew){
     editingMotoristaId = data[0].id;
     document.getElementById("motorista-modal-title").textContent = "Editar motorista";
+    if(document.getElementById("mt-doc-validade").value.trim()) await addDocumentoMotorista();
   }
   await carregarDados();
   if(isNew){ renderDocumentosMotorista(); }
