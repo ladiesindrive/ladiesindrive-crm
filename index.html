@@ -1468,12 +1468,18 @@ async function saveLead(){
     responsavel: document.getElementById("f-responsavel").value,
     notas: document.getElementById("f-notas").value,
   };
-  const { error } = editingLeadId
+  const isNew = !editingLeadId;
+  const { data, error } = editingLeadId
     ? await sb.from("leads").update(payload).eq("id", editingLeadId)
-    : await sb.from("leads").insert(payload);
+    : await sb.from("leads").insert(payload).select();
   if(error){ alert("Erro ao salvar: " + error.message); return; }
-  closeModal("lead-modal");
+  if(isNew){
+    editingLeadId = data[0].id;
+    document.getElementById("lead-modal-title").textContent = "Editar lead";
+  }
   await carregarDados();
+  if(isNew){ renderVendasLead(); renderInteracoesLead(); }
+  else { closeModal("lead-modal"); }
 }
 async function deleteLead(id){
   if(!confirm("Excluir este lead? O histórico de conversas dele também é excluído.")) return;
@@ -1510,12 +1516,18 @@ async function savePedido(){
     origem: document.getElementById("fp-origem").value,
     notas: document.getElementById("fp-notas").value,
   };
-  const { error } = editingPedidoId
+  const isNew = !editingPedidoId;
+  const { data, error } = editingPedidoId
     ? await sb.from("pecas_pedidos").update(payload).eq("id", editingPedidoId)
-    : await sb.from("pecas_pedidos").insert(payload);
+    : await sb.from("pecas_pedidos").insert(payload).select();
   if(error){ alert("Erro ao salvar: " + error.message); return; }
-  closeModal("pedido-modal");
+  if(isNew){
+    editingPedidoId = data[0].id;
+    document.getElementById("pedido-modal-title").textContent = "Editar pedido";
+  }
   await carregarDados();
+  if(isNew){ renderTentativasPedido(); }
+  else { closeModal("pedido-modal"); }
 }
 async function deletePedido(id){
   if(!confirm("Excluir este pedido? As tentativas registradas também são excluídas.")) return;
@@ -1765,12 +1777,18 @@ async function saveParceiro(){
     comissao: document.getElementById("p-comissao").value,
     notas: document.getElementById("p-notas").value,
   };
-  const { error } = editingParceiroId
+  const isNew = !editingParceiroId;
+  const { data, error } = editingParceiroId
     ? await sb.from("parceiros").update(payload).eq("id", editingParceiroId)
-    : await sb.from("parceiros").insert(payload);
+    : await sb.from("parceiros").insert(payload).select();
   if(error){ alert("Erro ao salvar: " + error.message); return; }
-  closeModal("parceiro-modal");
+  if(isNew){
+    editingParceiroId = data[0].id;
+    document.getElementById("parceiro-modal-title").textContent = "Editar parceira (o)";
+  }
   await carregarDados();
+  if(isNew){ renderContatosParceiro(); renderEnderecosParceiro(); renderInteracoesParceiro(); }
+  else { closeModal("parceiro-modal"); }
 }
 async function deleteParceiro(id){
   if(!confirm("Excluir esta parceira (o)? Os contatos, endereços e o histórico de conversa dela(e) também são excluídos.")) return;
@@ -2088,12 +2106,18 @@ async function saveMotorista(){
     status: document.getElementById("mt-status").value,
     origem: document.getElementById("mt-origem").value,
   };
-  const { error } = editingMotoristaId
+  const isNew = !editingMotoristaId;
+  const { data, error } = editingMotoristaId
     ? await sb.from("motoristas").update(payload).eq("id", editingMotoristaId)
-    : await sb.from("motoristas").insert(payload);
+    : await sb.from("motoristas").insert(payload).select();
   if(error){ alert("Erro ao salvar: " + error.message); return; }
-  closeModal("motorista-modal");
+  if(isNew){
+    editingMotoristaId = data[0].id;
+    document.getElementById("motorista-modal-title").textContent = "Editar motorista";
+  }
   await carregarDados();
+  if(isNew){ renderDocumentosMotorista(); }
+  else { closeModal("motorista-modal"); }
 }
 async function deleteMotorista(id){
   if(!confirm('Excluir esta motorista? Os documentos dela também são excluídos; viagens ligadas a ela ficam sem motorista definida (não são apagadas).')) return;
