@@ -685,6 +685,16 @@ tr.tr-click:hover{background:#fff7fa;}
       </div>
     </div>
 
+    <div id="p-links-wrap" style="margin-top:18px;">
+      <h4 style="font-size:13px; margin:0 0 8px; border-top:1px solid var(--border); padding-top:14px;">Site e Redes Sociais</h4>
+      <div id="p-links-lista"></div>
+      <div class="formgrid" style="margin-top:8px;">
+        <div><label>Tipo</label><select id="pl-tipo"><option>Site</option><option>Instagram</option><option>LinkedIn</option><option>Facebook</option><option>Outro</option></select></div>
+        <div class="full"><label>Link</label><input type="text" id="pl-url" placeholder="https://..."></div>
+        <div style="display:flex; align-items:flex-end;"><button class="btn secondary small" type="button" onclick="addLinkParceiro()">+ Adicionar link</button></div>
+      </div>
+    </div>
+
     <div id="p-enderecos-wrap" style="margin-top:18px;">
       <h4 style="font-size:13px; margin:0 0 8px; border-top:1px solid var(--border); padding-top:14px;">Endereços</h4>
       <div id="p-enderecos-lista"></div>
@@ -1042,6 +1052,7 @@ let contasPagar = [];
 let metasFinanceiras = [];
 let pecasPedidos = [];
 let pecasTentativas = [];
+let parceiroLinks = [];
 
 // ===== AUTENTICAÇÃO =====
 const loginForm = document.getElementById("login-form");
@@ -1109,7 +1120,7 @@ async function carregarDados(){
 
   // Módulo de Transporte — tolerante a erro (ex: SQL ainda não rodado),
   // pra não travar o resto do painel enquanto isso.
-  const [rm, rd, rc, rv, ra, rp, rpc, rpi, rpe, rli, rvd, rvp, rcp, rmf, rpp, rpt] = await Promise.all([
+  const [rm, rd, rc, rv, ra, rp, rpc, rpi, rpe, rli, rvd, rvp, rcp, rmf, rpp, rpt, rpl] = await Promise.all([
     sb.from("motoristas").select("*").order("id"),
     sb.from("documentos_motorista").select("*").order("id"),
     sb.from("clientes_transporte").select("*").order("id"),
@@ -1126,6 +1137,7 @@ async function carregarDados(){
     sb.from("metas_financeiras").select("*").order("id"),
     sb.from("pecas_pedidos").select("*").order("id"),
     sb.from("pecas_tentativas").select("*").order("id"),
+    sb.from("parceiro_links").select("*").order("id"),
   ]);
   motoristas = rm.data || [];
   documentosMotorista = rd.data || [];
@@ -1143,6 +1155,7 @@ async function carregarDados(){
   metasFinanceiras = rmf.data || [];
   pecasPedidos = rpp.data || [];
   pecasTentativas = rpt.data || [];
+  parceiroLinks = rpl.data || [];
 
   renderAll();
 }
@@ -1763,6 +1776,7 @@ function openParceiroModal(id){
   document.getElementById("p-comissao").value = p.comissao||"";
   document.getElementById("p-notas").value = p.notas||"";
   renderContatosParceiro();
+  renderLinksParceiro();
   renderEnderecosParceiro();
   renderInteracoesParceiro();
   document.getElementById("parceiro-modal").classList.add("open");
@@ -1789,15 +1803,16 @@ async function saveParceiro(){
     editingParceiroId = data[0].id;
     document.getElementById("parceiro-modal-title").textContent = "Editar parceira (o)";
     if(document.getElementById("pc-numero").value.trim()) await addContatoParceiro();
+    if(document.getElementById("pl-url").value.trim()) await addLinkParceiro();
     if(document.getElementById("pe-endereco").value.trim()) await addEnderecoParceiro();
     if(document.getElementById("pi-assunto").value.trim()) await addInteracaoParceiro();
   }
   await carregarDados();
-  if(isNew){ renderContatosParceiro(); renderEnderecosParceiro(); renderInteracoesParceiro(); }
+  if(isNew){ renderContatosParceiro(); renderLinksParceiro(); renderEnderecosParceiro(); renderInteracoesParceiro(); }
   else { closeModal("parceiro-modal"); }
 }
 async function deleteParceiro(id){
-  if(!confirm("Excluir esta parceira (o)? Os contatos, endereços e o histórico de conversa dela(e) também são excluídos.")) return;
+  if(!confirm("Excluir esta parceira (o)? Os contatos, links, endereços e o histórico de conversa dela(e) também são excluídos.")) return;
   const { error } = await sb.from("parceiros").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
   await carregarDados();
@@ -1848,6 +1863,49 @@ async function deleteContatoParceiro(id){
   parceiroContatos = data || [];
   renderContatosParceiro();
   renderParceiros();
+}
+
+// Site e redes sociais do parceiro
+function renderLinksParceiro(){
+  const wrap = document.getElementById("p-links-lista");
+  const campos = document.querySelectorAll("#p-links-wrap button");
+  if(!editingParceiroId){
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Pode preencher o 1º link aqui: ele é salvo junto quando você clicar em "Salvar" no cadastro.</p>`;
+    campos.forEach(el=>el.disabled = true);
+    return;
+  }
+  campos.forEach(el=>el.disabled = false);
+  const registros = parceiroLinks.filter(l=>l.parceiro_id===editingParceiroId);
+  wrap.innerHTML = registros.map(l=>`
+    <div style="padding:8px 0; border-bottom:1px solid #f4eaf0; font-size:12.5px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+      <span><strong>${l.tipo}:</strong> <a href="${normalizarLink(l.url)}" target="_blank" rel="noopener">${l.url}</a></span>
+      <button class="icon-btn" type="button" onclick="deleteLinkParceiro(${l.id})">🗑️</button>
+    </div>
+  `).join("") || `<p style="color:var(--muted); font-size:12.5px;">Nenhum link cadastrado ainda.</p>`;
+}
+async function addLinkParceiro(){
+  if(!editingParceiroId) return;
+  const url = document.getElementById("pl-url").value.trim();
+  if(!url){ alert("Informe o link"); return; }
+  const payload = {
+    parceiro_id: editingParceiroId,
+    tipo: document.getElementById("pl-tipo").value,
+    url: normalizarLink(url),
+  };
+  const { error } = await sb.from("parceiro_links").insert(payload);
+  if(error){ alert("Erro ao adicionar link: " + error.message); return; }
+  const { data } = await sb.from("parceiro_links").select("*").order("id");
+  parceiroLinks = data || [];
+  document.getElementById("pl-url").value = "";
+  renderLinksParceiro();
+}
+async function deleteLinkParceiro(id){
+  if(!confirm("Excluir este link?")) return;
+  const { error } = await sb.from("parceiro_links").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  const { data } = await sb.from("parceiro_links").select("*").order("id");
+  parceiroLinks = data || [];
+  renderLinksParceiro();
 }
 
 // Endereços (loja, oficina, empresa etc.) do parceiro
