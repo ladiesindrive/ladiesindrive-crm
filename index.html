@@ -79,6 +79,9 @@ tr:last-child td{border-bottom:none;}
 .tag.urg-alta{background:#fdecea; color:var(--red);}
 .tag.urg-media{background:#fff4e0; color:var(--amber);}
 .tag.urg-baixa{background:#e9f9ee; color:var(--green);}
+.tag.tipo-mensalidade{background:#e6f7ef; color:#1FAA72;}
+.tag.tipo-patrocinio{background:#eeeef0; color:#6B6B76;}
+.tag.tipo-embaixadora{background:#ffe6f4; color:#FF3EA5;}
 .filters{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
 select,input[type=text],input[type=number],input[type=date],input[type=email],input[type=password],textarea{
   border:1px solid var(--border); border-radius:7px; padding:7px 10px; font-size:13px; font-family:inherit; background:#fff;
@@ -261,6 +264,8 @@ tr.tr-click:hover{background:#fff7fa;}
     <div class="nav-item" data-tab="parceiros">🤝 Parceiras (os)</div>
     <div class="nav-item" data-tab="orcamentos">💰 Orçamentos</div>
     <div class="nav-item" data-tab="pecas">🔩 Peças</div>
+    <div class="nav-item" data-tab="divulgacao">📣 Divulgação</div>
+    <div class="nav-item" data-tab="vagas">💼 Vagas</div>
     <div class="nav-item" data-tab="transporte">🚗 Transporte</div>
     <div class="nav-item" data-tab="financeiro">💵 Financeiro</div>
     <div class="nav-item" data-tab="servicos">🔧 Serviços</div>
@@ -336,6 +341,9 @@ tr.tr-click:hover{background:#fff7fa;}
         <div><h2>Rede de Parceiras (os)</h2><p>Oficinas, guinchos, seguradoras e demais parceiras(os) indicados</p></div>
         <button class="btn" onclick="openParceiroModal()">+ Nova parceira (o)</button>
       </div>
+      <div class="filters">
+        <select id="filter-tipo-parceria" onchange="renderParceiros()"><option value="">Todos os tipos</option></select>
+      </div>
       <div class="panel">
         <table class="tbl">
           <thead><tr id="thead-parceiros"></tr></thead>
@@ -369,6 +377,40 @@ tr.tr-click:hover{background:#fff7fa;}
         <table class="tbl">
           <thead><tr id="thead-pecas"></tr></thead>
           <tbody id="pecas-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-divulgacao" style="display:none;">
+      <div class="pagehead">
+        <div><h2>Divulgação</h2><p>Eventos e cursos próprios, de terceiros e com comissão</p></div>
+        <button class="btn" onclick="openDivulgacaoModal()">+ Nova divulgação</button>
+      </div>
+      <div class="filters">
+        <select id="filter-formato-divulgacao" onchange="renderDivulgacoes()"><option value="">Todos os formatos</option></select>
+        <select id="filter-tipo-divulgacao" onchange="renderDivulgacoes()"><option value="">Todos os tipos</option></select>
+        <select id="filter-status-divulgacao" onchange="renderDivulgacoes()"><option value="">Todos os status</option></select>
+      </div>
+      <div class="panel">
+        <table class="tbl">
+          <thead><tr id="thead-divulgacoes"></tr></thead>
+          <tbody id="divulgacoes-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-vagas" style="display:none;">
+      <div class="pagehead">
+        <div><h2>Vagas</h2><p>Banco de talentos com curadoria — vagas de empresas parceiras e candidatas indicadas</p></div>
+        <button class="btn" onclick="openVagaModal()">+ Nova vaga</button>
+      </div>
+      <div class="filters">
+        <select id="filter-status-vaga" onchange="renderVagas()"><option value="">Todos os status</option></select>
+      </div>
+      <div class="panel">
+        <table class="tbl">
+          <thead><tr id="thead-vagas"></tr></thead>
+          <tbody id="vagas-body"></tbody>
         </table>
       </div>
     </div>
@@ -609,6 +651,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Carro</label><input type="text" id="fp-carro" placeholder="Ex: Toyota RAV4 2007"></div>
       <div><label>Status</label><select id="fp-status"></select></div>
       <div><label>Cliente</label><input type="text" id="fp-cliente-nome"></div>
+      <div><label>Tipo de cliente</label><select id="fp-tipo-cliente"><option>Pessoa física</option><option>Empresa</option></select></div>
       <div><label>WhatsApp do cliente</label><input type="text" id="fp-cliente-whatsapp"></div>
       <div><label>Origem</label><input type="text" id="fp-origem" placeholder="Ex: Grupo Mulheres V8"></div>
       <div class="full"><label>Notas</label><textarea id="fp-notas" rows="2"></textarea></div>
@@ -669,6 +712,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Região atendida</label><input type="text" id="p-regiao"></div>
       <div><label>Selo Ladies Approved</label><select id="p-selo"><option value="sim">Sim</option><option value="nao">Não</option></select></div>
       <div><label>Status</label><select id="p-status"></select></div>
+      <div><label>Tipo de parceria</label><select id="p-tipo-parceria"><option value="">-</option><option>Mensalidade</option><option>Patrocínio</option><option>Embaixadora</option></select></div>
       <div><label>Aniversário</label><input type="date" id="p-aniversario"></div>
       <div><label>% comissão / acordo</label><input type="text" id="p-comissao"></div>
       <div class="full"><label>Notas</label><textarea id="p-notas" rows="2"></textarea></div>
@@ -720,6 +764,78 @@ tr.tr-click:hover{background:#fff7fa;}
     <div class="modal-actions">
       <button class="btn ghost" onclick="closeModal('parceiro-modal')">Sair</button>
       <button class="btn" onclick="saveParceiro()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="divulgacao-modal">
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="divulgacao-modal-title" style="margin:0;">Nova divulgação</h3>
+      <button class="icon-btn" type="button" onclick="closeModal('divulgacao-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
+    </div>
+    <div class="formgrid">
+      <div class="full"><label>Título *</label><input type="text" id="dv-titulo"></div>
+      <div><label>Formato</label><select id="dv-formato"></select></div>
+      <div><label>Tipo</label><select id="dv-tipo"></select></div>
+      <div><label>Parceira (o) ligada</label><select id="dv-parceiro"><option value="">-</option></select></div>
+      <div><label>Status</label><select id="dv-status"></select></div>
+      <div><label>Data início</label><input type="date" id="dv-data-inicio"></div>
+      <div><label>Data fim</label><input type="date" id="dv-data-fim"></div>
+      <div><label>Carga horária</label><input type="text" id="dv-carga-horaria"></div>
+      <div><label>Local</label><input type="text" id="dv-local" placeholder="Endereço ou 'Online'"></div>
+      <div><label>Link de inscrição</label><input type="text" id="dv-link"></div>
+      <div><label>Preço (R$)</label><input type="number" id="dv-preco"></div>
+      <div><label>% comissão</label><input type="number" id="dv-comissao" placeholder="Só se Tipo = Terceiro com comissão"></div>
+      <div class="full"><label>Descrição</label><textarea id="dv-descricao" rows="2"></textarea></div>
+      <div class="full"><label>Notas</label><textarea id="dv-notas" rows="2"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="btn-excluir-divulgacao" style="color:var(--red); border-color:var(--red); margin-right:auto; display:none;" onclick="deleteDivulgacao()">Excluir</button>
+      <button class="btn ghost" onclick="closeModal('divulgacao-modal')">Sair</button>
+      <button class="btn" onclick="saveDivulgacao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="vaga-modal">
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="vaga-modal-title" style="margin:0;">Nova vaga</h3>
+      <button class="icon-btn" type="button" onclick="closeModal('vaga-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
+    </div>
+    <div class="formgrid">
+      <div class="full"><label>Título *</label><input type="text" id="vg-titulo" placeholder="Ex: Mecânica em oficina parceira"></div>
+      <div><label>Empresa parceira</label><select id="vg-empresa-parceira"><option value="">-</option></select></div>
+      <div><label>Nome da empresa <span style="font-weight:400; color:var(--muted);">(se não for parceira cadastrada)</span></label><input type="text" id="vg-empresa-nome"></div>
+      <div><label>Local</label><input type="text" id="vg-local"></div>
+      <div><label>Tipo de vaga</label><input type="text" id="vg-tipo-vaga" placeholder="Ex: CLT, PJ, Freelancer"></div>
+      <div><label>Faixa salarial</label><input type="text" id="vg-faixa-salarial"></div>
+      <div><label>Status</label><select id="vg-status"></select></div>
+      <div><label>Modelo de fee</label><input type="text" id="vg-fee-modelo" placeholder="Ex: Por vaga, Por contratação"></div>
+      <div><label>Valor do fee (R$)</label><input type="number" id="vg-fee-valor"></div>
+      <div class="full"><label>Descrição</label><textarea id="vg-descricao" rows="2"></textarea></div>
+      <div class="full"><label>Requisitos</label><textarea id="vg-requisitos" rows="2"></textarea></div>
+      <div class="full"><label>Notas</label><textarea id="vg-notas" rows="2"></textarea></div>
+    </div>
+
+    <div id="vg-candidatas-wrap" style="margin-top:18px;">
+      <h4 style="font-size:13px; margin:0 0 8px; border-top:1px solid var(--border); padding-top:14px;">Candidatas</h4>
+      <div id="vg-candidatas-lista"></div>
+      <div class="formgrid" style="margin-top:8px;">
+        <div><label>Nome</label><input type="text" id="vc-nome"></div>
+        <div><label>WhatsApp</label><input type="text" id="vc-whatsapp"></div>
+        <div><label>Link do currículo</label><input type="text" id="vc-curriculo"></div>
+        <div><label>Status</label><select id="vc-status"></select></div>
+        <div class="full"><label>Notas</label><input type="text" id="vc-notas"></div>
+        <div style="display:flex; align-items:flex-end;"><button class="btn secondary small" type="button" onclick="addCandidataVaga()">+ Adicionar candidata</button></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" id="btn-excluir-vaga" style="color:var(--red); border-color:var(--red); margin-right:auto; display:none;" onclick="deleteVaga()">Excluir</button>
+      <button class="btn ghost" onclick="closeModal('vaga-modal')">Sair</button>
+      <button class="btn" onclick="saveVaga()">Salvar</button>
     </div>
   </div>
 </div>
@@ -970,6 +1086,18 @@ const PARCEIRO_ETAPA_CLASS = {"Prospecto":"novo","Qualificado":"contato","Aborda
 const STATUS_PECA = ["Aberto","Em busca","Encontrado","Não encontrado","Encerrado"];
 const STATUS_PECA_CLASS = {"Aberto":"novo","Em busca":"contato","Encontrado":"ganho","Não encontrado":"perdido","Encerrado":"ativo"};
 
+const TIPO_PARCERIA = ["Mensalidade","Patrocínio","Embaixadora"];
+const TIPO_PARCERIA_CLASS = {"Mensalidade":"tipo-mensalidade","Patrocínio":"tipo-patrocinio","Embaixadora":"tipo-embaixadora"};
+
+const DIVULGACAO_FORMATOS = ["Evento","Curso"];
+const DIVULGACAO_TIPOS = ["Próprio Ladies","Terceiro - divulgação","Terceiro - com comissão"];
+const DIVULGACAO_STATUS = ["Planejado","Divulgado","Inscrições abertas","Em andamento","Concluído","Cancelado"];
+const DIVULGACAO_STATUS_CLASS = {"Planejado":"novo","Divulgado":"contato","Inscrições abertas":"orc-sol","Em andamento":"negociacao","Concluído":"ganho","Cancelado":"perdido"};
+
+const VAGA_STATUS = ["Em triagem","Aberta","Em processo","Preenchida","Cancelada"];
+const VAGA_STATUS_CLASS = {"Em triagem":"contato","Aberta":"ganho","Em processo":"negociacao","Preenchida":"ativo","Cancelada":"perdido"};
+const VAGA_CANDIDATA_STATUS = ["Recebida","Triagem","Indicada","Contratada","Recusada"];
+
 // ===== ORDENAÇÃO DE TABELAS (clicar no cabeçalho da coluna) =====
 let sortState = {};
 function aplicarOrdenacao(chave, lista){
@@ -1053,6 +1181,9 @@ let metasFinanceiras = [];
 let pecasPedidos = [];
 let pecasTentativas = [];
 let parceiroLinks = [];
+let divulgacoes = [];
+let vagas = [];
+let vagasCandidatas = [];
 
 // ===== AUTENTICAÇÃO =====
 const loginForm = document.getElementById("login-form");
@@ -1120,7 +1251,7 @@ async function carregarDados(){
 
   // Módulo de Transporte — tolerante a erro (ex: SQL ainda não rodado),
   // pra não travar o resto do painel enquanto isso.
-  const [rm, rd, rc, rv, ra, rp, rpc, rpi, rpe, rli, rvd, rvp, rcp, rmf, rpp, rpt, rpl] = await Promise.all([
+  const [rm, rd, rc, rv, ra, rp, rpc, rpi, rpe, rli, rvd, rvp, rcp, rmf, rpp, rpt, rpl, rdv, rvg, rvc] = await Promise.all([
     sb.from("motoristas").select("*").order("id"),
     sb.from("documentos_motorista").select("*").order("id"),
     sb.from("clientes_transporte").select("*").order("id"),
@@ -1138,6 +1269,9 @@ async function carregarDados(){
     sb.from("pecas_pedidos").select("*").order("id"),
     sb.from("pecas_tentativas").select("*").order("id"),
     sb.from("parceiro_links").select("*").order("id"),
+    sb.from("divulgacoes").select("*").order("id"),
+    sb.from("vagas").select("*").order("id"),
+    sb.from("vagas_candidatas").select("*").order("id"),
   ]);
   motoristas = rm.data || [];
   documentosMotorista = rd.data || [];
@@ -1156,6 +1290,9 @@ async function carregarDados(){
   pecasPedidos = rpp.data || [];
   pecasTentativas = rpt.data || [];
   parceiroLinks = rpl.data || [];
+  divulgacoes = rdv.data || [];
+  vagas = rvg.data || [];
+  vagasCandidatas = rvc.data || [];
 
   renderAll();
 }
@@ -1297,11 +1434,15 @@ function ultimoContatoParceiro(parceiroId){
   return datas.sort().slice(-1)[0];
 }
 function renderParceiros(){
+  const ft = document.getElementById("filter-tipo-parceria");
+  if(!ft.dataset.filled){ fillSelect(ft, ["",...TIPO_PARCERIA], ""); ft.querySelector("option").textContent="Todos os tipos"; ft.dataset.filled=1; }
+  const tipoF = ft.value;
   renderCabecalho("thead-parceiros", [
     {label:"Nome", campo:"nome"}, {label:"Categorias", campo:"categoria"}, {label:"Região", campo:"regiao"},
+    {label:"Tipo de parceria", campo:"tipo_parceria"},
     {label:"Selo Ladies Approved", campo:"selo"}, {label:"Status", campo:"status"}, {label:"Último contato", campo:null}, {label:"", campo:null}
   ], "parceiros");
-  const lista = aplicarOrdenacao("parceiros", parceiros);
+  const lista = aplicarOrdenacao("parceiros", parceiros.filter(p=>!tipoF || p.tipo_parceria===tipoF));
   document.getElementById("parceiros-body").innerHTML = lista.map(p=>{
     const celular = primeiroCelularParceiro(p.id);
     const ultimoContato = ultimoContatoParceiro(p.id);
@@ -1309,12 +1450,13 @@ function renderParceiros(){
       <td>${p.nome}${p.exemplo?' <span style="color:var(--muted); font-size:11px;">(exemplo)</span>':''}</td>
       <td>${p.categoria||"-"}</td>
       <td>${p.regiao||"-"}</td>
+      <td>${p.tipo_parceria?`<span class="tag ${TIPO_PARCERIA_CLASS[p.tipo_parceria]||''}">${p.tipo_parceria}</span>`:"-"}</td>
       <td>${p.selo==="sim"?'<span class="badge-seal">✓ Ladies Approved</span>':'-'}</td>
       <td><span class="tag ${PARCEIRO_ETAPA_CLASS[p.status]||''}">${p.status||"-"}</span></td>
       <td>${ultimoContato||"-"}</td>
       <td onclick="event.stopPropagation()">${botaoWhats(celular, p.nome)} <button class="icon-btn" onclick="openParceiroModal(${p.id})">✏️</button> <button class="icon-btn" onclick="deleteParceiro(${p.id})">🗑️</button></td>
     </tr>`;
-  }).join("") || `<tr><td class="empty" colspan="7">Nenhuma parceira (o) cadastrada ainda</td></tr>`;
+  }).join("") || `<tr><td class="empty" colspan="8">Nenhuma parceira (o) cadastrada ainda</td></tr>`;
 }
 
 function renderOrcamentos(){
@@ -1396,7 +1538,7 @@ function aplicarRotulos(){
   });
 }
 
-function renderAll(){ renderDashboard(); renderLeads(); renderClientes(); renderParceiros(); renderOrcamentos(); renderPecas(); renderServicos(); renderTransporteMotoristas(); renderTransporteClientes(); renderTransporteViagens(); renderTransporteAvaliacoes(); renderContasReceber(); renderContasPagar(); renderMetas(); renderResumoFinanceiro(); aplicarRotulos(); }
+function renderAll(){ renderDashboard(); renderLeads(); renderClientes(); renderParceiros(); renderOrcamentos(); renderPecas(); renderDivulgacoes(); renderVagas(); renderServicos(); renderTransporteMotoristas(); renderTransporteClientes(); renderTransporteViagens(); renderTransporteAvaliacoes(); renderContasReceber(); renderContasPagar(); renderMetas(); renderResumoFinanceiro(); aplicarRotulos(); }
 
 function mostrarSubTab(nome){
   document.querySelectorAll("#tab-transporte .subnav-item").forEach(b=>b.classList.toggle("active", b.dataset.subtab===nome));
@@ -1514,6 +1656,7 @@ function openPedidoModal(id){
   document.getElementById("fp-carro").value = p.carro||"";
   document.getElementById("fp-status").value = p.status||"Aberto";
   document.getElementById("fp-cliente-nome").value = p.cliente_nome||"";
+  document.getElementById("fp-tipo-cliente").value = p.tipo_cliente||"Pessoa física";
   document.getElementById("fp-cliente-whatsapp").value = p.cliente_whatsapp||"";
   document.getElementById("fp-origem").value = p.origem||"";
   document.getElementById("fp-notas").value = p.notas||"";
@@ -1527,6 +1670,7 @@ async function savePedido(){
     peca, carro: document.getElementById("fp-carro").value,
     status: document.getElementById("fp-status").value,
     cliente_nome: document.getElementById("fp-cliente-nome").value,
+    tipo_cliente: document.getElementById("fp-tipo-cliente").value,
     cliente_whatsapp: document.getElementById("fp-cliente-whatsapp").value,
     origem: document.getElementById("fp-origem").value,
     notas: document.getElementById("fp-notas").value,
@@ -1612,6 +1756,239 @@ async function deleteTentativa(id){
   pecasTentativas = data || [];
   renderTentativasPedido();
   renderPecas();
+}
+
+// Divulgação (eventos e cursos próprios, de terceiros e com comissão)
+let editingDivulgacaoId = null;
+function renderDivulgacoes(){
+  const ff = document.getElementById("filter-formato-divulgacao");
+  const ft = document.getElementById("filter-tipo-divulgacao");
+  const fs = document.getElementById("filter-status-divulgacao");
+  if(!ff.dataset.filled){ fillSelect(ff, ["",...DIVULGACAO_FORMATOS], ""); ff.querySelector("option").textContent="Todos os formatos"; ff.dataset.filled=1; }
+  if(!ft.dataset.filled){ fillSelect(ft, ["",...DIVULGACAO_TIPOS], ""); ft.querySelector("option").textContent="Todos os tipos"; ft.dataset.filled=1; }
+  if(!fs.dataset.filled){ fillSelect(fs, ["",...DIVULGACAO_STATUS], ""); fs.querySelector("option").textContent="Todos os status"; fs.dataset.filled=1; }
+  const formatoF = ff.value, tipoF = ft.value, statusF = fs.value;
+  renderCabecalho("thead-divulgacoes", [
+    {label:"Título", campo:"titulo"}, {label:"Formato", campo:"formato"}, {label:"Tipo", campo:"tipo"},
+    {label:"Parceiro", campo:null}, {label:"Data início", campo:"data_inicio"}, {label:"Status", campo:"status"}, {label:"", campo:null}
+  ], "divulgacoes");
+  const filtered = aplicarOrdenacao("divulgacoes", divulgacoes.filter(d=>
+    (!formatoF || d.formato===formatoF) && (!tipoF || d.tipo===tipoF) && (!statusF || d.status===statusF)
+  ));
+  document.getElementById("divulgacoes-body").innerHTML = filtered.map(d=>{
+    const parceiro = parceiros.find(p=>p.id===d.parceiro_id);
+    return `<tr class="tr-click" onclick="openDivulgacaoModal(${d.id})">
+      <td><strong>${d.titulo}</strong></td>
+      <td>${d.formato}</td>
+      <td>${d.tipo}</td>
+      <td>${parceiro?parceiro.nome:"-"}</td>
+      <td>${d.data_inicio||"-"}</td>
+      <td><span class="tag ${DIVULGACAO_STATUS_CLASS[d.status]||''}">${d.status}</span></td>
+      <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openDivulgacaoModal(${d.id})">✏️</button> <button class="icon-btn" onclick="deleteDivulgacao(${d.id})">🗑️</button></td>
+    </tr>`;
+  }).join("") || `<tr><td class="empty" colspan="7">Nenhuma divulgação cadastrada</td></tr>`;
+}
+function openDivulgacaoModal(id){
+  editingDivulgacaoId = id || null;
+  fillSelect(document.getElementById("dv-formato"), DIVULGACAO_FORMATOS, "Evento");
+  fillSelect(document.getElementById("dv-tipo"), DIVULGACAO_TIPOS, "Terceiro - divulgação");
+  fillSelect(document.getElementById("dv-status"), DIVULGACAO_STATUS, "Planejado");
+  document.getElementById("dv-parceiro").innerHTML = `<option value="">-</option>` + parceiros.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("");
+  document.getElementById("divulgacao-modal-title").textContent = id ? "Editar divulgação" : "Nova divulgação";
+  const d = divulgacoes.find(x=>x.id===id) || {};
+  document.getElementById("dv-titulo").value = d.titulo||"";
+  document.getElementById("dv-formato").value = d.formato||"Evento";
+  document.getElementById("dv-tipo").value = d.tipo||"Terceiro - divulgação";
+  document.getElementById("dv-parceiro").value = d.parceiro_id||"";
+  document.getElementById("dv-status").value = d.status||"Planejado";
+  document.getElementById("dv-data-inicio").value = d.data_inicio||"";
+  document.getElementById("dv-data-fim").value = d.data_fim||"";
+  document.getElementById("dv-carga-horaria").value = d.carga_horaria||"";
+  document.getElementById("dv-local").value = d.local||"";
+  document.getElementById("dv-link").value = d.link_inscricao||"";
+  document.getElementById("dv-preco").value = d.preco??"";
+  document.getElementById("dv-comissao").value = d.comissao_percentual??"";
+  document.getElementById("dv-descricao").value = d.descricao||"";
+  document.getElementById("dv-notas").value = d.notas||"";
+  document.getElementById("btn-excluir-divulgacao").style.display = id ? "block" : "none";
+  document.getElementById("divulgacao-modal").classList.add("open");
+}
+async function saveDivulgacao(){
+  const titulo = document.getElementById("dv-titulo").value.trim();
+  if(!titulo){ alert("Título é obrigatório"); return; }
+  const payload = {
+    titulo,
+    formato: document.getElementById("dv-formato").value,
+    tipo: document.getElementById("dv-tipo").value,
+    parceiro_id: document.getElementById("dv-parceiro").value || null,
+    status: document.getElementById("dv-status").value,
+    data_inicio: document.getElementById("dv-data-inicio").value || null,
+    data_fim: document.getElementById("dv-data-fim").value || null,
+    carga_horaria: document.getElementById("dv-carga-horaria").value,
+    local: document.getElementById("dv-local").value,
+    link_inscricao: document.getElementById("dv-link").value,
+    preco: document.getElementById("dv-preco").value === "" ? null : Number(document.getElementById("dv-preco").value),
+    comissao_percentual: document.getElementById("dv-comissao").value === "" ? null : Number(document.getElementById("dv-comissao").value),
+    descricao: document.getElementById("dv-descricao").value,
+    notas: document.getElementById("dv-notas").value,
+  };
+  const { error } = editingDivulgacaoId
+    ? await sb.from("divulgacoes").update(payload).eq("id", editingDivulgacaoId)
+    : await sb.from("divulgacoes").insert(payload);
+  if(error){ alert("Erro ao salvar: " + error.message); return; }
+  await carregarDados();
+  closeModal("divulgacao-modal");
+}
+async function deleteDivulgacao(id){
+  id = id || editingDivulgacaoId;
+  if(!confirm("Excluir esta divulgação?")) return;
+  const { error } = await sb.from("divulgacoes").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  await carregarDados();
+  closeModal("divulgacao-modal");
+}
+
+// Vagas (banco de talentos com curadoria) e candidatas
+let editingVagaId = null;
+function renderVagas(){
+  const fs = document.getElementById("filter-status-vaga");
+  if(!fs.dataset.filled){ fillSelect(fs, ["",...VAGA_STATUS], ""); fs.querySelector("option").textContent="Todos os status"; fs.dataset.filled=1; }
+  const statusF = fs.value;
+  renderCabecalho("thead-vagas", [
+    {label:"Título", campo:"titulo"}, {label:"Empresa", campo:null}, {label:"Local", campo:"local"},
+    {label:"Candidatas", campo:null}, {label:"Status", campo:"status"}, {label:"", campo:null}
+  ], "vagas");
+  const filtered = aplicarOrdenacao("vagas", vagas.filter(v=>!statusF || v.status===statusF));
+  document.getElementById("vagas-body").innerHTML = filtered.map(v=>{
+    const parceiro = parceiros.find(p=>p.id===v.empresa_parceira_id);
+    const qtd = vagasCandidatas.filter(c=>c.vaga_id===v.id).length;
+    return `<tr class="tr-click" onclick="openVagaModal(${v.id})">
+      <td><strong>${v.titulo}</strong></td>
+      <td>${parceiro?parceiro.nome:(v.empresa_nome||"-")}</td>
+      <td>${v.local||"-"}</td>
+      <td>${qtd}</td>
+      <td><span class="tag ${VAGA_STATUS_CLASS[v.status]||''}">${v.status}</span></td>
+      <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openVagaModal(${v.id})">✏️</button> <button class="icon-btn" onclick="deleteVaga(${v.id})">🗑️</button></td>
+    </tr>`;
+  }).join("") || `<tr><td class="empty" colspan="6">Nenhuma vaga cadastrada</td></tr>`;
+}
+function openVagaModal(id){
+  editingVagaId = id || null;
+  fillSelect(document.getElementById("vg-status"), VAGA_STATUS, "Em triagem");
+  document.getElementById("vg-empresa-parceira").innerHTML = `<option value="">-</option>` + parceiros.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("");
+  document.getElementById("vaga-modal-title").textContent = id ? "Editar vaga" : "Nova vaga";
+  const v = vagas.find(x=>x.id===id) || {};
+  document.getElementById("vg-titulo").value = v.titulo||"";
+  document.getElementById("vg-empresa-parceira").value = v.empresa_parceira_id||"";
+  document.getElementById("vg-empresa-nome").value = v.empresa_nome||"";
+  document.getElementById("vg-local").value = v.local||"";
+  document.getElementById("vg-tipo-vaga").value = v.tipo_vaga||"";
+  document.getElementById("vg-faixa-salarial").value = v.faixa_salarial||"";
+  document.getElementById("vg-status").value = v.status||"Em triagem";
+  document.getElementById("vg-fee-modelo").value = v.fee_modelo||"";
+  document.getElementById("vg-fee-valor").value = v.fee_valor??"";
+  document.getElementById("vg-descricao").value = v.descricao||"";
+  document.getElementById("vg-requisitos").value = v.requisitos||"";
+  document.getElementById("vg-notas").value = v.notas||"";
+  document.getElementById("btn-excluir-vaga").style.display = id ? "block" : "none";
+  renderCandidatasVaga();
+  document.getElementById("vaga-modal").classList.add("open");
+}
+async function saveVaga(){
+  const titulo = document.getElementById("vg-titulo").value.trim();
+  if(!titulo){ alert("Título é obrigatório"); return; }
+  const payload = {
+    titulo,
+    empresa_parceira_id: document.getElementById("vg-empresa-parceira").value || null,
+    empresa_nome: document.getElementById("vg-empresa-nome").value,
+    local: document.getElementById("vg-local").value,
+    tipo_vaga: document.getElementById("vg-tipo-vaga").value,
+    faixa_salarial: document.getElementById("vg-faixa-salarial").value,
+    status: document.getElementById("vg-status").value,
+    fee_modelo: document.getElementById("vg-fee-modelo").value,
+    fee_valor: document.getElementById("vg-fee-valor").value === "" ? null : Number(document.getElementById("vg-fee-valor").value),
+    descricao: document.getElementById("vg-descricao").value,
+    requisitos: document.getElementById("vg-requisitos").value,
+    notas: document.getElementById("vg-notas").value,
+  };
+  const isNew = !editingVagaId;
+  const { data, error } = editingVagaId
+    ? await sb.from("vagas").update(payload).eq("id", editingVagaId)
+    : await sb.from("vagas").insert(payload).select();
+  if(error){ alert("Erro ao salvar: " + error.message); return; }
+  if(isNew){
+    editingVagaId = data[0].id;
+    document.getElementById("vaga-modal-title").textContent = "Editar vaga";
+    document.getElementById("btn-excluir-vaga").style.display = "block";
+    if(document.getElementById("vc-nome").value.trim()) await addCandidataVaga();
+  }
+  await carregarDados();
+  if(isNew){ renderCandidatasVaga(); }
+  else { closeModal("vaga-modal"); }
+}
+async function deleteVaga(id){
+  id = id || editingVagaId;
+  if(!confirm("Excluir esta vaga? As candidatas registradas também são excluídas.")) return;
+  const { error } = await sb.from("vagas").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  await carregarDados();
+  closeModal("vaga-modal");
+}
+function renderCandidatasVaga(){
+  const wrap = document.getElementById("vg-candidatas-lista");
+  const campos = document.querySelectorAll("#vg-candidatas-wrap button");
+  if(!editingVagaId){
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Pode preencher a 1ª candidata aqui: ela é salva junto quando você clicar em "Salvar" na vaga.</p>`;
+    campos.forEach(el=>el.disabled = true);
+    return;
+  }
+  campos.forEach(el=>el.disabled = false);
+  fillSelect(document.getElementById("vc-status"), VAGA_CANDIDATA_STATUS, "Recebida");
+  const registros = vagasCandidatas.filter(c=>c.vaga_id===editingVagaId);
+  wrap.innerHTML = registros.map(c=>`
+    <div style="padding:8px 0; border-bottom:1px solid #f4eaf0; font-size:12.5px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+        <strong>${c.nome}</strong>
+        <button class="icon-btn" type="button" onclick="deleteCandidataVaga(${c.id})">🗑️</button>
+      </div>
+      <div style="color:var(--muted); margin-top:2px;">
+        WhatsApp: ${c.whatsapp||"-"} · Status: ${c.status||"-"}${c.curriculo_link?" · Currículo: "+c.curriculo_link:""}
+      </div>
+      ${c.notas?`<div style="color:var(--muted); margin-top:2px;">${c.notas}</div>`:""}
+    </div>
+  `).join("") || `<p style="color:var(--muted); font-size:12.5px;">Nenhuma candidata registrada ainda.</p>`;
+}
+async function addCandidataVaga(){
+  if(!editingVagaId) return;
+  const nome = document.getElementById("vc-nome").value.trim();
+  if(!nome){ alert("Nome da candidata é obrigatório"); return; }
+  const payload = {
+    vaga_id: editingVagaId,
+    nome,
+    whatsapp: document.getElementById("vc-whatsapp").value,
+    curriculo_link: document.getElementById("vc-curriculo").value,
+    status: document.getElementById("vc-status").value,
+    notas: document.getElementById("vc-notas").value,
+  };
+  const { error } = await sb.from("vagas_candidatas").insert(payload);
+  if(error){ alert("Erro ao adicionar candidata: " + error.message); return; }
+  const { data } = await sb.from("vagas_candidatas").select("*").order("id");
+  vagasCandidatas = data || [];
+  document.getElementById("vc-nome").value = "";
+  document.getElementById("vc-whatsapp").value = "";
+  document.getElementById("vc-curriculo").value = "";
+  document.getElementById("vc-notas").value = "";
+  renderCandidatasVaga();
+  renderVagas();
+}
+async function deleteCandidataVaga(id){
+  if(!confirm("Excluir esta candidata?")) return;
+  const { error } = await sb.from("vagas_candidatas").delete().eq("id", id);
+  if(error){ alert("Erro ao excluir: " + error.message); return; }
+  const { data } = await sb.from("vagas_candidatas").select("*").order("id");
+  vagasCandidatas = data || [];
+  renderCandidatasVaga();
+  renderVagas();
 }
 
 // Vendas do lead/cliente (gera as parcelas em Contas a Receber)
@@ -1772,6 +2149,7 @@ function openParceiroModal(id){
   document.getElementById("p-regiao").value = p.regiao||"";
   document.getElementById("p-selo").value = p.selo||"nao";
   document.getElementById("p-status").value = p.status||"Prospecto";
+  document.getElementById("p-tipo-parceria").value = p.tipo_parceria||"";
   document.getElementById("p-aniversario").value = p.aniversario||"";
   document.getElementById("p-comissao").value = p.comissao||"";
   document.getElementById("p-notas").value = p.notas||"";
@@ -1790,6 +2168,7 @@ async function saveParceiro(){
     regiao: document.getElementById("p-regiao").value,
     selo: document.getElementById("p-selo").value,
     status: document.getElementById("p-status").value,
+    tipo_parceria: document.getElementById("p-tipo-parceria").value || null,
     aniversario: document.getElementById("p-aniversario").value || null,
     comissao: document.getElementById("p-comissao").value,
     notas: document.getElementById("p-notas").value,
