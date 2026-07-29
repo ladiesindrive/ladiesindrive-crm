@@ -224,6 +224,13 @@ tr.tr-click:hover{background:#fff7fa;}
 @media (max-width:700px){
   .kanban{grid-template-columns:1fr;}
 }
+.toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(12px);
+  background:var(--green); color:#fff; padding:10px 20px; border-radius:8px;
+  font-size:13px; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,.18);
+  opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; z-index:9999;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -1628,6 +1635,7 @@ async function saveLead(){
     ? await sb.from("leads").update(payload).eq("id", editingLeadId)
     : await sb.from("leads").insert(payload).select();
   if(error){ alert("Erro ao salvar: " + error.message); return; }
+  showToast("Salvo!");
   if(isNew){
     editingLeadId = data[0].id;
     document.getElementById("lead-modal-title").textContent = "Editar lead";
@@ -1680,6 +1688,7 @@ async function savePedido(){
     ? await sb.from("pecas_pedidos").update(payload).eq("id", editingPedidoId)
     : await sb.from("pecas_pedidos").insert(payload).select();
   if(error){ alert("Erro ao salvar: " + error.message); return; }
+  showToast("Salvo!");
   if(isNew){
     editingPedidoId = data[0].id;
     document.getElementById("pedido-modal-title").textContent = "Editar pedido";
@@ -1836,6 +1845,7 @@ async function saveDivulgacao(){
     ? await sb.from("divulgacoes").update(payload).eq("id", editingDivulgacaoId)
     : await sb.from("divulgacoes").insert(payload);
   if(error){ alert("Erro ao salvar: " + error.message); return; }
+  showToast("Salvo!");
   await carregarDados();
   closeModal("divulgacao-modal");
 }
@@ -1916,6 +1926,7 @@ async function saveVaga(){
     ? await sb.from("vagas").update(payload).eq("id", editingVagaId)
     : await sb.from("vagas").insert(payload).select();
   if(error){ alert("Erro ao salvar: " + error.message); return; }
+  showToast("Salvo!");
   if(isNew){
     editingVagaId = data[0].id;
     document.getElementById("vaga-modal-title").textContent = "Editar vaga";
@@ -2178,6 +2189,7 @@ async function saveParceiro(){
     ? await sb.from("parceiros").update(payload).eq("id", editingParceiroId)
     : await sb.from("parceiros").insert(payload).select();
   if(error){ alert("Erro ao salvar: " + error.message); return; }
+  showToast("Salvo!");
   if(isNew){
     editingParceiroId = data[0].id;
     document.getElementById("parceiro-modal-title").textContent = "Editar parceira (o)";
@@ -2418,6 +2430,7 @@ async function saveOrcamento(){
     ? await sb.from("orcamentos").update(payload).eq("id", editingOrcamentoId)
     : await sb.from("orcamentos").insert(payload);
   if(error){ alert("Erro ao salvar: " + error.message); return; }
+  showToast("Salvo!");
   closeModal("orcamento-modal");
   await carregarDados();
 }
@@ -2554,6 +2567,7 @@ async function saveMotorista(){
     ? await sb.from("motoristas").update(payload).eq("id", editingMotoristaId)
     : await sb.from("motoristas").insert(payload).select();
   if(error){ alert("Erro ao salvar: " + error.message); return; }
+  showToast("Salvo!");
   if(isNew){
     editingMotoristaId = data[0].id;
     document.getElementById("motorista-modal-title").textContent = "Editar motorista";
@@ -2625,6 +2639,7 @@ async function saveClienteTransporte(){
     ? await sb.from("clientes_transporte").update(payload).eq("id", editingClienteTransporteId)
     : await sb.from("clientes_transporte").insert(payload);
   if(error){ alert("Erro ao salvar: " + error.message); return; }
+  showToast("Salvo!");
   closeModal("cliente-transporte-modal");
   await carregarDados();
 }
@@ -2749,6 +2764,7 @@ async function saveViagem(){
     if(error){ alert("Erro ao salvar pagamento: " + error.message); return; }
   }
 
+  showToast("Salvo!");
   closeModal("viagem-modal");
   await carregarDados();
 }
@@ -2810,6 +2826,7 @@ async function saveAvaliacao(){
     ? await sb.from("avaliacoes").update(payload).eq("id", editingAvaliacaoId)
     : await sb.from("avaliacoes").insert(payload);
   if(error){ alert("Erro ao salvar: " + error.message); return; }
+  showToast("Salvo!");
   closeModal("avaliacao-modal");
   await carregarDados();
 }
@@ -2884,6 +2901,7 @@ async function saveParcela(){
   };
   const { error } = await sb.from("venda_parcelas").update(payload).eq("id", editingParcelaId);
   if(error){ alert("Erro ao salvar: " + error.message); return; }
+  showToast("Salvo!");
   closeModal("parcela-modal");
   await carregarDados();
 }
@@ -2963,6 +2981,7 @@ async function saveContaPagar(){
     ? await sb.from("contas_pagar").update(payload).eq("id", editingContaPagarId)
     : await sb.from("contas_pagar").insert(payload);
   if(error){ alert("Erro ao salvar: " + error.message); return; }
+  showToast("Salvo!");
   closeModal("conta-pagar-modal");
   await carregarDados();
 }
@@ -3020,6 +3039,7 @@ async function saveMeta(){
     ? await sb.from("metas_financeiras").update(payload).eq("id", existente.id)
     : await sb.from("metas_financeiras").insert(payload);
   if(error){ alert("Erro ao salvar meta: " + error.message); return; }
+  showToast("Salvo!");
   document.getElementById("mf-faturamento").value = "";
   document.getElementById("mf-lucro").value = "";
   await carregarDados();
@@ -3095,6 +3115,20 @@ function renderResumoFinanceiro(){
 }
 
 function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+let toastTimer;
+function showToast(msg){
+  let el = document.getElementById("toast");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "toast";
+    el.className = "toast";
+    document.body.appendChild(el);
+  }
+  el.textContent = msg || "Salvo!";
+  clearTimeout(toastTimer);
+  el.classList.add("show");
+  toastTimer = setTimeout(()=>el.classList.remove("show"), 2200);
+}
 
 function exportarDados(){
   const blob = new Blob([JSON.stringify({leads,parceiros,orcamentos}, null, 2)], {type:"application/json"});
