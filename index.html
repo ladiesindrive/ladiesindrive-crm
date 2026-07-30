@@ -695,6 +695,10 @@ tr.tr-click:hover{background:#fff7fa;}
       <button class="icon-btn" type="button" onclick="closeModal('parceiro-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
     </div>
     <div class="formgrid">
+      <div class="full" id="p-puxar-lead-wrap">
+        <label>Puxar dados de um lead/cliente já cadastrado <span style="font-weight:400; color:var(--muted);">(opcional, preenche nome, contato, aniversário e região)</span></label>
+        <select id="p-puxar-lead" onchange="puxarDadosLead()"><option value="">- Selecionar -</option></select>
+      </div>
       <div class="full"><label>Nome *</label><input type="text" id="p-nome"></div>
       <div class="full">
         <label>Categorias <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
@@ -719,7 +723,14 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Região atendida</label><input type="text" id="p-regiao"></div>
       <div><label>Selo Ladies Approved</label><select id="p-selo"><option value="sim">Sim</option><option value="nao">Não</option></select></div>
       <div><label>Status</label><select id="p-status"></select></div>
-      <div><label>Tipo de parceria</label><select id="p-tipo-parceria"><option value="">-</option><option>Mensalidade</option><option>Patrocínio</option><option>Embaixadora</option></select></div>
+      <div class="full">
+        <label>Tipo de parceria <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
+        <div id="p-tipo-parceria-wrap" style="display:flex; flex-wrap:wrap; gap:6px;">
+          <label class="chip-check"><input type="checkbox" value="Mensalidade"> Mensalidade</label>
+          <label class="chip-check"><input type="checkbox" value="Patrocínio"> Patrocínio</label>
+          <label class="chip-check"><input type="checkbox" value="Embaixadora"> Embaixadora</label>
+        </div>
+      </div>
       <div><label>Aniversário</label><input type="date" id="p-aniversario"></div>
       <div><label>% comissão / acordo</label><input type="text" id="p-comissao"></div>
       <div class="full"><label>Notas</label><textarea id="p-notas" rows="2"></textarea></div>
@@ -1449,7 +1460,7 @@ function renderParceiros(){
     {label:"Tipo de parceria", campo:"tipo_parceria"},
     {label:"Selo Ladies Approved", campo:"selo"}, {label:"Status", campo:"status"}, {label:"Último contato", campo:null}, {label:"", campo:null}
   ], "parceiros");
-  const lista = aplicarOrdenacao("parceiros", parceiros.filter(p=>!tipoF || p.tipo_parceria===tipoF));
+  const lista = aplicarOrdenacao("parceiros", parceiros.filter(p=>!tipoF || (p.tipo_parceria||"").split(",").map(s=>s.trim()).includes(tipoF)));
   document.getElementById("parceiros-body").innerHTML = lista.map(p=>{
     const celular = primeiroCelularParceiro(p.id);
     const ultimoContato = ultimoContatoParceiro(p.id);
@@ -1457,7 +1468,7 @@ function renderParceiros(){
       <td>${p.nome}${p.exemplo?' <span style="color:var(--muted); font-size:11px;">(exemplo)</span>':''}</td>
       <td>${p.categoria||"-"}</td>
       <td>${p.regiao||"-"}</td>
-      <td>${p.tipo_parceria?`<span class="tag ${TIPO_PARCERIA_CLASS[p.tipo_parceria]||''}">${p.tipo_parceria}</span>`:"-"}</td>
+      <td>${(p.tipo_parceria||"").split(",").map(s=>s.trim()).filter(Boolean).map(t=>`<span class="tag ${TIPO_PARCERIA_CLASS[t]||''}">${t}</span>`).join(" ")||"-"}</td>
       <td>${p.selo==="sim"?'<span class="badge-seal">✓ Ladies Approved</span>':'-'}</td>
       <td><span class="tag ${PARCEIRO_ETAPA_CLASS[p.status]||''}">${p.status||"-"}</span></td>
       <td>${ultimoContato||"-"}</td>
@@ -2147,10 +2158,33 @@ async function deleteInteracaoLead(id){
 
 // Parceiro modal
 let editingParceiroId = null;
+function puxarDadosLead(){
+  const leadId = Number(document.getElementById("p-puxar-lead").value);
+  if(!leadId) return;
+  const lead = leads.find(l=>l.id===leadId);
+  if(!lead) return;
+  document.getElementById("p-nome").value = lead.nome || "";
+  document.getElementById("p-aniversario").value = lead.aniversario || "";
+  const regiao = [lead.bairro, lead.cidade, lead.estado].filter(Boolean).join(", ");
+  if(regiao) document.getElementById("p-regiao").value = regiao;
+  if(lead.whatsapp){
+    document.getElementById("pc-tipo").value = "Celular";
+    document.getElementById("pc-numero").value = lead.whatsapp;
+  }
+  if(lead.email){
+    const atual = document.getElementById("p-notas").value;
+    const notaEmail = "E-mail: " + lead.email;
+    document.getElementById("p-notas").value = atual ? atual + "\n" + notaEmail : notaEmail;
+  }
+}
 function openParceiroModal(id){
   editingParceiroId = id || null;
   fillSelect(document.getElementById("p-status"), PARCEIRO_ETAPAS, "Prospecto");
   document.getElementById("parceiro-modal-title").textContent = id ? "Editar parceira (o)" : "Nova parceira (o)";
+  document.getElementById("p-puxar-lead-wrap").style.display = id ? "none" : "block";
+  document.getElementById("p-puxar-lead").innerHTML = `<option value="">- Selecionar -</option>` +
+    leads.map(l=>`<option value="${l.id}">${l.nome}${l.whatsapp?" ("+l.whatsapp+")":""}</option>`).join("");
+  document.getElementById("p-puxar-lead").value = "";
   const p = parceiros.find(x=>x.id===id) || {};
   document.getElementById("p-nome").value = p.nome||"";
   const categoriasMarcadas = (p.categoria||"").split(",").map(c=>c.trim()).filter(Boolean);
@@ -2160,7 +2194,10 @@ function openParceiroModal(id){
   document.getElementById("p-regiao").value = p.regiao||"";
   document.getElementById("p-selo").value = p.selo||"nao";
   document.getElementById("p-status").value = p.status||"Prospecto";
-  document.getElementById("p-tipo-parceria").value = p.tipo_parceria||"";
+  const tiposMarcados = (p.tipo_parceria||"").split(",").map(t=>t.trim()).filter(Boolean);
+  document.querySelectorAll("#p-tipo-parceria-wrap input[type=checkbox]").forEach(cb=>{
+    cb.checked = tiposMarcados.includes(cb.value);
+  });
   document.getElementById("p-aniversario").value = p.aniversario||"";
   document.getElementById("p-comissao").value = p.comissao||"";
   document.getElementById("p-notas").value = p.notas||"";
@@ -2174,12 +2211,13 @@ async function saveParceiro(){
   const nome = document.getElementById("p-nome").value.trim();
   if(!nome){ alert("Nome é obrigatório"); return; }
   const categorias = [...document.querySelectorAll("#p-categorias-wrap input[type=checkbox]:checked")].map(cb=>cb.value);
+  const tiposParceria = [...document.querySelectorAll("#p-tipo-parceria-wrap input[type=checkbox]:checked")].map(cb=>cb.value);
   const payload = {
     nome, categoria: categorias.join(", "),
     regiao: document.getElementById("p-regiao").value,
     selo: document.getElementById("p-selo").value,
     status: document.getElementById("p-status").value,
-    tipo_parceria: document.getElementById("p-tipo-parceria").value || null,
+    tipo_parceria: tiposParceria.join(", "),
     aniversario: document.getElementById("p-aniversario").value || null,
     comissao: document.getElementById("p-comissao").value,
     notas: document.getElementById("p-notas").value,
