@@ -1605,6 +1605,17 @@ function openLeadModal(id){
   document.getElementById("f-aniversario").value = l.aniversario||"";
   document.getElementById("f-responsavel").value = l.responsavel||"Jú";
   document.getElementById("f-notas").value = l.notas||"";
+  document.getElementById("fv-servico").value = "";
+  document.getElementById("fv-preco-unitario").value = "";
+  document.getElementById("fv-preco-total").value = "";
+  document.getElementById("fv-forma-pagamento").value = "";
+  document.getElementById("fv-parcelado").checked = false;
+  document.getElementById("fv-num-parcelas").value = 2;
+  document.getElementById("fv-num-parcelas-wrap").style.display = "none";
+  document.getElementById("fv-data-prevista").value = "";
+  document.getElementById("fi-data").value = "";
+  document.getElementById("fi-assunto").value = "";
+  document.getElementById("fi-proximos").value = "";
   renderVendasLead();
   renderInteracoesLead();
   document.getElementById("lead-modal").classList.add("open");
@@ -1679,6 +1690,15 @@ function openPedidoModal(id){
   document.getElementById("fp-cliente-whatsapp").value = p.cliente_whatsapp||"";
   document.getElementById("fp-origem").value = p.origem||"";
   document.getElementById("fp-notas").value = p.notas||"";
+  document.getElementById("ft-loja-nome").value = "";
+  document.getElementById("ft-loja-contato").value = "";
+  document.getElementById("ft-data-contato").value = "";
+  document.getElementById("ft-tem-estoque").value = "";
+  document.getElementById("ft-valor").value = "";
+  document.getElementById("ft-prazo").value = "";
+  document.getElementById("ft-topou-comissao").value = "";
+  document.getElementById("ft-garantia").value = "";
+  document.getElementById("ft-observacao").value = "";
   renderTentativasPedido();
   document.getElementById("pedido-modal").classList.add("open");
 }
@@ -1912,6 +1932,10 @@ function openVagaModal(id){
   document.getElementById("vg-requisitos").value = v.requisitos||"";
   document.getElementById("vg-notas").value = v.notas||"";
   document.getElementById("btn-excluir-vaga").style.display = id ? "block" : "none";
+  document.getElementById("vc-nome").value = "";
+  document.getElementById("vc-whatsapp").value = "";
+  document.getElementById("vc-curriculo").value = "";
+  document.getElementById("vc-notas").value = "";
   renderCandidatasVaga();
   document.getElementById("vaga-modal").classList.add("open");
 }
@@ -2201,6 +2225,16 @@ function openParceiroModal(id){
   document.getElementById("p-aniversario").value = p.aniversario||"";
   document.getElementById("p-comissao").value = p.comissao||"";
   document.getElementById("p-notas").value = p.notas||"";
+  document.getElementById("pc-tipo").value = "Celular";
+  document.getElementById("pc-numero").value = "";
+  document.getElementById("pc-descricao").value = "";
+  document.getElementById("pl-tipo").value = "Site";
+  document.getElementById("pl-url").value = "";
+  document.getElementById("pe-endereco").value = "";
+  document.getElementById("pe-descricao").value = "";
+  document.getElementById("pi-data").value = "";
+  document.getElementById("pi-assunto").value = "";
+  document.getElementById("pi-proximos").value = "";
   renderContatosParceiro();
   renderLinksParceiro();
   renderEnderecosParceiro();
@@ -2538,6 +2572,9 @@ function openMotoristaModal(id){
   document.getElementById("mt-antecedentes-status").value = m.antecedentes_status||"";
   document.getElementById("mt-status").value = m.status||"Candidatura recebida";
   document.getElementById("mt-origem").value = m.origem||"Site";
+  document.getElementById("mt-doc-tipo").value = "CNH";
+  document.getElementById("mt-doc-validade").value = "";
+  document.getElementById("mt-doc-status").value = "Pendente";
   renderDocumentosMotorista();
   document.getElementById("motorista-modal").classList.add("open");
 }
