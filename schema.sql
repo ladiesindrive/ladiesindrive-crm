@@ -69,7 +69,7 @@ insert into public.leads (exemplo, nome, whatsapp, email, bairro, cidade, estado
 (true,'Camila Rodrigues','51 99999-0001','','Petrópolis','Porto Alegre','RS','SOS e Emergências','Guincho e Reboque 24h','Hatch','Urgente','Carro não liga na garagem do trabalho.','Fechado - Ganho','Instagram','2026-06-20','Jú',''),
 (true,'Fernanda Alves','51 99999-0002','','Menino Deus','Porto Alegre','RS','Manutenção e Prevenção','Oficina Mecânica Geral','Sedan','Essa semana','Barulho estranho no motor.','Orçamento enviado','Indicação','2026-06-28','Jú',''),
 (true,'Bianca Souza','51 99999-0003','bianca@email.com','Moinhos de Vento','Porto Alegre','RS','Proteção, Compra e Burocracia','Consultoria de Compra e Venda (Car Hunter)','SUV','Sem pressa','Quer ajuda pra escolher um SUV até 90 mil.','Negociação','Google','2026-07-01','Jú',''),
-(true,'Renata Lima','51 99999-0004','','Cidade Baixa','Porto Alegre','RS','Viagem','Viagem particular','-','Essa semana','Viagem até o aeroporto na sexta.','Novo lead','Facebook','2026-07-03','Jú','');
+(true,'Renata Lima','51 99999-0004','','Cidade Baixa','Porto Alegre','RS','Viagem','Viagem sob demanda','-','Essa semana','Viagem até o aeroporto na sexta.','Novo lead','Facebook','2026-07-03','Jú','');
 
 insert into public.parceiros (exemplo, nome, categoria, regiao, selo, status, contato, comissao, notas) values
 (true,'Oficina do Marcelo','Oficina mecânica','Zona Sul - POA','sim','Ativo','51 98888-1111','10%',''),

@@ -8,7 +8,7 @@ create table public.candidatas (
   whatsapp text not null,
   area_interesse text default 'Motorista',
   cnh_categoria text,
-  cnh_ear boolean,
+  cnh_ear text,
   curso_conduapp boolean,
   curso_transporte_infantil boolean,
   regiao text,

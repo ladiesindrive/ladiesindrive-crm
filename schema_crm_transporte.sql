@@ -9,7 +9,7 @@ create table public.motoristas (
   whatsapp text,
   email text,
   cnh_categoria text,
-  cnh_ear boolean,
+  cnh_ear text,
   cnh_validade date,
   antecedentes_data date,
   antecedentes_status text,
