@@ -2566,6 +2566,18 @@ async function saveOrcamento(){
     ? await sb.from("orcamentos").update(payload).eq("id", editingOrcamentoId)
     : await sb.from("orcamentos").insert(payload);
   if(error){ alert("Erro ao salvar: " + error.message); return; }
+
+  // Orçamento aceito promove a lead pra "Fechado - Ganho" automaticamente,
+  // caso ela ainda não seja cliente — mesmo que outro orçamento dela já
+  // tenha sido recusado antes. Não mexe se ela já é cliente, e recusar um
+  // orçamento nunca rebaixa a etapa sozinho (fica a critério dela).
+  if(payload.status === "Aceito"){
+    const lead = leads.find(l=>l.id===payload.lead_id);
+    if(lead && !["Fechado - Ganho","Cliente ativo"].includes(lead.etapa)){
+      await sb.from("leads").update({ etapa: "Fechado - Ganho" }).eq("id", payload.lead_id);
+    }
+  }
+
   showToast("Salvo!");
   closeModal("orcamento-modal");
   await carregarDados();
