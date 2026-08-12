@@ -891,6 +891,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>WhatsApp</label><input type="text" id="mt-whatsapp"></div>
       <div><label>E-mail</label><input type="text" id="mt-email"></div>
       <div><label>Região</label><input type="text" id="mt-regiao"></div>
+      <div><label>Aniversário</label><input type="date" id="mt-aniversario"></div>
       <div><label>Veículo</label><input type="text" id="mt-veiculo"></div>
       <div class="full">
         <label>Categoria da CNH <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
@@ -1414,6 +1415,7 @@ function renderAniversariosDashboard(){
     ...leads.map(l=>({nome:l.nome, tipo:"Lead", aniversario:l.aniversario})),
     ...parceiros.map(p=>({nome:p.nome, tipo:"Parceira (o)", aniversario:p.aniversario})),
     ...clientesTransporte.map(c=>({nome:c.nome, tipo:"Cliente de viagem", aniversario:c.aniversario})),
+    ...motoristas.map(m=>({nome:m.nome, tipo:"Motorista", aniversario:m.aniversario})),
   ];
   const proximos = candidatos
     .filter(c=>c.aniversario)
@@ -2595,6 +2597,7 @@ function openMotoristaModal(id){
   document.getElementById("mt-whatsapp").value = m.whatsapp||"";
   document.getElementById("mt-email").value = m.email||"";
   document.getElementById("mt-regiao").value = m.regiao||"";
+  document.getElementById("mt-aniversario").value = m.aniversario||"";
   document.getElementById("mt-veiculo").value = m.veiculo||"";
   const cnhCategoriasMarcadas = (m.cnh_categoria||"").split(",").map(c=>c.trim()).filter(Boolean);
   document.querySelectorAll("#mt-cnh-categoria-wrap input[type=checkbox]").forEach(cb=>{
@@ -2710,6 +2713,7 @@ async function saveMotorista(){
     whatsapp: document.getElementById("mt-whatsapp").value,
     email: document.getElementById("mt-email").value,
     regiao: document.getElementById("mt-regiao").value,
+    aniversario: document.getElementById("mt-aniversario").value || null,
     veiculo: document.getElementById("mt-veiculo").value,
     cnh_categoria: [...document.querySelectorAll("#mt-cnh-categoria-wrap input[type=checkbox]:checked")].map(cb=>cb.value).join(", "),
     cnh_validade: document.getElementById("mt-cnh-validade").value || null,
