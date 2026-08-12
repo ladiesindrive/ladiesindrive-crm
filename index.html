@@ -972,13 +972,18 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Tipo de serviço</label><select id="vg-tipo-servico"></select></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-motorista-preferida" style="width:auto;"> Motorista preferida da cliente</label></div>
       <div><label>Canal de recepção</label><select id="vg-canal"></select></div>
-      <div><label>Status</label><select id="vg-status"></select></div>
+      <div><label>Status</label><select id="vg-viagem-status"></select></div>
       <div class="full"><label>Endereço de origem</label><input type="text" id="vg-origem-endereco"></div>
       <div class="full"><label>Endereço de destino</label><input type="text" id="vg-destino-endereco"></div>
-      <div><label>Data e hora</label><input type="datetime-local" id="vg-data-hora"></div>
+      <div class="full"><button type="button" class="btn ghost" style="font-size:12.5px;" onclick="abrirRotaMaps()">📍 Ver rota no Google Maps</button></div>
+      <div><label>Horário previsto de partida</label><input type="datetime-local" id="vg-data-hora"></div>
+      <div><label>Horário previsto de chegada</label><input type="datetime-local" id="vg-data-hora-chegada"></div>
       <div><label>Link de acompanhamento</label><input type="text" id="vg-link"></div>
+      <div><label>Distância (km)</label><input type="number" id="vg-distancia-km" step="0.1" oninput="calcularSugestaoViagem()"></div>
+      <div class="full" id="vg-sugestao" style="color:var(--muted); font-size:12.5px;"></div>
       <div><label>Preço cotado (R$)</label><input type="number" id="vg-preco-cotado"></div>
       <div><label>Preço final (R$)</label><input type="number" id="vg-preco-final"></div>
+      <div class="full"><label>Motivo (se não fechou)</label><textarea id="vg-motivo-perda" rows="2" placeholder="Ex: preço, motorista indisponível, cliente desistiu, prazo, concorrência..."></textarea></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-preparacao" style="width:auto;"> Preparação pré-viagem confirmada</label></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-saida" style="width:auto;"> Saída do veículo confirmada</label></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-grupo-whats" style="width:auto;"> Grupo de WhatsApp criado</label></div>
@@ -1112,6 +1117,12 @@ const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Idoso"];
 const CANAL_RECEPCAO = ["Telefone","Redes sociais","Site","E-mail"];
 const VIAGEM_STATUS = ["Solicitada","Confirmada","Em andamento","Concluída","Cancelada"];
 const VIAGEM_STATUS_CLASS = {"Solicitada":"orc-sol","Confirmada":"negociacao","Em andamento":"contato","Concluída":"ganho","Cancelada":"perdido"};
+// Tarifas sugeridas pra calcular preço a partir da distância (km).
+// Ponto de partida baseado em pesquisa de mercado (motorista particular/executivo
+// e apps de transporte em POA, ago/2026) — ajustar aqui conforme fechar viagens reais.
+const TARIFA_KM_CLIENTE = 3.00;    // R$ por km cobrado da cliente
+const TAXA_FIXA_CLIENTE = 15.00;   // R$ fixo por corrida, além do km
+const PERCENTUAL_REPASSE_MOTORISTA = 0.75; // % do preço cobrado repassado à motorista
 const SEGMENTO_CLIENTE = ["Frequente","Ocasional","Empresarial"];
 
 // Funil de parceiros — o mesmo que a Juliana já documenta e usa
@@ -2798,6 +2809,27 @@ async function deleteClienteTransporte(id){
 }
 
 // ===== TRANSPORTE: VIAGENS (KANBAN) =====
+function abrirRotaMaps(){
+  const origem = document.getElementById("vg-origem-endereco").value.trim();
+  const destino = document.getElementById("vg-destino-endereco").value.trim();
+  if(!origem || !destino){ alert("Preencha o endereço de origem e de destino antes."); return; }
+  const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origem)}&destination=${encodeURIComponent(destino)}`;
+  window.open(url, "_blank");
+}
+function calcularSugestaoViagem(){
+  const km = Number(document.getElementById("vg-distancia-km").value) || 0;
+  const el = document.getElementById("vg-sugestao");
+  if(!km){ el.innerHTML = ""; return; }
+  const precoCliente = TAXA_FIXA_CLIENTE + TARIFA_KM_CLIENTE * km;
+  const repasseMotorista = precoCliente * PERCENTUAL_REPASSE_MOTORISTA;
+  el.innerHTML = `Sugestão pra ${km} km: cliente R$ ${precoCliente.toFixed(2)} · motorista R$ ${repasseMotorista.toFixed(2)} `
+    + `<button type="button" class="btn ghost" style="padding:2px 8px; font-size:11px;" onclick="aplicarSugestaoViagem(${precoCliente.toFixed(2)},${repasseMotorista.toFixed(2)})">Usar valores</button>`;
+}
+function aplicarSugestaoViagem(precoCliente, repasseMotorista){
+  document.getElementById("vg-preco-cotado").value = precoCliente;
+  document.getElementById("vg-pg-valor").value = repasseMotorista;
+  showToast("Valores aplicados!");
+}
 function labelViagem(v){
   const cliente = clientesTransporte.find(c=>c.id===v.cliente_id);
   const motorista = motoristas.find(m=>m.id===v.motorista_id);
@@ -2821,6 +2853,7 @@ function renderTransporteViagens(){
           <div class="kc-top">${cliente?cliente.nome:"Cliente não definido"}</div>
           <div style="color:var(--muted);">${motorista?motorista.nome:"Sem motorista"}</div>
           <div style="color:var(--muted); font-size:11.5px; margin-top:4px;">${v.data_hora?new Date(v.data_hora).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}):"Sem data"}</div>
+          ${v.preco_cotado?`<div style="color:var(--muted); font-size:11.5px;">R$ ${Number(v.preco_cotado).toFixed(2)}</div>`:""}
           ${v.tipo_servico?`<span class="tag novo kc-tag">${v.tipo_servico}</span>`:""}
         </div>`;
       }).join("") || `<p class="kanban-vazio">Vazio</p>`}
@@ -2834,7 +2867,7 @@ function openViagemModal(id){
   document.getElementById("vg-motorista").innerHTML = `<option value="">-</option>` + motoristas.map(m=>`<option value="${m.id}">${m.nome}</option>`).join("");
   fillSelect(document.getElementById("vg-tipo-servico"), TIPO_SERVICO_VIAGEM, "Padrão");
   fillSelect(document.getElementById("vg-canal"), CANAL_RECEPCAO, "Telefone");
-  fillSelect(document.getElementById("vg-status"), VIAGEM_STATUS, "Solicitada");
+  fillSelect(document.getElementById("vg-viagem-status"), VIAGEM_STATUS, "Solicitada");
   document.getElementById("viagem-modal-title").textContent = id ? "Editar viagem" : "Nova viagem";
   const v = viagens.find(x=>x.id===id) || {};
   if(v.cliente_id) document.getElementById("vg-cliente").value = v.cliente_id;
@@ -2842,13 +2875,17 @@ function openViagemModal(id){
   document.getElementById("vg-tipo-servico").value = v.tipo_servico||"Padrão";
   document.getElementById("vg-motorista-preferida").checked = !!v.motorista_preferida;
   document.getElementById("vg-canal").value = v.canal_recepcao||"Telefone";
-  document.getElementById("vg-status").value = v.status||"Solicitada";
+  document.getElementById("vg-viagem-status").value = v.status||"Solicitada";
   document.getElementById("vg-origem-endereco").value = v.origem_endereco||"";
   document.getElementById("vg-destino-endereco").value = v.destino_endereco||"";
   document.getElementById("vg-data-hora").value = v.data_hora ? v.data_hora.slice(0,16) : "";
+  document.getElementById("vg-data-hora-chegada").value = v.data_hora_chegada ? v.data_hora_chegada.slice(0,16) : "";
   document.getElementById("vg-link").value = v.link_acompanhamento||"";
+  document.getElementById("vg-distancia-km").value = v.distancia_km ?? "";
   document.getElementById("vg-preco-cotado").value = v.preco_cotado ?? "";
   document.getElementById("vg-preco-final").value = v.preco_final ?? "";
+  document.getElementById("vg-motivo-perda").value = v.motivo_perda || "";
+  calcularSugestaoViagem();
   document.getElementById("vg-preparacao").checked = !!v.preparacao_confirmada;
   document.getElementById("vg-saida").checked = !!v.saida_confirmada;
   document.getElementById("vg-grupo-whats").checked = !!v.grupo_whatsapp_criado;
@@ -2871,13 +2908,16 @@ async function saveViagem(){
     tipo_servico: document.getElementById("vg-tipo-servico").value,
     motorista_preferida: document.getElementById("vg-motorista-preferida").checked,
     canal_recepcao: document.getElementById("vg-canal").value,
-    status: document.getElementById("vg-status").value,
+    status: document.getElementById("vg-viagem-status").value,
     origem_endereco: document.getElementById("vg-origem-endereco").value,
     destino_endereco: document.getElementById("vg-destino-endereco").value,
     data_hora: document.getElementById("vg-data-hora").value || null,
+    data_hora_chegada: document.getElementById("vg-data-hora-chegada").value || null,
     link_acompanhamento: document.getElementById("vg-link").value,
+    distancia_km: document.getElementById("vg-distancia-km").value === "" ? null : Number(document.getElementById("vg-distancia-km").value),
     preco_cotado: document.getElementById("vg-preco-cotado").value === "" ? null : Number(document.getElementById("vg-preco-cotado").value),
     preco_final: document.getElementById("vg-preco-final").value === "" ? null : Number(document.getElementById("vg-preco-final").value),
+    motivo_perda: document.getElementById("vg-motivo-perda").value,
     preparacao_confirmada: document.getElementById("vg-preparacao").checked,
     saida_confirmada: document.getElementById("vg-saida").checked,
     grupo_whatsapp_criado: document.getElementById("vg-grupo-whats").checked,
