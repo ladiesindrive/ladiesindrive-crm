@@ -969,8 +969,12 @@ tr.tr-click:hover{background:#fff7fa;}
     </div>
     <div class="formgrid">
       <div class="full"><label>Cliente</label><select id="vg-cliente"></select></div>
-      <div class="full"><label>Motorista</label><select id="vg-motorista"></select></div>
+      <div class="full">
+        <label>Motorista(s) <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
+        <div id="vg-motoristas-wrap" style="display:flex; flex-wrap:wrap; gap:6px; max-height:140px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+      </div>
       <div><label>Tipo de serviço</label><select id="vg-tipo-servico"></select></div>
+      <div class="full" id="vg-evento-wrap"><label>Descrição do evento</label><input type="text" id="vg-evento-descricao" placeholder="Só se Tipo de serviço = Evento"></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-motorista-preferida" style="width:auto;"> Motorista preferida da cliente</label></div>
       <div><label>Canal de recepção</label><select id="vg-canal"></select></div>
       <div><label>Status</label><select id="vg-viagem-status"></select></div>
@@ -1114,7 +1118,7 @@ const CATEGORIAS = [...new Set(SERVICOS.map(s=>s.categoria))];
 
 const MOTORISTA_ETAPAS = ["Candidatura recebida","Em entrevista","Documentos pendentes","Em treinamento","Ativa","Inativa","Recusada"];
 const MOTORISTA_ETAPA_CLASS = {"Candidatura recebida":"novo","Em entrevista":"contato","Documentos pendentes":"urg-media","Em treinamento":"negociacao","Ativa":"ativo","Inativa":"perdido","Recusada":"perdido"};
-const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Idoso"];
+const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Idoso","Recorrente","Diário","Evento"];
 const CANAL_RECEPCAO = ["Telefone","Redes sociais","Site","E-mail"];
 const VIAGEM_STATUS = ["Solicitada","Confirmada","Em andamento","Concluída","Cancelada"];
 const VIAGEM_STATUS_CLASS = {"Solicitada":"orc-sol","Confirmada":"negociacao","Em andamento":"contato","Concluída":"ganho","Cancelada":"perdido"};
@@ -2551,7 +2555,7 @@ function documentosPendentesCount(motoristaId){
   return documentosMotorista.filter(d=>d.motorista_id===motoristaId && d.status_verificacao!=="Verificado").length;
 }
 function mediaAvaliacaoMotorista(motoristaId){
-  const viagensDoMotorista = viagens.filter(v=>v.motorista_id===motoristaId).map(v=>v.id);
+  const viagensDoMotorista = viagens.filter(v=>idsMotoristasViagem(v).includes(motoristaId)).map(v=>v.id);
   const notas = avaliacoes.filter(a=>a.visivel && viagensDoMotorista.includes(a.viagem_id) && a.nota_motorista!=null).map(a=>Number(a.nota_motorista));
   if(!notas.length) return null;
   return (notas.reduce((s,n)=>s+n,0)/notas.length).toFixed(1);
@@ -2834,11 +2838,21 @@ function aplicarSugestaoViagem(precoCliente, repasseMotorista){
   document.getElementById("vg-pg-valor").value = repasseMotorista;
   showToast("Valores aplicados!");
 }
+function idsMotoristasViagem(v){
+  return (v.motorista_ids && v.motorista_ids.length) ? v.motorista_ids : (v.motorista_id ? [v.motorista_id] : []);
+}
+function nomesMotoristasViagem(v){
+  return idsMotoristasViagem(v).map(id=>motoristas.find(m=>m.id===id)?.nome).filter(Boolean).join(", ");
+}
+function renderMotoristasCheckboxes(selecionados){
+  const wrap = document.getElementById("vg-motoristas-wrap");
+  wrap.innerHTML = motoristas.map(m=>`<label class="chip-check"><input type="checkbox" value="${m.id}" ${selecionados.includes(m.id)?"checked":""}> ${m.nome}</label>`).join("") || `<span style="color:var(--muted); font-size:12.5px;">Nenhuma motorista cadastrada ainda</span>`;
+}
 function labelViagem(v){
   const cliente = clientesTransporte.find(c=>c.id===v.cliente_id);
-  const motorista = motoristas.find(m=>m.id===v.motorista_id);
+  const nomesMotoristas = nomesMotoristasViagem(v);
   const data = v.data_hora ? new Date(v.data_hora).toLocaleDateString("pt-BR") : "sem data";
-  return `#${v.id} · ${data} · ${cliente?cliente.nome:"sem cliente"} / ${motorista?motorista.nome:"sem motorista"}`;
+  return `#${v.id} · ${data} · ${cliente?cliente.nome:"sem cliente"} / ${nomesMotoristas || "sem motorista"}`;
 }
 function renderTransporteViagens(){
   const ft = document.getElementById("filter-viagem-tipo");
@@ -2852,10 +2866,10 @@ function renderTransporteViagens(){
       <h4>${status}<span>${doColuna.length}</span></h4>
       ${doColuna.map(v=>{
         const cliente = clientesTransporte.find(c=>c.id===v.cliente_id);
-        const motorista = motoristas.find(m=>m.id===v.motorista_id);
+        const nomesMotoristas = nomesMotoristasViagem(v);
         return `<div class="kanban-card" onclick="openViagemModal(${v.id})">
           <div class="kc-top">${cliente?cliente.nome:"Cliente não definido"}</div>
-          <div style="color:var(--muted);">${motorista?motorista.nome:"Sem motorista"}</div>
+          <div style="color:var(--muted);">${nomesMotoristas || "Sem motorista"}</div>
           <div style="color:var(--muted); font-size:11.5px; margin-top:4px;">${v.data_hora?new Date(v.data_hora).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}):"Sem data"}</div>
           ${v.preco_cotado?`<div style="color:var(--muted); font-size:11.5px;">R$ ${Number(v.preco_cotado).toFixed(2)}</div>`:""}
           ${v.tipo_servico?`<span class="tag novo kc-tag">${v.tipo_servico}</span>`:""}
@@ -2868,15 +2882,15 @@ let editingViagemId = null;
 function openViagemModal(id){
   editingViagemId = id || null;
   document.getElementById("vg-cliente").innerHTML = `<option value="">-</option>` + clientesTransporte.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
-  document.getElementById("vg-motorista").innerHTML = `<option value="">-</option>` + motoristas.map(m=>`<option value="${m.id}">${m.nome}</option>`).join("");
   fillSelect(document.getElementById("vg-tipo-servico"), TIPO_SERVICO_VIAGEM, "Padrão");
   fillSelect(document.getElementById("vg-canal"), CANAL_RECEPCAO, "Telefone");
   fillSelect(document.getElementById("vg-viagem-status"), VIAGEM_STATUS, "Solicitada");
   document.getElementById("viagem-modal-title").textContent = id ? "Editar viagem" : "Nova viagem";
   const v = viagens.find(x=>x.id===id) || {};
   if(v.cliente_id) document.getElementById("vg-cliente").value = v.cliente_id;
-  if(v.motorista_id) document.getElementById("vg-motorista").value = v.motorista_id;
+  renderMotoristasCheckboxes(idsMotoristasViagem(v));
   document.getElementById("vg-tipo-servico").value = v.tipo_servico||"Padrão";
+  document.getElementById("vg-evento-descricao").value = v.evento_descricao||"";
   document.getElementById("vg-motorista-preferida").checked = !!v.motorista_preferida;
   document.getElementById("vg-canal").value = v.canal_recepcao||"Telefone";
   document.getElementById("vg-viagem-status").value = v.status||"Solicitada";
@@ -2908,8 +2922,9 @@ function openViagemModal(id){
 async function saveViagem(){
   const payload = {
     cliente_id: Number(document.getElementById("vg-cliente").value) || null,
-    motorista_id: Number(document.getElementById("vg-motorista").value) || null,
+    motorista_ids: (()=>{ const ids = [...document.querySelectorAll("#vg-motoristas-wrap input[type=checkbox]:checked")].map(cb=>Number(cb.value)); return ids.length ? ids : null; })(),
     tipo_servico: document.getElementById("vg-tipo-servico").value,
+    evento_descricao: document.getElementById("vg-evento-descricao").value,
     motorista_preferida: document.getElementById("vg-motorista-preferida").checked,
     canal_recepcao: document.getElementById("vg-canal").value,
     status: document.getElementById("vg-viagem-status").value,
@@ -2978,11 +2993,11 @@ function renderTransporteAvaliacoes(){
   const lista = aplicarOrdenacao("avaliacoes", avaliacoes);
   document.getElementById("avaliacoes-body").innerHTML = lista.map(a=>{
     const viagem = viagens.find(v=>v.id===a.viagem_id);
-    const motorista = viagem ? motoristas.find(m=>m.id===viagem.motorista_id) : null;
+    const nomesMotoristas = viagem ? nomesMotoristasViagem(viagem) : "";
     const cliente = viagem ? clientesTransporte.find(c=>c.id===viagem.cliente_id) : null;
     return `<tr class="tr-click" onclick="openAvaliacaoModal(${a.id})">
       <td>${viagem ? (viagem.data_hora ? new Date(viagem.data_hora).toLocaleDateString("pt-BR") : "Viagem #"+viagem.id) : "-"}</td>
-      <td>${motorista?motorista.nome:"-"}</td>
+      <td>${nomesMotoristas || "-"}</td>
       <td>${cliente?cliente.nome:"-"}</td>
       <td>${a.nota_motorista ?? "-"}</td>
       <td>${a.nota_cliente ?? "-"}</td>
@@ -3106,10 +3121,10 @@ function listaContasAPagarUnificada(){
   }));
   const motoristasPag = pagamentosMotorista.map(p=>{
     const viagem = viagens.find(v=>v.id===p.viagem_id);
-    const motorista = viagem ? motoristas.find(m=>m.id===viagem.motorista_id) : null;
+    const nomesMotoristas = viagem ? nomesMotoristasViagem(viagem) : "";
     return {
       origem: "Motorista", id: p.id, viagemId: p.viagem_id,
-      descricao: "Pagamento — " + (motorista?motorista.nome:"motorista") + (viagem?" (viagem #"+viagem.id+")":""),
+      descricao: "Pagamento — " + (nomesMotoristas||"motorista") + (viagem?" (viagem #"+viagem.id+")":""),
       categoria: "Motorista", valor: p.valor_repassado, vencimento: null,
       data_pagamento: p.data_pagamento, status: p.status || "Pendente",
     };
