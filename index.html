@@ -981,8 +981,21 @@ tr.tr-click:hover{background:#fff7fa;}
       <div class="full"><label>Endereço de origem</label><input type="text" id="vg-origem-endereco"></div>
       <div class="full"><label>Endereço de destino</label><input type="text" id="vg-destino-endereco"></div>
       <div class="full"><button type="button" class="btn ghost" style="font-size:12.5px;" onclick="abrirRotaMaps()">📍 Ver rota no Google Maps</button></div>
-      <div><label>Horário previsto de partida</label><input type="datetime-local" id="vg-data-hora"></div>
-      <div><label>Horário previsto de chegada</label><input type="datetime-local" id="vg-data-hora-chegada"></div>
+      <div><label>Data</label><input type="date" id="vg-data"></div>
+      <div><label>Horário previsto de partida</label><input type="time" id="vg-horario-partida"></div>
+      <div><label>Horário previsto de chegada</label><input type="time" id="vg-horario-chegada"></div>
+      <div class="full">
+        <label>Dias da semana <span style="font-weight:400; color:var(--muted);">(pra cliente fixa, ex: segunda a sexta, mesmo horário)</span></label>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;" id="vg-dias-semana-wrap">
+          <label class="chip-check"><input type="checkbox" value="Segunda"> Segunda</label>
+          <label class="chip-check"><input type="checkbox" value="Terça"> Terça</label>
+          <label class="chip-check"><input type="checkbox" value="Quarta"> Quarta</label>
+          <label class="chip-check"><input type="checkbox" value="Quinta"> Quinta</label>
+          <label class="chip-check"><input type="checkbox" value="Sexta"> Sexta</label>
+          <label class="chip-check"><input type="checkbox" value="Sábado"> Sábado</label>
+          <label class="chip-check"><input type="checkbox" value="Domingo"> Domingo</label>
+        </div>
+      </div>
       <div><label>Link de acompanhamento</label><input type="text" id="vg-link"></div>
       <div><label>Distância (km)</label><input type="number" id="vg-distancia-km" step="0.1" oninput="calcularSugestaoViagem()"></div>
       <div class="full" id="vg-sugestao" style="color:var(--muted); font-size:12.5px;"></div>
@@ -2848,10 +2861,15 @@ function renderMotoristasCheckboxes(selecionados){
   const wrap = document.getElementById("vg-motoristas-wrap");
   wrap.innerHTML = motoristas.map(m=>`<label class="chip-check"><input type="checkbox" value="${m.id}" ${selecionados.includes(m.id)?"checked":""}> ${m.nome}</label>`).join("") || `<span style="color:var(--muted); font-size:12.5px;">Nenhuma motorista cadastrada ainda</span>`;
 }
+function formatarDataBR(dataISO){
+  if(!dataISO) return null;
+  const [ano,mes,dia] = dataISO.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
 function labelViagem(v){
   const cliente = clientesTransporte.find(c=>c.id===v.cliente_id);
   const nomesMotoristas = nomesMotoristasViagem(v);
-  const data = v.data_hora ? new Date(v.data_hora).toLocaleDateString("pt-BR") : "sem data";
+  const data = v.data ? formatarDataBR(v.data) : "sem data";
   return `#${v.id} · ${data} · ${cliente?cliente.nome:"sem cliente"} / ${nomesMotoristas || "sem motorista"}`;
 }
 function renderTransporteViagens(){
@@ -2870,7 +2888,8 @@ function renderTransporteViagens(){
         return `<div class="kanban-card" onclick="openViagemModal(${v.id})">
           <div class="kc-top">${cliente?cliente.nome:"Cliente não definido"}</div>
           <div style="color:var(--muted);">${nomesMotoristas || "Sem motorista"}</div>
-          <div style="color:var(--muted); font-size:11.5px; margin-top:4px;">${v.data_hora?new Date(v.data_hora).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}):"Sem data"}</div>
+          <div style="color:var(--muted); font-size:11.5px; margin-top:4px;">${v.data?`${formatarDataBR(v.data)}${v.horario_partida?" "+v.horario_partida.slice(0,5):""}`:"Sem data"}</div>
+          ${v.dias_semana?`<div style="color:var(--muted); font-size:11px;">${v.dias_semana}</div>`:""}
           ${v.preco_cotado?`<div style="color:var(--muted); font-size:11.5px;">R$ ${Number(v.preco_cotado).toFixed(2)}</div>`:""}
           ${v.tipo_servico?`<span class="tag novo kc-tag">${v.tipo_servico}</span>`:""}
         </div>`;
@@ -2896,8 +2915,11 @@ function openViagemModal(id){
   document.getElementById("vg-viagem-status").value = v.status||"Solicitada";
   document.getElementById("vg-origem-endereco").value = v.origem_endereco||"";
   document.getElementById("vg-destino-endereco").value = v.destino_endereco||"";
-  document.getElementById("vg-data-hora").value = v.data_hora ? v.data_hora.slice(0,16) : "";
-  document.getElementById("vg-data-hora-chegada").value = v.data_hora_chegada ? v.data_hora_chegada.slice(0,16) : "";
+  document.getElementById("vg-data").value = v.data || "";
+  document.getElementById("vg-horario-partida").value = v.horario_partida ? v.horario_partida.slice(0,5) : "";
+  document.getElementById("vg-horario-chegada").value = v.horario_chegada ? v.horario_chegada.slice(0,5) : "";
+  const diasMarcados = (v.dias_semana||"").split(",").map(d=>d.trim()).filter(Boolean);
+  document.querySelectorAll("#vg-dias-semana-wrap input[type=checkbox]").forEach(cb=>{ cb.checked = diasMarcados.includes(cb.value); });
   document.getElementById("vg-link").value = v.link_acompanhamento||"";
   document.getElementById("vg-distancia-km").value = v.distancia_km ?? "";
   document.getElementById("vg-preco-cotado").value = v.preco_cotado ?? "";
@@ -2930,8 +2952,10 @@ async function saveViagem(){
     status: document.getElementById("vg-viagem-status").value,
     origem_endereco: document.getElementById("vg-origem-endereco").value,
     destino_endereco: document.getElementById("vg-destino-endereco").value,
-    data_hora: document.getElementById("vg-data-hora").value || null,
-    data_hora_chegada: document.getElementById("vg-data-hora-chegada").value || null,
+    data: document.getElementById("vg-data").value || null,
+    horario_partida: document.getElementById("vg-horario-partida").value || null,
+    horario_chegada: document.getElementById("vg-horario-chegada").value || null,
+    dias_semana: [...document.querySelectorAll("#vg-dias-semana-wrap input[type=checkbox]:checked")].map(cb=>cb.value).join(", "),
     link_acompanhamento: document.getElementById("vg-link").value,
     distancia_km: document.getElementById("vg-distancia-km").value === "" ? null : Number(document.getElementById("vg-distancia-km").value),
     preco_cotado: document.getElementById("vg-preco-cotado").value === "" ? null : Number(document.getElementById("vg-preco-cotado").value),
@@ -2996,7 +3020,7 @@ function renderTransporteAvaliacoes(){
     const nomesMotoristas = viagem ? nomesMotoristasViagem(viagem) : "";
     const cliente = viagem ? clientesTransporte.find(c=>c.id===viagem.cliente_id) : null;
     return `<tr class="tr-click" onclick="openAvaliacaoModal(${a.id})">
-      <td>${viagem ? (viagem.data_hora ? new Date(viagem.data_hora).toLocaleDateString("pt-BR") : "Viagem #"+viagem.id) : "-"}</td>
+      <td>${viagem ? (viagem.data ? formatarDataBR(viagem.data) : "Viagem #"+viagem.id) : "-"}</td>
       <td>${nomesMotoristas || "-"}</td>
       <td>${cliente?cliente.nome:"-"}</td>
       <td>${a.nota_motorista ?? "-"}</td>
