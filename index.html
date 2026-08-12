@@ -1206,6 +1206,11 @@ function formatarTelefoneBR(valor){
   return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
 }
 
+// ===== MOEDA: formato padrão R$ 0,00, usado em toda exibição de valor =====
+function formatarMoedaBR(valor){
+  return "R$ " + Number(valor||0).toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
 // ===== LINKS CLICÁVEIS =====
 function numeroClicavel(numero){
   if(!numero) return "-";
@@ -1550,8 +1555,8 @@ function renderOrcamentos(){
       <td>${lead?lead.nome:"-"}</td>
       <td>${o.servico||"-"}</td>
       <td>${parceiro?parceiro.nome:"-"}</td>
-      <td>${o.valor_cotado!=null?"R$ "+Number(o.valor_cotado).toLocaleString("pt-BR"):"-"}</td>
-      <td>${o.valor_final!=null?"R$ "+Number(o.valor_final).toLocaleString("pt-BR"):"-"}</td>
+      <td>${o.valor_cotado!=null?formatarMoedaBR(o.valor_cotado):"-"}</td>
+      <td>${o.valor_final!=null?formatarMoedaBR(o.valor_final):"-"}</td>
       <td><span class="tag ${o.status==='Aceito'?'ganho':o.status==='Recusado'?'perdido':'orc-env'}">${o.status}</span></td>
       <td>${o.data||"-"}</td>
       <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openOrcamentoModal(${o.id})">✏️</button> <button class="icon-btn" onclick="deleteOrcamento(${o.id})">🗑️</button></td>
@@ -1592,7 +1597,7 @@ function renderServicos(){
     const qtd = leads.filter(l=>l.servico===s.nome).length;
     const aceitos = orcamentos.filter(o=>o.servico===s.nome && o.status==="Aceito" && o.valor_final!=null);
     const media = aceitos.length ? (aceitos.reduce((a,o)=>a+Number(o.valor_final),0)/aceitos.length) : null;
-    return `<tr><td>${s.nome}</td><td>${s.categoria}</td><td>${qtd}</td><td>${media?"R$ "+media.toLocaleString("pt-BR",{maximumFractionDigits:0}):"-"}</td></tr>`;
+    return `<tr><td>${s.nome}</td><td>${s.categoria}</td><td>${qtd}</td><td>${media?formatarMoedaBR(media):"-"}</td></tr>`;
   }).join("");
 }
 
@@ -1811,7 +1816,7 @@ function renderTentativasPedido(){
         <button class="icon-btn" type="button" onclick="deleteTentativa(${t.id})">🗑️</button>
       </div>
       <div style="color:var(--muted); margin-top:2px;">
-        Estoque: ${t.tem_estoque||"-"} · Valor: ${t.valor!=null?"R$ "+Number(t.valor).toLocaleString("pt-BR"):"-"} · Prazo: ${t.prazo||"-"} · Comissão: ${t.topou_comissao||"-"}${t.garantia?" · Garantia: "+t.garantia:""}
+        Estoque: ${t.tem_estoque||"-"} · Valor: ${t.valor!=null?formatarMoedaBR(t.valor):"-"} · Prazo: ${t.prazo||"-"} · Comissão: ${t.topou_comissao||"-"}${t.garantia?" · Garantia: "+t.garantia:""}
       </div>
       ${t.observacao?`<div style="color:var(--muted); margin-top:2px;">${t.observacao}</div>`:""}
     </div>
@@ -2122,7 +2127,7 @@ function renderVendasLead(){
     const pagas = parcelas.filter(p=>p.status==="Pago").length;
     return `
     <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f4eaf0; font-size:12.5px;">
-      <span><strong>${v.servico_produto||"-"}</strong> — R$ ${Number(v.preco_total||0).toLocaleString("pt-BR")} <span style="color:var(--muted);">${v.parcelado?`· ${pagas}/${parcelas.length} parcelas pagas`:`· ${pagas?"Pago":"Pendente"}`}</span></span>
+      <span><strong>${v.servico_produto||"-"}</strong> — ${formatarMoedaBR(v.preco_total)} <span style="color:var(--muted);">${v.parcelado?`· ${pagas}/${parcelas.length} parcelas pagas`:`· ${pagas?"Pago":"Pendente"}`}</span></span>
       <button class="icon-btn" type="button" onclick="deleteVenda(${v.id})">🗑️</button>
     </div>`;
   }).join("") || `<p style="color:var(--muted); font-size:12.5px;">Nenhuma venda registrada ainda.</p>`;
@@ -2852,7 +2857,7 @@ function calcularSugestaoViagem(){
   if(!km){ el.innerHTML = ""; return; }
   const precoCliente = TAXA_FIXA_CLIENTE + TARIFA_KM_CLIENTE * km;
   const repasseMotorista = precoCliente * PERCENTUAL_REPASSE_MOTORISTA;
-  el.innerHTML = `Sugestão pra ${km} km: cliente R$ ${precoCliente.toFixed(2)} · motorista R$ ${repasseMotorista.toFixed(2)} `
+  el.innerHTML = `Sugestão pra ${km} km: cliente ${formatarMoedaBR(precoCliente)} · motorista ${formatarMoedaBR(repasseMotorista)} `
     + `<button type="button" class="btn ghost" style="padding:2px 8px; font-size:11px;" onclick="aplicarSugestaoViagem(${precoCliente.toFixed(2)},${repasseMotorista.toFixed(2)})">Usar valores</button>`;
 }
 function aplicarSugestaoViagem(precoCliente, repasseMotorista){
@@ -2899,7 +2904,7 @@ function renderTransporteViagens(){
           <div style="color:var(--muted);">${nomesMotoristas || "Sem motorista"}</div>
           <div style="color:var(--muted); font-size:11.5px; margin-top:4px;">${v.data?`${formatarDataBR(v.data)}${v.horario_partida?" "+v.horario_partida.slice(0,5):""}`:"Sem data"}</div>
           ${v.dias_semana?`<div style="color:var(--muted); font-size:11px;">${v.dias_semana}</div>`:""}
-          ${v.preco_cotado?`<div style="color:var(--muted); font-size:11.5px;">R$ ${Number(v.preco_cotado).toFixed(2)}</div>`:""}
+          ${v.preco_cotado?`<div style="color:var(--muted); font-size:11.5px;">${formatarMoedaBR(v.preco_cotado)}</div>`:""}
           ${v.tipo_servico?`<span class="tag novo kc-tag">${v.tipo_servico}</span>`:""}
         </div>`;
       }).join("") || `<p class="kanban-vazio">Vazio</p>`}
@@ -3099,7 +3104,7 @@ function renderContasReceber(){
       <td>${lead?lead.nome:"-"}</td>
       <td>${venda?venda.servico_produto:"-"}</td>
       <td>${p.numero_parcela||1}/${venda?venda.num_parcelas:1}</td>
-      <td>R$ ${Number(p.valor||0).toLocaleString("pt-BR")}</td>
+      <td>${formatarMoedaBR(p.valor)}</td>
       <td>${p.forma_pagamento||"-"}</td>
       <td>${p.data_prevista||"-"}</td>
       <td>${p.data_realizada||"-"}</td>
@@ -3174,7 +3179,7 @@ function renderContasPagar(){
       <td><span class="tag ${c.origem==='Despesa'?'novo':'negociacao'}">${c.origem}</span></td>
       <td>${c.descricao||"-"}</td>
       <td>${c.categoria||"-"}</td>
-      <td>${c.valor!=null?"R$ "+Number(c.valor).toLocaleString("pt-BR"):"-"}</td>
+      <td>${c.valor!=null?formatarMoedaBR(c.valor):"-"}</td>
       <td>${c.vencimento||"-"}</td>
       <td>${c.data_pagamento||"-"}</td>
       <td><span class="tag ${c.status==='Pago'?'ativo':'urg-media'}">${c.status}</span></td>
@@ -3250,8 +3255,8 @@ function renderMetas(){
   document.getElementById("metas-body").innerHTML = [...metasFinanceiras].sort((a,b)=> (b.ano-a.ano) || (b.mes-a.mes)).map(m=>`
     <tr>
       <td>${nomeMes(m.mes)}/${m.ano}</td>
-      <td>R$ ${Number(m.meta_faturamento||0).toLocaleString("pt-BR")}</td>
-      <td>R$ ${Number(m.meta_lucro||0).toLocaleString("pt-BR")}</td>
+      <td>${formatarMoedaBR(m.meta_faturamento)}</td>
+      <td>${formatarMoedaBR(m.meta_lucro)}</td>
       <td><button class="icon-btn" onclick="editarMeta(${m.id})">✏️</button> <button class="icon-btn" onclick="deleteMeta(${m.id})">🗑️</button></td>
     </tr>
   `).join("") || `<tr><td class="empty" colspan="4">Nenhuma meta cadastrada ainda</td></tr>`;
@@ -3323,17 +3328,17 @@ function renderResumoFinanceiro(){
   document.getElementById("resumo-body").innerHTML = linhas.map(l=>`
     <tr>
       <td>${nomeMes(l.mes)}</td>
-      <td>R$ ${l.faturamento.toLocaleString("pt-BR")}</td>
-      <td>${l.metaFaturamento!=null?"R$ "+Number(l.metaFaturamento).toLocaleString("pt-BR"):"-"}</td>
-      <td>R$ ${l.despesas.toLocaleString("pt-BR")}</td>
-      <td style="color:${l.lucro>=0?'var(--green)':'var(--red)'};">R$ ${l.lucro.toLocaleString("pt-BR")}</td>
-      <td>${l.metaLucro!=null?"R$ "+Number(l.metaLucro).toLocaleString("pt-BR"):"-"}</td>
+      <td>${formatarMoedaBR(l.faturamento)}</td>
+      <td>${l.metaFaturamento!=null?formatarMoedaBR(l.metaFaturamento):"-"}</td>
+      <td>${formatarMoedaBR(l.despesas)}</td>
+      <td style="color:${l.lucro>=0?'var(--green)':'var(--red)'};">${formatarMoedaBR(l.lucro)}</td>
+      <td>${l.metaLucro!=null?formatarMoedaBR(l.metaLucro):"-"}</td>
     </tr>
   `).join("") + `
     <tr style="font-weight:700;">
-      <td>Total ${ano}</td><td>R$ ${totalFat.toLocaleString("pt-BR")}</td><td>-</td>
-      <td>R$ ${totalDesp.toLocaleString("pt-BR")}</td>
-      <td style="color:${totalLucro>=0?'var(--green)':'var(--red)'};">R$ ${totalLucro.toLocaleString("pt-BR")}</td><td>-</td>
+      <td>Total ${ano}</td><td>${formatarMoedaBR(totalFat)}</td><td>-</td>
+      <td>${formatarMoedaBR(totalDesp)}</td>
+      <td style="color:${totalLucro>=0?'var(--green)':'var(--red)'};">${formatarMoedaBR(totalLucro)}</td><td>-</td>
     </tr>`;
 
   const ctx = document.getElementById("chart-resumo");
