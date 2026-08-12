@@ -595,7 +595,7 @@ tr.tr-click:hover{background:#fff7fa;}
     </div>
     <div class="formgrid">
       <div><label>Nome *</label><input type="text" id="f-nome"></div>
-      <div><label>WhatsApp *</label><input type="text" id="f-whatsapp"></div>
+      <div><label>WhatsApp *</label><input type="text" id="f-whatsapp" placeholder="(51) 99999-9999" oninput="this.value=formatarTelefoneBR(this.value)"></div>
       <div><label>E-mail</label><input type="text" id="f-email"></div>
       <div><label>Bairro</label><input type="text" id="f-bairro"></div>
       <div><label>Cidade</label><input type="text" id="f-cidade"></div>
@@ -659,7 +659,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Status</label><select id="fp-status"></select></div>
       <div><label>Cliente</label><input type="text" id="fp-cliente-nome"></div>
       <div><label>Tipo de cliente</label><select id="fp-tipo-cliente"><option>Pessoa física</option><option>Empresa</option></select></div>
-      <div><label>WhatsApp do cliente</label><input type="text" id="fp-cliente-whatsapp"></div>
+      <div><label>WhatsApp do cliente</label><input type="text" id="fp-cliente-whatsapp" placeholder="(51) 99999-9999" oninput="this.value=formatarTelefoneBR(this.value)"></div>
       <div><label>Origem</label><input type="text" id="fp-origem" placeholder="Ex: Grupo Mulheres V8"></div>
       <div class="full"><label>Notas</label><textarea id="fp-notas" rows="2"></textarea></div>
     </div>
@@ -741,7 +741,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div id="p-contatos-lista"></div>
       <div class="formgrid" style="margin-top:8px;">
         <div><label>Tipo</label><select id="pc-tipo"><option>Celular</option><option>Fixo</option></select></div>
-        <div><label>Número</label><input type="text" id="pc-numero" placeholder="(51) 99999-9999"></div>
+        <div><label>Número</label><input type="text" id="pc-numero" placeholder="(51) 99999-9999" oninput="this.value=formatarTelefoneBR(this.value)"></div>
         <div class="full"><label>Descrição <span style="font-weight:400; color:var(--muted);">(opcional)</span></label><input type="text" id="pc-descricao" placeholder="Ex: Marcelo, dono da oficina"></div>
         <div style="display:flex; align-items:flex-end;"><button class="btn secondary small" type="button" onclick="addContatoParceiro()">+ Adicionar contato</button></div>
       </div>
@@ -842,7 +842,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div id="vg-candidatas-lista"></div>
       <div class="formgrid" style="margin-top:8px;">
         <div><label>Nome</label><input type="text" id="vc-nome"></div>
-        <div><label>WhatsApp</label><input type="text" id="vc-whatsapp"></div>
+        <div><label>WhatsApp</label><input type="text" id="vc-whatsapp" placeholder="(51) 99999-9999" oninput="this.value=formatarTelefoneBR(this.value)"></div>
         <div><label>Link do currículo</label><input type="text" id="vc-curriculo"></div>
         <div><label>Status</label><select id="vc-status"></select></div>
         <div class="full"><label>Notas</label><input type="text" id="vc-notas"></div>
@@ -888,7 +888,7 @@ tr.tr-click:hover{background:#fff7fa;}
     </div>
     <div class="formgrid">
       <div class="full"><label>Nome *</label><input type="text" id="mt-nome"></div>
-      <div><label>WhatsApp</label><input type="text" id="mt-whatsapp"></div>
+      <div><label>WhatsApp</label><input type="text" id="mt-whatsapp" placeholder="(51) 99999-9999" oninput="this.value=formatarTelefoneBR(this.value)"></div>
       <div><label>E-mail</label><input type="text" id="mt-email"></div>
       <div><label>Região</label><input type="text" id="mt-regiao"></div>
       <div><label>Aniversário</label><input type="date" id="mt-aniversario"></div>
@@ -945,7 +945,7 @@ tr.tr-click:hover{background:#fff7fa;}
     </div>
     <div class="formgrid">
       <div class="full"><label>Nome *</label><input type="text" id="ct-nome"></div>
-      <div><label>WhatsApp</label><input type="text" id="ct-whatsapp"></div>
+      <div><label>WhatsApp</label><input type="text" id="ct-whatsapp" placeholder="(51) 99999-9999" oninput="this.value=formatarTelefoneBR(this.value)"></div>
       <div><label>E-mail</label><input type="text" id="ct-email"></div>
       <div><label>Região</label><input type="text" id="ct-regiao"></div>
       <div><label>Aniversário</label><input type="date" id="ct-aniversario"></div>
@@ -1195,6 +1195,15 @@ function renderCabecalho(trId, colunas, chave){
     const seta = (st && st.campo===c.campo) ? (st.dir===1?" ▲":" ▼") : "";
     return `<th onclick="ordenarPor('${chave}','${c.campo}','${c.tipo||"texto"}')">${c.label}${seta}</th>`;
   }).join("");
+}
+
+// ===== TELEFONE: formato padrão (DD) NNNNN-NNNN, aplicado enquanto digita =====
+function formatarTelefoneBR(valor){
+  const d = String(valor||"").replace(/\D/g,"").slice(0,11);
+  if(d.length <= 2) return d.length ? `(${d}` : "";
+  if(d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  if(d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
 }
 
 // ===== LINKS CLICÁVEIS =====
