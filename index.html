@@ -1009,6 +1009,10 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Data</label><input type="date" id="vg-data"></div>
       <div><label>Horário previsto de partida</label><input type="time" id="vg-horario-partida"></div>
       <div><label>Horário previsto de chegada</label><input type="time" id="vg-horario-chegada"></div>
+      <div><label>Data do retorno <span style="font-weight:400; color:var(--muted);">(ida e volta)</span></label><input type="date" id="vg-data-retorno"></div>
+      <div><label>Horário do retorno</label><input type="time" id="vg-horario-retorno"></div>
+      <div class="full"><label>Endereço de origem do retorno <span style="font-weight:400; color:var(--muted);">(se vazio, é o mesmo destino de ida)</span></label><input type="text" id="vg-origem-retorno"></div>
+      <div class="full"><label>Endereço de destino do retorno <span style="font-weight:400; color:var(--muted);">(se vazio, é o mesmo origem de ida)</span></label><input type="text" id="vg-destino-retorno"></div>
       <div class="full">
         <label>Dias da semana <span style="font-weight:400; color:var(--muted);">(pra cliente fixa, ex: segunda a sexta, mesmo horário)</span></label>
         <div style="display:flex; flex-wrap:wrap; gap:6px;" id="vg-dias-semana-wrap">
@@ -1025,7 +1029,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Distância (km)</label><input type="number" id="vg-distancia-km" step="0.1" oninput="calcularSugestaoViagem()"></div>
       <div class="full" id="vg-sugestao" style="color:var(--muted); font-size:12.5px;"></div>
       <div><label>Preço cotado (R$)</label><input type="number" id="vg-preco-cotado"></div>
-      <div><label>Preço final (R$)</label><input type="number" id="vg-preco-final"></div>
+      <div><label>Preço final <span style="font-weight:400; color:var(--muted);">(calculado: repasse + comissão)</span></label><input type="text" id="vg-preco-final" readonly style="background:var(--border); cursor:not-allowed;"></div>
       <div><label>Repasse motorista <span style="font-weight:400; color:var(--muted);">(oferta, aparece pra ela antes de aceitar)</span></label><input type="number" id="vg-preco-motorista"></div>
       <div class="full"><label>Motivo (se não fechou)</label><textarea id="vg-motivo-perda" rows="2" placeholder="Ex: preço, motorista indisponível, cliente desistiu, prazo, concorrência..."></textarea></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-preparacao" style="width:auto;"> Preparação pré-viagem confirmada</label></div>
@@ -1035,8 +1039,8 @@ tr.tr-click:hover{background:#fff7fa;}
 
     <h4 style="font-size:13px; margin:18px 0 8px; border-top:1px solid var(--border); padding-top:14px;">💰 Pagamento à motorista</h4>
     <div class="formgrid">
-      <div><label>Valor repassado (R$)</label><input type="number" id="vg-pg-valor"></div>
-      <div><label>Comissão da plataforma (R$)</label><input type="number" id="vg-pg-comissao"></div>
+      <div><label>Valor repassado (R$)</label><input type="number" id="vg-pg-valor" oninput="calcularPrecoFinalViagem()"></div>
+      <div><label>Comissão da plataforma (R$)</label><input type="number" id="vg-pg-comissao" oninput="calcularPrecoFinalViagem()"></div>
       <div><label>Forma de pagamento</label><select id="vg-pg-forma"><option value="">-</option><option>Pix</option><option>Dinheiro</option><option>Transferência</option><option>Outro</option></select></div>
       <div><label>Status do pagamento</label><select id="vg-pg-status"><option>Pendente</option><option>Pago</option></select></div>
       <div><label>Data do pagamento</label><input type="date" id="vg-pg-data"></div>
@@ -3019,7 +3023,21 @@ function aplicarSugestaoViagem(precoCliente, repasseMotorista){
   document.getElementById("vg-preco-cotado").value = precoCliente;
   document.getElementById("vg-preco-motorista").value = repasseMotorista;
   document.getElementById("vg-pg-valor").value = repasseMotorista;
+  calcularPrecoFinalViagem();
   showToast("Valores aplicados!");
+}
+function calcularPrecoFinalViagem(){
+  const valorStr = document.getElementById("vg-pg-valor").value;
+  const comissaoStr = document.getElementById("vg-pg-comissao").value;
+  const campo = document.getElementById("vg-preco-final");
+  if(valorStr === "" && comissaoStr === ""){
+    campo.value = "";
+    campo.dataset.valor = "";
+    return;
+  }
+  const total = (Number(valorStr) || 0) + (Number(comissaoStr) || 0);
+  campo.dataset.valor = total;
+  campo.value = formatarMoedaBR(total);
 }
 function idsMotoristasViagem(v){
   return (v.motorista_ids && v.motorista_ids.length) ? v.motorista_ids : (v.motorista_id ? [v.motorista_id] : []);
@@ -3088,12 +3106,15 @@ function openViagemModal(id){
   document.getElementById("vg-data").value = v.data || "";
   document.getElementById("vg-horario-partida").value = v.horario_partida ? v.horario_partida.slice(0,5) : "";
   document.getElementById("vg-horario-chegada").value = v.horario_chegada ? v.horario_chegada.slice(0,5) : "";
+  document.getElementById("vg-data-retorno").value = v.data_retorno || "";
+  document.getElementById("vg-horario-retorno").value = v.horario_retorno ? v.horario_retorno.slice(0,5) : "";
+  document.getElementById("vg-origem-retorno").value = v.origem_retorno_endereco || "";
+  document.getElementById("vg-destino-retorno").value = v.destino_retorno_endereco || "";
   const diasMarcados = (v.dias_semana||"").split(",").map(d=>d.trim()).filter(Boolean);
   document.querySelectorAll("#vg-dias-semana-wrap input[type=checkbox]").forEach(cb=>{ cb.checked = diasMarcados.includes(cb.value); });
   document.getElementById("vg-link").value = v.link_acompanhamento||"";
   document.getElementById("vg-distancia-km").value = v.distancia_km ?? "";
   document.getElementById("vg-preco-cotado").value = v.preco_cotado ?? "";
-  document.getElementById("vg-preco-final").value = v.preco_final ?? "";
   document.getElementById("vg-preco-motorista").value = v.preco_motorista ?? "";
   document.getElementById("vg-motivo-perda").value = v.motivo_perda || "";
   calcularSugestaoViagem();
@@ -3108,6 +3129,7 @@ function openViagemModal(id){
   document.getElementById("vg-pg-status").value = pg.status || "Pendente";
   document.getElementById("vg-pg-data").value = pg.data_pagamento || "";
   document.getElementById("vg-pg-notas").value = pg.notas || "";
+  calcularPrecoFinalViagem();
 
   document.getElementById("btn-excluir-viagem").style.display = id ? "inline-block" : "none";
   document.getElementById("viagem-modal").classList.add("open");
@@ -3126,11 +3148,15 @@ async function saveViagem(){
     data: document.getElementById("vg-data").value || null,
     horario_partida: document.getElementById("vg-horario-partida").value || null,
     horario_chegada: document.getElementById("vg-horario-chegada").value || null,
+    data_retorno: document.getElementById("vg-data-retorno").value || null,
+    horario_retorno: document.getElementById("vg-horario-retorno").value || null,
+    origem_retorno_endereco: document.getElementById("vg-origem-retorno").value || null,
+    destino_retorno_endereco: document.getElementById("vg-destino-retorno").value || null,
     dias_semana: [...document.querySelectorAll("#vg-dias-semana-wrap input[type=checkbox]:checked")].map(cb=>cb.value).join(", "),
     link_acompanhamento: document.getElementById("vg-link").value,
     distancia_km: document.getElementById("vg-distancia-km").value === "" ? null : Number(document.getElementById("vg-distancia-km").value),
     preco_cotado: document.getElementById("vg-preco-cotado").value === "" ? null : Number(document.getElementById("vg-preco-cotado").value),
-    preco_final: document.getElementById("vg-preco-final").value === "" ? null : Number(document.getElementById("vg-preco-final").value),
+    preco_final: document.getElementById("vg-preco-final").dataset.valor ? Number(document.getElementById("vg-preco-final").dataset.valor) : null,
     preco_motorista: document.getElementById("vg-preco-motorista").value === "" ? null : Number(document.getElementById("vg-preco-motorista").value),
     motivo_perda: document.getElementById("vg-motivo-perda").value,
     preparacao_confirmada: document.getElementById("vg-preparacao").checked,
