@@ -1026,6 +1026,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div class="full" id="vg-sugestao" style="color:var(--muted); font-size:12.5px;"></div>
       <div><label>Preço cotado (R$)</label><input type="number" id="vg-preco-cotado"></div>
       <div><label>Preço final (R$)</label><input type="number" id="vg-preco-final"></div>
+      <div><label>Repasse motorista <span style="font-weight:400; color:var(--muted);">(oferta, aparece pra ela antes de aceitar)</span></label><input type="number" id="vg-preco-motorista"></div>
       <div class="full"><label>Motivo (se não fechou)</label><textarea id="vg-motivo-perda" rows="2" placeholder="Ex: preço, motorista indisponível, cliente desistiu, prazo, concorrência..."></textarea></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-preparacao" style="width:auto;"> Preparação pré-viagem confirmada</label></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-saida" style="width:auto;"> Saída do veículo confirmada</label></div>
@@ -3016,6 +3017,7 @@ function calcularSugestaoViagem(){
 }
 function aplicarSugestaoViagem(precoCliente, repasseMotorista){
   document.getElementById("vg-preco-cotado").value = precoCliente;
+  document.getElementById("vg-preco-motorista").value = repasseMotorista;
   document.getElementById("vg-pg-valor").value = repasseMotorista;
   showToast("Valores aplicados!");
 }
@@ -3092,6 +3094,7 @@ function openViagemModal(id){
   document.getElementById("vg-distancia-km").value = v.distancia_km ?? "";
   document.getElementById("vg-preco-cotado").value = v.preco_cotado ?? "";
   document.getElementById("vg-preco-final").value = v.preco_final ?? "";
+  document.getElementById("vg-preco-motorista").value = v.preco_motorista ?? "";
   document.getElementById("vg-motivo-perda").value = v.motivo_perda || "";
   calcularSugestaoViagem();
   document.getElementById("vg-preparacao").checked = !!v.preparacao_confirmada;
@@ -3128,6 +3131,7 @@ async function saveViagem(){
     distancia_km: document.getElementById("vg-distancia-km").value === "" ? null : Number(document.getElementById("vg-distancia-km").value),
     preco_cotado: document.getElementById("vg-preco-cotado").value === "" ? null : Number(document.getElementById("vg-preco-cotado").value),
     preco_final: document.getElementById("vg-preco-final").value === "" ? null : Number(document.getElementById("vg-preco-final").value),
+    preco_motorista: document.getElementById("vg-preco-motorista").value === "" ? null : Number(document.getElementById("vg-preco-motorista").value),
     motivo_perda: document.getElementById("vg-motivo-perda").value,
     preparacao_confirmada: document.getElementById("vg-preparacao").checked,
     saida_confirmada: document.getElementById("vg-saida").checked,
