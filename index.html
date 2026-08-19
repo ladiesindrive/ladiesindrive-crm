@@ -1332,6 +1332,7 @@ sb.auth.onAuthStateChange(async (event, session)=>{
     }
     document.getElementById("login-screen").style.display = "none";
     document.querySelector(".app").style.display = "flex";
+    window.scrollTo(0, 0);
     carregarDados();
   } else {
     document.querySelector(".app").style.display = "none";
@@ -1497,8 +1498,8 @@ function renderLeads(){
   document.getElementById("leads-body").innerHTML = filtered.map(l=>`
     <tr class="tr-click" onclick="openLeadModal(${l.id})">
       <td><strong>${l.nome}</strong>${l.exemplo?' <span style="color:var(--muted); font-size:11px;">(exemplo)</span>':''}<br><span style="color:var(--muted); font-size:12px;">${[l.bairro,l.cidade].filter(Boolean).join(", ")}</span></td>
-      <td>${numeroClicavel(l.whatsapp)}${l.email?"<br>"+l.email:""}</td>
-      <td>${l.categoria||"-"}<br><span style="color:var(--muted); font-size:12px;">${l.servico||""}</span></td>
+      <td><span>${numeroClicavel(l.whatsapp)}${l.email?"<br>"+l.email:""}</span></td>
+      <td><span>${l.categoria||"-"}<br><span style="color:var(--muted); font-size:12px;">${l.servico||""}</span></span></td>
       <td><span class="tag ${URG_CLASS[l.urgencia]||''}">${l.urgencia||"-"}</span></td>
       <td><span class="tag ${ETAPA_CLASS[l.etapa]||''}">${l.etapa}</span></td>
       <td>${l.origem||"-"}</td>
@@ -1554,7 +1555,7 @@ function renderParceiros(){
       <td>${p.nome}${p.exemplo?' <span style="color:var(--muted); font-size:11px;">(exemplo)</span>':''}</td>
       <td>${p.categoria||"-"}</td>
       <td>${p.regiao||"-"}</td>
-      <td>${(p.tipo_parceria||"").split(",").map(s=>s.trim()).filter(Boolean).map(t=>`<span class="tag ${TIPO_PARCERIA_CLASS[t]||''}">${t}</span>`).join(" ")||"-"}</td>
+      <td><span>${(p.tipo_parceria||"").split(",").map(s=>s.trim()).filter(Boolean).map(t=>`<span class="tag ${TIPO_PARCERIA_CLASS[t]||''}">${t}</span>`).join(" ")||"-"}</span></td>
       <td>${p.selo==="sim"?'<span class="badge-seal">✓ Ladies Approved</span>':'-'}</td>
       <td><span class="tag ${PARCEIRO_ETAPA_CLASS[p.status]||''}">${p.status||"-"}</span></td>
       <td>${ultimoContato||"-"}</td>
@@ -2730,7 +2731,7 @@ function renderTransporteMotoristas(){
     return `<tr class="tr-click" onclick="openMotoristaModal(${m.id})">
       <td><strong>${m.nome}</strong></td>
       <td>${numeroClicavel(m.whatsapp)}</td>
-      <td>${m.regiao||"-"}${m.veiculo?"<br><span style='color:var(--muted); font-size:12px;'>"+m.veiculo+"</span>":""}</td>
+      <td><span>${m.regiao||"-"}${m.veiculo?"<br><span style='color:var(--muted); font-size:12px;'>"+m.veiculo+"</span>":""}</span></td>
       <td>${emDia?'<span class="tag urg-baixa">Em dia</span>':`<span class="tag urg-alta">${faltam} pendente${faltam>1?"s":""}</span>`}</td>
       <td><span class="tag ${MOTORISTA_ETAPA_CLASS[m.status]||''}">${m.status}</span></td>
       <td>${media?media+" ★":"-"}</td>
