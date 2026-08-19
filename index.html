@@ -1337,6 +1337,7 @@ sb.auth.onAuthStateChange(async (event, session)=>{
   } else {
     document.querySelector(".app").style.display = "none";
     document.getElementById("login-screen").style.display = "flex";
+    document.getElementById("login-email").focus();
   }
 });
 
