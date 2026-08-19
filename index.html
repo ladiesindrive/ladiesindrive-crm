@@ -924,6 +924,7 @@ tr.tr-click:hover{background:#fff7fa;}
 
     <div id="mt-documentos-wrap" style="margin-top:18px;">
       <h4 style="font-size:13px; margin:0 0 8px;">Documentos</h4>
+      <div id="mt-checklist-documentos" style="margin-bottom:12px;"></div>
       <div id="mt-documentos-lista"></div>
       <div class="formgrid" style="margin-top:8px;">
         <div><label>Tipo de documento</label><select id="mt-doc-tipo"><option>CNH</option><option>CNH EAR</option><option>Antecedentes Criminais</option><option>Curso ConduApp (16h)</option><option>Curso Transporte Infantil (50h CONTRAN)</option><option>Outro</option></select></div>
@@ -1144,6 +1145,7 @@ const CATEGORIAS = [...new Set(SERVICOS.map(s=>s.categoria))];
 
 const MOTORISTA_ETAPAS = ["Candidatura recebida","Em entrevista","Documentos pendentes","Em treinamento","Ativa","Inativa","Recusada"];
 const MOTORISTA_ETAPA_CLASS = {"Candidatura recebida":"novo","Em entrevista":"contato","Documentos pendentes":"urg-media","Em treinamento":"negociacao","Ativa":"ativo","Inativa":"perdido","Recusada":"perdido"};
+const DOCUMENTOS_OBRIGATORIOS_MOTORISTA = ["CNH","CNH EAR","Antecedentes Criminais","Curso ConduApp (16h)","Curso Transporte Infantil (50h CONTRAN)"];
 const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Idoso","Recorrente","Diário","Evento"];
 const CANAL_RECEPCAO = ["Telefone","Redes sociais","Site","E-mail"];
 const VIAGEM_STATUS = ["Solicitada","Confirmada","Em andamento","Concluída","Cancelada"];
@@ -1319,8 +1321,15 @@ document.getElementById("toggle-senha").addEventListener("click", ()=>{
   btn.setAttribute("aria-label", mostrando ? "Mostrar senha" : "Ocultar senha");
 });
 
-sb.auth.onAuthStateChange((event, session)=>{
+sb.auth.onAuthStateChange(async (event, session)=>{
   if(session){
+    const { data: motoristaVinculada } = await sb.rpc("motorista_id_atual");
+    if(motoristaVinculada){
+      loginErro.textContent = "Este login é de motorista — use o painel dela em ladiesindrive.com.br/motorista.html, não o CRM.";
+      loginErro.style.display = "block";
+      await sb.auth.signOut();
+      return;
+    }
     document.getElementById("login-screen").style.display = "none";
     document.querySelector(".app").style.display = "flex";
     carregarDados();
@@ -2682,6 +2691,16 @@ async function deleteOrcamento(id){
 function documentosPendentesCount(motoristaId){
   return documentosMotorista.filter(d=>d.motorista_id===motoristaId && d.status_verificacao!=="Verificado").length;
 }
+function checklistDocumentosMotorista(motoristaId){
+  const docs = documentosMotorista.filter(d=>d.motorista_id===motoristaId);
+  return DOCUMENTOS_OBRIGATORIOS_MOTORISTA.map(tipo=>({
+    tipo,
+    ok: docs.some(d=>d.tipo_documento===tipo && d.status_verificacao==="Verificado"),
+  }));
+}
+function documentosEmDiaMotorista(motoristaId){
+  return checklistDocumentosMotorista(motoristaId).every(item=>item.ok);
+}
 function mediaAvaliacaoMotorista(motoristaId){
   const viagensDoMotorista = viagens.filter(v=>idsMotoristasViagem(v).includes(motoristaId)).map(v=>v.id);
   const notas = avaliacoes.filter(a=>a.visivel && viagensDoMotorista.includes(a.viagem_id) && a.nota_motorista!=null).map(a=>Number(a.nota_motorista));
@@ -2705,13 +2724,14 @@ function renderTransporteMotoristas(){
   const filtradas = aplicarOrdenacao("motoristas", motoristas.filter(m=>!statusF || m.status===statusF));
 
   document.getElementById("motoristas-body").innerHTML = filtradas.map(m=>{
-    const pend = documentosPendentesCount(m.id);
+    const emDia = documentosEmDiaMotorista(m.id);
+    const faltam = checklistDocumentosMotorista(m.id).filter(i=>!i.ok).length;
     const media = mediaAvaliacaoMotorista(m.id);
     return `<tr class="tr-click" onclick="openMotoristaModal(${m.id})">
       <td><strong>${m.nome}</strong></td>
       <td>${numeroClicavel(m.whatsapp)}</td>
       <td>${m.regiao||"-"}${m.veiculo?"<br><span style='color:var(--muted); font-size:12px;'>"+m.veiculo+"</span>":""}</td>
-      <td>${pend>0?`<span class="tag urg-alta">${pend} pendente${pend>1?"s":""}</span>`:'<span class="tag urg-baixa">Em dia</span>'}</td>
+      <td>${emDia?'<span class="tag urg-baixa">Em dia</span>':`<span class="tag urg-alta">${faltam} pendente${faltam>1?"s":""}</span>`}</td>
       <td><span class="tag ${MOTORISTA_ETAPA_CLASS[m.status]||''}">${m.status}</span></td>
       <td>${media?media+" ★":"-"}</td>
       <td onclick="event.stopPropagation()">${botaoWhats(m.whatsapp, m.nome)} <button class="icon-btn" onclick="openMotoristaModal(${m.id})">✏️</button> <button class="icon-btn" onclick="deleteMotorista(${m.id})">🗑️</button></td>
@@ -2750,9 +2770,26 @@ function openMotoristaModal(id){
   renderObservacoesMotorista();
   document.getElementById("motorista-modal").classList.add("open");
 }
+function renderChecklistDocumentos(){
+  const wrap = document.getElementById("mt-checklist-documentos");
+  if(!editingMotoristaId){
+    wrap.innerHTML = "";
+    return;
+  }
+  const itens = checklistDocumentosMotorista(editingMotoristaId);
+  const emDia = itens.every(i=>i.ok);
+  wrap.innerHTML = `
+    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+      ${itens.map(i=>`<span class="tag ${i.ok?'ativo':'urg-media'}">${i.ok?'✓':'○'} ${i.tipo}</span>`).join("")}
+    </div>
+    <div style="font-size:12.5px; font-weight:700; color:${emDia?'var(--green)':'var(--pink)'};">
+      ${emDia?'✅ Documentos em dia':'⚠️ Documentos pendentes — marque cada um como "Verificado" na lista abaixo pra completar'}
+    </div>`;
+}
 function renderDocumentosMotorista(){
   const wrap = document.getElementById("mt-documentos-lista");
   const campos = document.querySelectorAll("#mt-documentos-wrap button");
+  renderChecklistDocumentos();
   if(!editingMotoristaId){
     wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Pode preencher o 1º documento aqui: ele é salvo junto quando você clicar em "Salvar" no cadastro.</p>`;
     campos.forEach(el=>el.disabled = true);
