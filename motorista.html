@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Painel da motorista · Ladies in Drive</title>
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FF3EA5">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --rosa: #FF3EA5;
+      --rosa-claro: #FFE0F0;
+      --verde: #1FAA72;
+      --verde-claro: #DFF5EA;
+      --azul: #2A6FE0;
+      --azul-claro: #E1EBFB;
+      --preto: #1a1a1a;
+      --branco: #ffffff;
+      --cinza: #f5f5f5;
+      --cinza-texto: #666;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: var(--preto);
+      background: var(--cinza);
+      min-height: 100vh;
+    }
+
+    nav {
+      background: var(--branco);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    nav img { height: 44px; }
+    nav a, nav button { color: var(--preto); text-decoration: none; font-weight: 600; font-size: 14px; background: none; border: none; cursor: pointer; font-family: inherit; }
+    nav a:hover, nav button:hover { color: var(--rosa); }
+
+    .container { max-width: 560px; margin: 0 auto; padding: 28px 18px 60px; }
+
+    /* ── LOGIN ── */
+    #login-screen { display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 20px; }
+    .login-card {
+      background: var(--branco);
+      border-radius: 16px;
+      padding: 32px 26px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 380px;
+    }
+    .login-card img { height: 56px; display: block; margin: 0 auto 18px; }
+    .login-card h1 { font-size: 1.2rem; text-align: center; margin-bottom: 22px; }
+    .campo { margin-bottom: 14px; }
+    .campo label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 5px; }
+    .campo input {
+      width: 100%; padding: 11px 12px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 0.95rem; font-family: inherit;
+    }
+    .campo input:focus { outline: none; border-color: var(--rosa); }
+    .campo-senha { position: relative; }
+    .campo-senha input { padding-right: 42px; }
+    .campo-senha button {
+      position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; font-size: 1.1rem;
+      padding: 6px; line-height: 1; color: var(--cinza-texto);
+    }
+    .btn-rosa {
+      width: 100%; background: var(--rosa); color: var(--branco); border: none;
+      padding: 13px; border-radius: 10px; font-weight: 700; font-size: 0.95rem; cursor: pointer; margin-top: 6px;
+    }
+    .btn-rosa:disabled { opacity: 0.6; cursor: default; }
+    .login-erro { color: #c0392b; font-size: 0.85rem; margin-top: 10px; text-align: center; display: none; }
+
+    /* ── PAINEL ── */
+    #painel { display: none; }
+
+    .disponibilidade {
+      background: var(--branco);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+    .disponibilidade strong { display: block; }
+    .disponibilidade span { font-size: 0.8rem; color: var(--cinza-texto); }
+    .toggle { position: relative; width: 50px; height: 28px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle .trilho {
+      position: absolute; inset: 0; background: #ccc; border-radius: 999px; cursor: pointer; transition: 0.2s;
+    }
+    .toggle .trilho::before {
+      content: ""; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px;
+      background: var(--branco); border-radius: 50%; transition: 0.2s;
+    }
+    .toggle input:checked + .trilho { background: var(--verde); }
+    .toggle input:checked + .trilho::before { transform: translateX(22px); }
+
+    .viagem-card {
+      background: var(--branco);
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 14px;
+    }
+    .viagem-card .status-tag {
+      display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 3px 10px;
+      border-radius: 999px; background: var(--azul-claro); color: var(--azul); margin-bottom: 8px;
+    }
+    .viagem-card .linha { font-size: 0.9rem; margin: 3px 0; }
+    .viagem-card .linha b { color: var(--cinza-texto); font-weight: 600; }
+    .viagem-card .valor { color: var(--verde); font-weight: 800; font-size: 1.15rem; margin: 8px 0; }
+    .viagem-card .acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .viagem-card .acoes button {
+      flex: 1; min-width: 120px; padding: 10px; border: none; border-radius: 8px;
+      font-weight: 700; font-size: 0.85rem; cursor: pointer; background: var(--rosa-claro); color: var(--rosa);
+    }
+    .viagem-card .acoes button:disabled { opacity: 0.5; cursor: default; }
+    .viagem-card .acoes button.feito { background: var(--verde-claro); color: var(--verde); }
+
+    .vazio { text-align: center; color: var(--cinza-texto); padding: 40px 10px; }
+    .secao-titulo { font-size: 1.05rem; font-weight: 800; margin: 24px 0 12px; }
+    .secao-titulo:first-of-type { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+  <div id="login-screen">
+    <form class="login-card" id="login-form">
+      <img src="images/logo.png" alt="Ladies in Drive">
+      <h1>Painel da motorista</h1>
+      <div class="campo">
+        <label>E-mail</label>
+        <input type="email" id="login-email" required autocomplete="username">
+      </div>
+      <div class="campo">
+        <label>Senha</label>
+        <div class="campo-senha">
+          <input type="password" id="login-senha" required autocomplete="current-password">
+          <button type="button" id="toggle-senha" aria-label="Mostrar senha">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="btn-rosa" id="btn-login">Entrar</button>
+      <p class="login-erro" id="login-erro">E-mail ou senha incorretos.</p>
+    </form>
+  </div>
+
+  <div id="painel">
+    <nav>
+      <a href="index.html"><img src="images/logo.png" alt="Ladies in Drive"></a>
+      <button id="btn-sair">Sair</button>
+    </nav>
+
+    <div class="container">
+      <div class="disponibilidade">
+        <div>
+          <strong id="saudacao">Olá!</strong>
+          <span id="disp-legenda">Fico disponível pra receber corridas</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-disponivel">
+          <span class="trilho"></span>
+        </label>
+      </div>
+
+      <div class="secao-titulo">Minhas viagens</div>
+      <div id="lista-viagens"><div class="vazio">Carregando...</div></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://ilhuhbcklvcdrggovmth.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_3nMRN_iu3rW9hzYoyVzHcA_GwAavOUN";
+    const { createClient } = window.supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let motorista = null;
+    let watchId = null;
+    let intervaloLocalizacao = null;
+
+    // ── LOGIN ──
+    document.getElementById('toggle-senha').addEventListener('click', function () {
+      var campo = document.getElementById('login-senha');
+      var mostrando = campo.type === 'text';
+      campo.type = mostrando ? 'password' : 'text';
+      this.textContent = mostrando ? '👁' : '🙈';
+      this.setAttribute('aria-label', mostrando ? 'Mostrar senha' : 'Ocultar senha');
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      var btn = document.getElementById('btn-login');
+      var erro = document.getElementById('login-erro');
+      erro.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Entrando...';
+
+      var email = document.getElementById('login-email').value.trim();
+      var senha = document.getElementById('login-senha').value;
+      var { error } = await sb.auth.signInWithPassword({ email, password: senha });
+
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+
+      if (error) {
+        erro.style.display = 'block';
+      }
+    });
+
+    document.getElementById('btn-sair').addEventListener('click', async () => {
+      pararLocalizacao();
+      await sb.auth.signOut();
+    });
+
+    // Evita que uma resposta atrasada de uma sessão antiga (ex: alguém
+    // clicou "Sair" e logou com outra conta rápido demais) sobrescreva a
+    // tela com dados de quem não está mais logada.
+    let sessaoAtual = 0;
+
+    sb.auth.onAuthStateChange((event, session) => {
+      sessaoAtual++;
+      var minhaSessao = sessaoAtual;
+      if (session) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('painel').style.display = 'block';
+        carregarPainel(minhaSessao);
+      } else {
+        document.getElementById('painel').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'flex';
+        pararLocalizacao();
+      }
+    });
+
+    // ── PAINEL ──
+    async function carregarPainel(minhaSessao) {
+      var { data: meuId } = await sb.rpc('motorista_id_atual');
+      if (minhaSessao !== sessaoAtual) return;
+
+      if (!meuId) {
+        document.getElementById('lista-viagens').innerHTML = '<div class="vazio">Não encontramos seu cadastro de motorista vinculado a este login. Fale com a equipe.</div>';
+        return;
+      }
+
+      var { data, error } = await sb.from('motoristas').select('*').eq('id', meuId).single();
+      if (minhaSessao !== sessaoAtual) return;
+
+      if (error || !data) {
+        document.getElementById('lista-viagens').innerHTML = '<div class="vazio">Não encontramos seu cadastro de motorista vinculado a este login. Fale com a equipe.</div>';
+        return;
+      }
+
+      motorista = data;
+      document.getElementById('saudacao').textContent = 'Olá, ' + (motorista.nome || '') + '!';
+      document.getElementById('toggle-disponivel').checked = !!motorista.disponivel;
+      if (motorista.disponivel) iniciarLocalizacao();
+
+      carregarViagens(minhaSessao);
+    }
+
+    document.getElementById('toggle-disponivel').addEventListener('change', async (e) => {
+      var ligado = e.target.checked;
+      await sb.from('motoristas').update({ disponivel: ligado }).eq('id', motorista.id);
+      motorista.disponivel = ligado;
+      if (ligado) iniciarLocalizacao();
+      else pararLocalizacao();
+    });
+
+    function iniciarLocalizacao() {
+      if (!navigator.geolocation || intervaloLocalizacao) return;
+      atualizarLocalizacao();
+      intervaloLocalizacao = setInterval(atualizarLocalizacao, 60000);
+    }
+
+    function pararLocalizacao() {
+      if (intervaloLocalizacao) { clearInterval(intervaloLocalizacao); intervaloLocalizacao = null; }
+    }
+
+    function atualizarLocalizacao() {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        if (!motorista) return;
+        await sb.from('motoristas').update({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          localizacao_atualizada_em: new Date().toISOString()
+        }).eq('id', motorista.id);
+      }, function(err) {
+        console.error('Não foi possível obter localização:', err);
+      });
+    }
+
+    async function carregarViagens(minhaSessao) {
+      var { data, error } = await sb.from('viagens').select('*').order('data', { ascending: true });
+      if (minhaSessao !== sessaoAtual) return;
+      var lista = document.getElementById('lista-viagens');
+
+      if (error || !data || data.length === 0) {
+        lista.innerHTML = '<div class="vazio">Nenhuma viagem atribuída no momento.</div>';
+        return;
+      }
+
+      lista.innerHTML = '';
+      data.forEach(function(v) { lista.appendChild(cartaoViagem(v)); });
+    }
+
+    function formatarData(data, horario) {
+      if (!data) return '';
+      var partes = data.split('-');
+      var dataFmt = partes.length === 3 ? partes[2] + '/' + partes[1] + '/' + partes[0] : data;
+      return dataFmt + (horario ? ' às ' + horario.slice(0, 5) : '');
+    }
+
+    function cartaoViagem(v) {
+      var div = document.createElement('div');
+      div.className = 'viagem-card';
+
+      var html = '<span class="status-tag">' + v.status + '</span>';
+      if (v.origem_endereco) html += '<div class="linha"><b>De:</b> ' + v.origem_endereco + '</div>';
+      if (v.destino_endereco) html += '<div class="linha"><b>Para:</b> ' + v.destino_endereco + '</div>';
+      if (v.data) html += '<div class="linha"><b>Quando:</b> ' + formatarData(v.data, v.horario_partida) + '</div>';
+      if (v.preco_motorista) html += '<div class="valor">R$ ' + Number(v.preco_motorista).toFixed(2).replace('.', ',') + ' <span style="font-size:0.7rem;color:var(--cinza-texto);font-weight:400">(seu repasse)</span></div>';
+
+      html += '<div class="acoes">';
+      html += '<button data-acao="preparacao"' + (v.preparacao_confirmada ? ' class="feito" disabled' : '') + '>' + (v.preparacao_confirmada ? '✓ Preparação ok' : 'Confirmar preparação') + '</button>';
+      html += '<button data-acao="saida"' + (v.saida_confirmada ? ' class="feito" disabled' : '') + '>' + (v.saida_confirmada ? '✓ Saída confirmada' : 'Confirmar saída') + '</button>';
+      if (v.status !== 'Concluída' && v.status !== 'Cancelada') {
+        html += '<button data-acao="concluir">Concluir viagem</button>';
+      }
+      html += '</div>';
+
+      div.innerHTML = html;
+
+      div.querySelectorAll('button[data-acao]').forEach(function(btn) {
+        btn.addEventListener('click', function() { executarAcao(v.id, btn.dataset.acao, btn); });
+      });
+
+      return div;
+    }
+
+    async function executarAcao(viagemId, acao, btn) {
+      btn.disabled = true;
+      var payload = {};
+      if (acao === 'preparacao') payload = { preparacao_confirmada: true };
+      if (acao === 'saida') payload = { saida_confirmada: true, status: 'Em andamento' };
+      if (acao === 'concluir') payload = { status: 'Concluída' };
+
+      var { error } = await sb.from('viagens').update(payload).eq('id', viagemId);
+      if (error) {
+        alert('Não foi possível atualizar agora. Tenta de novo em instantes.');
+        btn.disabled = false;
+        return;
+      }
+      carregarViagens();
+    }
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").catch(()=>{});
+    }
+  </script>
+</body>
+</html>
