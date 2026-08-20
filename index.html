@@ -915,6 +915,13 @@ tr.tr-click:hover{background:#fff7fa;}
       </div>
       <div id="ia-cnh-status" style="display:none; margin-top:8px; font-size:12.5px;"></div>
     </div>
+    <div style="border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:12px;">
+      <span id="dp-cnh-arquivo-atual" style="font-size:12px;"></span>
+      <div class="formgrid" style="margin-top:6px;">
+        <div><label>Data de verificação</label><input type="date" id="dp-cnh-data"></div>
+        <div><label>Status</label><select id="dp-cnh-status"><option value="">-</option><option>Pendente</option><option>Lido por IA</option><option>Verificado</option><option>Vencido</option></select></div>
+      </div>
+    </div>
     <div class="formgrid">
       <div class="full"><label>Nome *</label><input type="text" id="mt-nome"></div>
       <div><label>WhatsApp</label><input type="text" id="mt-whatsapp" placeholder="(51) 99999-9999" oninput="this.value=formatarTelefoneBR(this.value)"></div>
@@ -952,6 +959,13 @@ tr.tr-click:hover{background:#fff7fa;}
           </div>
         </div>
         <div id="ia-crlv-status" style="display:none; margin-top:8px; font-size:12.5px;"></div>
+      </div>
+      <div style="border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:12px;">
+        <span id="dp-crlv-arquivo-atual" style="font-size:12px;"></span>
+        <div class="formgrid" style="margin-top:6px;">
+          <div><label>Data de verificação</label><input type="date" id="dp-crlv-data"></div>
+          <div><label>Status</label><select id="dp-crlv-status"><option value="">-</option><option>Pendente</option><option>Lido por IA</option><option>Verificado</option><option>Vencido</option></select></div>
+        </div>
       </div>
       <div class="formgrid">
         <div><label>Veículo</label><input type="text" id="mt-veiculo" placeholder="Ex: Fiat Argo prata"></div>
@@ -2849,11 +2863,10 @@ function renderTransporteMotoristas(){
 
 // ===== LEITURA DE CNH/CRLV COM IA =====
 const IA_DOC_CONFIG = {
-  cnh: { endpoint: "ler-cnh", tipoDocumento: "CNH", aplicarDados: aplicarDadosIACNH },
-  crlv: { endpoint: "ler-crlv", tipoDocumento: "CRLV", aplicarDados: aplicarDadosIACRLV },
+  cnh: { endpoint: "ler-cnh", aplicarDados: aplicarDadosIACNH },
+  crlv: { endpoint: "ler-crlv", aplicarDados: aplicarDadosIACRLV },
 };
 let iaArquivoSelecionado = { cnh: null, crlv: null };
-let iaArquivoPendente = { cnh: null, crlv: null };
 function selecionarArquivoIA(tipo, input){
   const arquivo = input.files[0]; if(!arquivo) return;
   iaArquivoSelecionado[tipo] = arquivo;
@@ -2888,7 +2901,9 @@ async function confirmarLeituraIA(tipo){
     IA_DOC_CONFIG[tipo].aplicarDados(result.dados);
     status.style.color = "var(--green)";
     status.textContent = "✅ Dados preenchidos! O documento é salvo junto quando você clicar em \"Salvar\".";
-    iaArquivoPendente[tipo] = arquivo;
+    docPrincipalArquivoPendente[tipo] = arquivo;
+    document.getElementById(`dp-${tipo}-data`).value = new Date().toISOString().slice(0,10);
+    document.getElementById(`dp-${tipo}-status`).value = "Lido por IA";
   }catch(e){
     status.style.color = "var(--red)";
     status.textContent = "❌ " + (e.message || "Erro ao ler. Preencha manualmente.");
@@ -2936,22 +2951,25 @@ function aplicarDadosIACRLV(d){
   }
 }
 
-// ===== ANTECEDENTES CRIMINAIS / COMPROVANTE DE ENDEREÇO (documentos principais, 1 arquivo cada) =====
-const DOC_PRINCIPAL_CONFIG = { antecedentes: "Antecedentes Criminais", endereco: "Comprovante de Endereço" };
-let docPrincipalArquivoPendente = { antecedentes: null, endereco: null };
-let docPrincipalId = { antecedentes: null, endereco: null };
+// ===== DOCUMENTOS PRINCIPAIS (CNH, CRLV, Antecedentes, Comprovante — 1 arquivo cada, sem histórico) =====
+const DOC_PRINCIPAL_CONFIG = { cnh: "CNH", crlv: "CRLV", antecedentes: "Antecedentes Criminais", endereco: "Comprovante de Endereço" };
+let docPrincipalArquivoPendente = { cnh: null, crlv: null, antecedentes: null, endereco: null };
+let docPrincipalId = { cnh: null, crlv: null, antecedentes: null, endereco: null };
 function selecionarArquivoDocPrincipal(tipo, input){
   const arquivo = input.files[0]; if(!arquivo) return;
   docPrincipalArquivoPendente[tipo] = arquivo;
   document.getElementById(`dp-${tipo}-arquivo-atual`).textContent = `Novo arquivo: ${arquivo.name} (salvo junto quando você clicar em "Salvar")`;
 }
 function carregarDocPrincipal(tipo){
-  const doc = editingMotoristaId ? documentosMotorista.find(d=>d.motorista_id===editingMotoristaId && d.tipo_documento===DOC_PRINCIPAL_CONFIG[tipo]) : null;
+  const doc = editingMotoristaId
+    ? documentosMotorista.filter(d=>d.motorista_id===editingMotoristaId && d.tipo_documento===DOC_PRINCIPAL_CONFIG[tipo]).sort((a,b)=>b.id-a.id)[0]
+    : null;
   docPrincipalId[tipo] = doc ? doc.id : null;
   docPrincipalArquivoPendente[tipo] = null;
   document.getElementById(`dp-${tipo}-data`).value = doc?.validade || "";
   document.getElementById(`dp-${tipo}-status`).value = doc?.status_verificacao || "";
-  document.getElementById(`dp-${tipo}-file`).value = "";
+  const fileInput = document.getElementById(`dp-${tipo}-file`);
+  if(fileInput) fileInput.value = "";
   document.getElementById(`dp-${tipo}-arquivo-atual`).innerHTML = doc?.url
     ? `<a href="#" onclick="abrirDocumentoMotorista('${doc.url}');return false;">📎 ver arquivo</a>`
     : "";
@@ -3003,7 +3021,8 @@ function openMotoristaModal(id){
   document.getElementById("mt-cnh-validade").value = m.cnh_validade||"";
   document.getElementById("mt-cnh-ear").value = m.cnh_ear || "";
   cancelarSelecaoIA("cnh"); cancelarSelecaoIA("crlv");
-  iaArquivoPendente.cnh = null; iaArquivoPendente.crlv = null;
+  carregarDocPrincipal("cnh");
+  carregarDocPrincipal("crlv");
   document.getElementById("ia-cnh-status").style.display = "none";
   document.getElementById("ia-crlv-status").style.display = "none";
   document.getElementById("ia-cnh-btn").textContent = "📄 Selecionar CNH (foto ou PDF)";
@@ -3034,7 +3053,8 @@ function renderDocumentosMotorista(){
     return;
   }
   campos.forEach(el=>el.disabled = false);
-  const docs = documentosMotorista.filter(d=>d.motorista_id===editingMotoristaId && d.tipo_documento!=="Antecedentes Criminais" && d.tipo_documento!=="Comprovante de Endereço");
+  const docsPrincipaisTipos = Object.values(DOC_PRINCIPAL_CONFIG);
+  const docs = documentosMotorista.filter(d=>d.motorista_id===editingMotoristaId && !docsPrincipaisTipos.includes(d.tipo_documento));
   wrap.innerHTML = docs.map(d=>`
     <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f4eaf0; font-size:12.5px;">
       <span>${d.tipo_documento}${d.validade?" · até "+d.validade:""} <span class="tag ${d.status_verificacao==='Verificado'?'ativo':d.status_verificacao==='Vencido'?'perdido':d.status_verificacao==='Lido por IA'?'negociacao':'urg-media'}">${d.status_verificacao}</span>${d.url?` <a href="#" onclick="abrirDocumentoMotorista('${d.url}');return false;" style="font-size:11.5px;">📎 ver arquivo</a>`:""}</span>
@@ -3168,31 +3188,13 @@ async function saveMotorista(){
     if(document.getElementById("mt-doc-validade").value.trim()) await addDocumentoMotorista();
     if(document.getElementById("mo-texto").value.trim()) await addObservacaoMotorista();
   }
-  await salvarDocumentosPendentesIA(editingMotoristaId);
+  await salvarDocPrincipal("cnh", editingMotoristaId);
+  await salvarDocPrincipal("crlv", editingMotoristaId);
   await salvarDocPrincipal("antecedentes", editingMotoristaId);
   await salvarDocPrincipal("endereco", editingMotoristaId);
   await carregarDados();
   if(isNew){ renderDocumentosMotorista(); renderObservacoesMotorista(); }
   else { closeModal("motorista-modal"); }
-}
-async function salvarDocumentosPendentesIA(motoristaId){
-  for(const tipo of ["cnh","crlv"]){
-    const arquivo = iaArquivoPendente[tipo];
-    if(!arquivo || !motoristaId) continue;
-    try{
-      const path = `${motoristaId}/${Date.now()}_${IA_DOC_CONFIG[tipo].tipoDocumento}_${arquivo.name}`;
-      const { error: ue } = await sb.storage.from("documentos-motoristas").upload(path, arquivo);
-      if(!ue){
-        await sb.from("documentos_motorista").insert({
-          motorista_id: motoristaId,
-          tipo_documento: IA_DOC_CONFIG[tipo].tipoDocumento,
-          status_verificacao: "Lido por IA",
-          url: path,
-        });
-      }
-    }catch(e){ console.error(e); }
-    iaArquivoPendente[tipo] = null;
-  }
 }
 async function deleteMotorista(id){
   if(!confirm('Excluir esta motorista? Os documentos e observações dela também são excluídos; viagens ligadas a ela ficam sem motorista definida (não são apagadas).')) return;
