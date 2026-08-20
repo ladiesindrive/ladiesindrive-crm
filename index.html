@@ -907,8 +907,13 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>E-mail</label><input type="text" id="mt-email"></div>
       <div><label>Região</label><input type="text" id="mt-regiao"></div>
       <div><label>Aniversário</label><input type="date" id="mt-aniversario"></div>
+      <div><label>Status</label><select id="mt-status"></select></div>
+      <div><label>Origem</label><select id="mt-origem"><option>Site</option><option>Instagram</option><option>Facebook</option><option>Networking</option><option>Indicação</option><option>Outro</option></select></div>
+    </div>
 
-      <div class="full" id="ia-cnh-wrap" style="background:var(--pink-light); border:1px solid var(--pink-mid); border-radius:10px; padding:12px 14px;">
+    <div style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
+      <h4 style="font-size:13px; margin:0 0 10px;">CNH</h4>
+      <div class="full" id="ia-cnh-wrap" style="background:var(--pink-light); border:1px solid var(--pink-mid); border-radius:10px; padding:12px 14px; margin-bottom:12px;">
         <div style="font-size:13px; font-weight:600; color:var(--pink); margin-bottom:6px;">🤖 Preencher automaticamente com a CNH</div>
         <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">Envie uma foto ou PDF da CNH e a IA preenche os campos abaixo.</div>
         <input type="file" id="ia-cnh-file" accept="image/*,.pdf" style="display:none" onchange="selecionarArquivoIA('cnh', this)">
@@ -922,20 +927,25 @@ tr.tr-click:hover{background:#fff7fa;}
         </div>
         <div id="ia-cnh-status" style="display:none; margin-top:8px; font-size:12.5px;"></div>
       </div>
-      <div><label>CPF</label><input type="text" id="mt-cpf"></div>
-      <div><label>Nº de registro da CNH</label><input type="text" id="mt-cnh-registro"></div>
-      <div class="full">
-        <label>Categoria da CNH <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
-        <div id="mt-cnh-categoria-wrap" style="display:flex; flex-wrap:wrap; gap:6px;">
-          <label class="chip-check"><input type="checkbox" value="B"> B</label>
-          <label class="chip-check"><input type="checkbox" value="D"> D</label>
-          <label class="chip-check"><input type="checkbox" value="Outra"> Outra</label>
+      <div class="formgrid">
+        <div><label>CPF</label><input type="text" id="mt-cpf"></div>
+        <div><label>Nº de registro da CNH</label><input type="text" id="mt-cnh-registro"></div>
+        <div class="full">
+          <label>Categoria da CNH <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
+          <div id="mt-cnh-categoria-wrap" style="display:flex; flex-wrap:wrap; gap:6px;">
+            <label class="chip-check"><input type="checkbox" value="B"> B</label>
+            <label class="chip-check"><input type="checkbox" value="D"> D</label>
+            <label class="chip-check"><input type="checkbox" value="Outra"> Outra</label>
+          </div>
         </div>
+        <div><label>Validade da CNH</label><input type="date" id="mt-cnh-validade"></div>
+        <div><label>Situação do EAR</label><select id="mt-cnh-ear"><option value="">-</option><option value="Já tenho EAR">Já tenho EAR</option><option value="Não tenho EAR">Não tenho EAR</option><option value="Estou em processo">Estou em processo</option></select></div>
       </div>
-      <div><label>Validade da CNH</label><input type="date" id="mt-cnh-validade"></div>
-      <div><label>Situação do EAR</label><select id="mt-cnh-ear"><option value="">-</option><option value="Já tenho EAR">Já tenho EAR</option><option value="Não tenho EAR">Não tenho EAR</option><option value="Estou em processo">Estou em processo</option></select></div>
+    </div>
 
-      <div class="full" id="ia-crlv-wrap" style="background:var(--pink-light); border:1px solid var(--pink-mid); border-radius:10px; padding:12px 14px;">
+    <div style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
+      <h4 style="font-size:13px; margin:0 0 10px;">Veículo (CRLV)</h4>
+      <div class="full" id="ia-crlv-wrap" style="background:var(--pink-light); border:1px solid var(--pink-mid); border-radius:10px; padding:12px 14px; margin-bottom:12px;">
         <div style="font-size:13px; font-weight:600; color:var(--pink); margin-bottom:6px;">🤖 Preencher automaticamente com o CRLV</div>
         <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">Envie uma foto ou PDF do CRLV (documento do carro) e a IA preenche os campos abaixo. Se ela trocar de carro, é só ler o CRLV novo de novo.</div>
         <input type="file" id="ia-crlv-file" accept="image/*,.pdf" style="display:none" onchange="selecionarArquivoIA('crlv', this)">
@@ -949,22 +959,19 @@ tr.tr-click:hover{background:#fff7fa;}
         </div>
         <div id="ia-crlv-status" style="display:none; margin-top:8px; font-size:12.5px;"></div>
       </div>
-      <div><label>Veículo</label><input type="text" id="mt-veiculo" placeholder="Ex: Fiat Argo prata"></div>
-      <div><label>Placa</label><input type="text" id="mt-placa" placeholder="ABC1D23"></div>
-      <div><label>Marca</label><input type="text" id="mt-marca"></div>
-      <div><label>Modelo</label><input type="text" id="mt-modelo"></div>
-      <div><label>Ano de fabricação</label><input type="text" id="mt-ano-fab"></div>
-      <div><label>Ano do modelo</label><input type="text" id="mt-ano-mod"></div>
-      <div><label>Cor</label><input type="text" id="mt-cor"></div>
-      <div><label>Combustível</label><input type="text" id="mt-combustivel"></div>
-      <div><label>Renavam</label><input type="text" id="mt-renavam"></div>
-      <div><label>Chassi</label><input type="text" id="mt-chassi"></div>
-      <div><label>Proprietário do veículo <span style="font-weight:400; color:var(--muted);">(no documento)</span></label><input type="text" id="mt-proprietario"></div>
-
-      <div><label>Antecedentes — data</label><input type="date" id="mt-antecedentes-data"></div>
-      <div><label>Antecedentes — status</label><select id="mt-antecedentes-status"><option value="">-</option><option>Pendente</option><option>Aprovado</option><option>Reprovado</option></select></div>
-      <div><label>Status</label><select id="mt-status"></select></div>
-      <div><label>Origem</label><select id="mt-origem"><option>Site</option><option>Instagram</option><option>Facebook</option><option>Networking</option><option>Indicação</option><option>Outro</option></select></div>
+      <div class="formgrid">
+        <div><label>Veículo</label><input type="text" id="mt-veiculo" placeholder="Ex: Fiat Argo prata"></div>
+        <div><label>Placa</label><input type="text" id="mt-placa" placeholder="ABC1D23"></div>
+        <div><label>Marca</label><input type="text" id="mt-marca"></div>
+        <div><label>Modelo</label><input type="text" id="mt-modelo"></div>
+        <div><label>Ano de fabricação</label><input type="text" id="mt-ano-fab"></div>
+        <div><label>Ano do modelo</label><input type="text" id="mt-ano-mod"></div>
+        <div><label>Cor</label><input type="text" id="mt-cor"></div>
+        <div><label>Combustível</label><input type="text" id="mt-combustivel"></div>
+        <div><label>Renavam</label><input type="text" id="mt-renavam"></div>
+        <div><label>Chassi</label><input type="text" id="mt-chassi"></div>
+        <div><label>Proprietário do veículo <span style="font-weight:400; color:var(--muted);">(no documento)</span></label><input type="text" id="mt-proprietario"></div>
+      </div>
     </div>
 
     <div id="mt-acesso-wrap" style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
@@ -979,8 +986,12 @@ tr.tr-click:hover{background:#fff7fa;}
       <div id="mt-acesso-status" style="font-size:12.5px; margin-top:4px;"></div>
     </div>
 
-    <div id="mt-documentos-wrap" style="margin-top:18px;">
+    <div id="mt-documentos-wrap" style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
       <h4 style="font-size:13px; margin:0 0 8px;">Documentos</h4>
+      <div class="formgrid" style="margin-bottom:12px;">
+        <div><label>Antecedentes — data</label><input type="date" id="mt-antecedentes-data"></div>
+        <div><label>Antecedentes — status</label><select id="mt-antecedentes-status"><option value="">-</option><option>Pendente</option><option>Aprovado</option><option>Reprovado</option></select></div>
+      </div>
       <div id="mt-checklist-documentos" style="margin-bottom:12px;"></div>
       <div id="mt-documentos-lista"></div>
       <div class="formgrid" style="margin-top:8px;">
