@@ -1010,8 +1010,9 @@ tr.tr-click:hover{background:#fff7fa;}
       <div class="full"><label>Endereço de destino</label><input type="text" id="vg-destino-endereco"></div>
       <div class="full"><button type="button" class="btn ghost" style="font-size:12.5px;" onclick="abrirRotaMaps()">📍 Ver rota no Google Maps</button></div>
       <div><label>Data</label><input type="date" id="vg-data"></div>
-      <div><label>Horário previsto de partida</label><input type="time" id="vg-horario-partida"></div>
-      <div><label>Horário previsto de chegada</label><input type="time" id="vg-horario-chegada"></div>
+      <div><label>Horário previsto de partida</label><input type="time" id="vg-horario-partida" oninput="recalcularHorarioChegada()"></div>
+      <div><label>Duração prevista (min)</label><input type="number" id="vg-duracao-min" step="1" oninput="recalcularHorarioChegada()"></div>
+      <div><label>Horário previsto de chegada <span style="font-weight:400; color:var(--muted);">(calculado: partida + duração)</span></label><input type="time" id="vg-horario-chegada"></div>
       <div><label>Data do retorno <span style="font-weight:400; color:var(--muted);">(ida e volta)</span></label><input type="date" id="vg-data-retorno"></div>
       <div><label>Horário do retorno</label><input type="time" id="vg-horario-retorno"></div>
       <div class="full"><label>Endereço de origem do retorno <span style="font-weight:400; color:var(--muted);">(se vazio, é o mesmo destino de ida)</span></label><input type="text" id="vg-origem-retorno"></div>
@@ -3037,6 +3038,19 @@ function copiarLinkAcompanhamento(){
   if(!val) return;
   navigator.clipboard.writeText(val).then(()=> showToast("Link copiado!"));
 }
+function recalcularHorarioChegada(){
+  const partida = document.getElementById("vg-horario-partida").value;
+  const duracaoStr = document.getElementById("vg-duracao-min").value;
+  const campo = document.getElementById("vg-horario-chegada");
+  if(!partida || duracaoStr === "") return;
+  if(!(campo.value === "" || campo.value === campo.dataset.autoValor)) return;
+  const duracao = Number(duracaoStr) || 0;
+  const [h, m] = partida.split(":").map(Number);
+  const totalMin = ((h * 60 + m + duracao) % 1440 + 1440) % 1440;
+  const novoValor = String(Math.floor(totalMin / 60)).padStart(2, "0") + ":" + String(totalMin % 60).padStart(2, "0");
+  campo.value = novoValor;
+  campo.dataset.autoValor = novoValor;
+}
 function recalcularCotacao(){
   const km = Number(document.getElementById("vg-distancia-km").value) || 0;
   const tarifaFixa = Number(document.getElementById("vg-tarifa-fixa").value) || 0;
@@ -3149,6 +3163,7 @@ function openViagemModal(id){
   document.getElementById("vg-destino-endereco").value = v.destino_endereco||"";
   document.getElementById("vg-data").value = v.data || "";
   document.getElementById("vg-horario-partida").value = v.horario_partida ? v.horario_partida.slice(0,5) : "";
+  document.getElementById("vg-duracao-min").value = v.duracao_prevista_min ?? "";
   document.getElementById("vg-horario-chegada").value = v.horario_chegada ? v.horario_chegada.slice(0,5) : "";
   document.getElementById("vg-data-retorno").value = v.data_retorno || "";
   document.getElementById("vg-horario-retorno").value = v.horario_retorno ? v.horario_retorno.slice(0,5) : "";
@@ -3198,6 +3213,7 @@ async function saveViagem(){
     destino_endereco: document.getElementById("vg-destino-endereco").value,
     data: document.getElementById("vg-data").value || null,
     horario_partida: document.getElementById("vg-horario-partida").value || null,
+    duracao_prevista_min: document.getElementById("vg-duracao-min").value === "" ? null : Number(document.getElementById("vg-duracao-min").value),
     horario_chegada: document.getElementById("vg-horario-chegada").value || null,
     data_retorno: document.getElementById("vg-data-retorno").value || null,
     horario_retorno: document.getElementById("vg-horario-retorno").value || null,
