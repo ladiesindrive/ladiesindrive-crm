@@ -25,6 +25,7 @@ begin
   foreach tbl in array tabelas loop
     if to_regclass('public.' || tbl) is not null then
       execute format('drop policy if exists %I on public.%I', 'Autenticados podem tudo - ' || tbl, tbl);
+      execute format('drop policy if exists %I on public.%I', 'Staff podem tudo - ' || tbl, tbl);
       execute format(
         'create policy %I on public.%I for all using (auth.role() = ''authenticated'' and public.motorista_id_atual() is null) with check (auth.role() = ''authenticated'' and public.motorista_id_atual() is null)',
         'Staff podem tudo - ' || tbl, tbl
