@@ -1004,7 +1004,6 @@ tr.tr-click:hover{background:#fff7fa;}
       </div>
 
       <h4 style="font-size:13px; margin:18px 0 8px; border-top:1px solid var(--border); padding-top:14px;">Outros documentos</h4>
-      <div id="mt-checklist-documentos" style="margin-bottom:12px;"></div>
       <div id="mt-documentos-lista"></div>
       <div class="formgrid" style="margin-top:8px;">
         <div><label>Tipo de documento</label><select id="mt-doc-tipo"><option>CNH EAR</option><option>Curso ConduApp (16h)</option><option>Curso Transporte Infantil (50h CONTRAN)</option><option>Outro</option></select></div>
@@ -3023,26 +3022,9 @@ function openMotoristaModal(id){
   renderObservacoesMotorista();
   document.getElementById("motorista-modal").classList.add("open");
 }
-function renderChecklistDocumentos(){
-  const wrap = document.getElementById("mt-checklist-documentos");
-  if(!editingMotoristaId){
-    wrap.innerHTML = "";
-    return;
-  }
-  const itens = checklistDocumentosMotorista(editingMotoristaId);
-  const emDia = itens.every(i=>i.ok);
-  wrap.innerHTML = `
-    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
-      ${itens.map(i=>`<span class="tag ${i.ok?'ativo':'urg-media'}">${i.ok?'✓':'○'} ${i.tipo}</span>`).join("")}
-    </div>
-    <div style="font-size:12.5px; font-weight:700; color:${emDia?'var(--green)':'var(--pink)'};">
-      ${emDia?'✅ Documentos em dia':'⚠️ Documentos pendentes — marque cada um como "Verificado" na lista abaixo pra completar'}
-    </div>`;
-}
 function renderDocumentosMotorista(){
   const wrap = document.getElementById("mt-documentos-lista");
   const campos = document.querySelectorAll("#mt-documentos-wrap button");
-  renderChecklistDocumentos();
   if(!editingMotoristaId){
     wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Pode preencher o 1º documento aqui: ele é salvo junto quando você clicar em "Salvar" no cadastro.</p>`;
     campos.forEach(el=>el.disabled = true);
