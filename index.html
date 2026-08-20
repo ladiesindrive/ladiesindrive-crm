@@ -981,17 +981,36 @@ tr.tr-click:hover{background:#fff7fa;}
     </div>
 
     <div id="mt-documentos-wrap" style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
-      <h4 style="font-size:13px; margin:0 0 8px;">Documentos</h4>
-      <div class="formgrid" style="margin-bottom:12px;">
-        <div><label>Antecedentes — data</label><input type="date" id="mt-antecedentes-data"></div>
-        <div><label>Antecedentes — status</label><select id="mt-antecedentes-status"><option value="">-</option><option>Pendente</option><option>Aprovado</option><option>Reprovado</option></select></div>
+      <h4 style="font-size:13px; margin:0 0 10px;">Antecedentes Criminais</h4>
+      <div style="border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:16px;">
+        <input type="file" id="dp-antecedentes-file" accept="image/*,.pdf" style="display:none" onchange="selecionarArquivoDocPrincipal('antecedentes', this)">
+        <button type="button" class="btn secondary small" id="dp-antecedentes-btn" onclick="document.getElementById('dp-antecedentes-file').click()">📄 Anexar arquivo</button>
+        <span id="dp-antecedentes-arquivo-atual" style="font-size:12px; margin-left:6px;"></span>
+        <div class="formgrid" style="margin-top:10px;">
+          <div><label>Data da consulta</label><input type="date" id="dp-antecedentes-data"></div>
+          <div><label>Status</label><select id="dp-antecedentes-status"><option value="">-</option><option>Pendente</option><option>Aprovado</option><option>Reprovado</option></select></div>
+        </div>
       </div>
+
+      <h4 style="font-size:13px; margin:0 0 10px;">Comprovante de Endereço</h4>
+      <div style="border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:16px;">
+        <input type="file" id="dp-endereco-file" accept="image/*,.pdf" style="display:none" onchange="selecionarArquivoDocPrincipal('endereco', this)">
+        <button type="button" class="btn secondary small" id="dp-endereco-btn" onclick="document.getElementById('dp-endereco-file').click()">📄 Anexar arquivo</button>
+        <span id="dp-endereco-arquivo-atual" style="font-size:12px; margin-left:6px;"></span>
+        <div class="formgrid" style="margin-top:10px;">
+          <div><label>Data do documento</label><input type="date" id="dp-endereco-data"></div>
+          <div><label>Status</label><select id="dp-endereco-status"><option value="">-</option><option>Pendente</option><option>Verificado</option><option>Vencido</option></select></div>
+        </div>
+      </div>
+
+      <h4 style="font-size:13px; margin:18px 0 8px; border-top:1px solid var(--border); padding-top:14px;">Outros documentos</h4>
       <div id="mt-checklist-documentos" style="margin-bottom:12px;"></div>
       <div id="mt-documentos-lista"></div>
       <div class="formgrid" style="margin-top:8px;">
-        <div><label>Tipo de documento</label><select id="mt-doc-tipo"><option>CNH</option><option>CNH EAR</option><option>CRLV</option><option>Antecedentes Criminais</option><option>Curso ConduApp (16h)</option><option>Curso Transporte Infantil (50h CONTRAN)</option><option>Outro</option></select></div>
+        <div><label>Tipo de documento</label><select id="mt-doc-tipo"><option>CNH EAR</option><option>Curso ConduApp (16h)</option><option>Curso Transporte Infantil (50h CONTRAN)</option><option>Outro</option></select></div>
         <div><label>Validade</label><input type="date" id="mt-doc-validade"></div>
         <div><label>Status</label><select id="mt-doc-status"><option>Pendente</option><option>Lido por IA</option><option>Verificado</option><option>Vencido</option></select></div>
+        <div><label>Arquivo (opcional)</label><input type="file" id="mt-doc-file" accept="image/*,.pdf"></div>
         <div style="display:flex; align-items:flex-end;"><button class="btn secondary small" type="button" onclick="addDocumentoMotorista()">+ Adicionar documento</button></div>
       </div>
     </div>
@@ -1228,7 +1247,7 @@ const CATEGORIAS = [...new Set(SERVICOS.map(s=>s.categoria))];
 
 const MOTORISTA_ETAPAS = ["Candidatura recebida","Em entrevista","Documentos pendentes","Em treinamento","Ativa","Inativa","Recusada"];
 const MOTORISTA_ETAPA_CLASS = {"Candidatura recebida":"novo","Em entrevista":"contato","Documentos pendentes":"urg-media","Em treinamento":"negociacao","Ativa":"ativo","Inativa":"perdido","Recusada":"perdido"};
-const DOCUMENTOS_OBRIGATORIOS_MOTORISTA = ["CNH","CNH EAR","Antecedentes Criminais","Curso ConduApp (16h)","Curso Transporte Infantil (50h CONTRAN)"];
+const DOCUMENTOS_OBRIGATORIOS_MOTORISTA = ["CNH","CNH EAR","Curso ConduApp (16h)","Curso Transporte Infantil (50h CONTRAN)"];
 const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Idoso","Recorrente","Diário","Evento"];
 const CANAL_RECEPCAO = ["Telefone","Redes sociais","Site","E-mail"];
 const VIAGEM_STATUS = ["Solicitada","Confirmada","Em andamento","Concluída","Cancelada"];
@@ -2915,6 +2934,40 @@ function aplicarDadosIACRLV(d){
   }
 }
 
+// ===== ANTECEDENTES CRIMINAIS / COMPROVANTE DE ENDEREÇO (documentos principais, 1 arquivo cada) =====
+const DOC_PRINCIPAL_CONFIG = { antecedentes: "Antecedentes Criminais", endereco: "Comprovante de Endereço" };
+let docPrincipalArquivoPendente = { antecedentes: null, endereco: null };
+let docPrincipalId = { antecedentes: null, endereco: null };
+function selecionarArquivoDocPrincipal(tipo, input){
+  const arquivo = input.files[0]; if(!arquivo) return;
+  docPrincipalArquivoPendente[tipo] = arquivo;
+  document.getElementById(`dp-${tipo}-arquivo-atual`).textContent = `Novo arquivo: ${arquivo.name} (salvo junto quando você clicar em "Salvar")`;
+}
+function carregarDocPrincipal(tipo){
+  const doc = editingMotoristaId ? documentosMotorista.find(d=>d.motorista_id===editingMotoristaId && d.tipo_documento===DOC_PRINCIPAL_CONFIG[tipo]) : null;
+  docPrincipalId[tipo] = doc ? doc.id : null;
+  docPrincipalArquivoPendente[tipo] = null;
+  document.getElementById(`dp-${tipo}-data`).value = doc?.validade || "";
+  document.getElementById(`dp-${tipo}-status`).value = doc?.status_verificacao || "";
+  document.getElementById(`dp-${tipo}-file`).value = "";
+  document.getElementById(`dp-${tipo}-arquivo-atual`).textContent = doc?.url ? "📎 já tem arquivo salvo" : "";
+}
+async function salvarDocPrincipal(tipo, motoristaId){
+  const validade = document.getElementById(`dp-${tipo}-data`).value || null;
+  const status = document.getElementById(`dp-${tipo}-status`).value || null;
+  const arquivo = docPrincipalArquivoPendente[tipo];
+  const payload = { motorista_id: motoristaId, tipo_documento: DOC_PRINCIPAL_CONFIG[tipo], validade, status_verificacao: status };
+  if(!docPrincipalId[tipo] && !validade && !status && !arquivo) return;
+  if(arquivo){
+    const path = `${motoristaId}/${Date.now()}_${DOC_PRINCIPAL_CONFIG[tipo]}_${arquivo.name}`;
+    const { error: ue } = await sb.storage.from("documentos-motoristas").upload(path, arquivo);
+    if(!ue) payload.url = path;
+  }
+  if(docPrincipalId[tipo]) await sb.from("documentos_motorista").update(payload).eq("id", docPrincipalId[tipo]);
+  else await sb.from("documentos_motorista").insert(payload);
+  docPrincipalArquivoPendente[tipo] = null;
+}
+
 let editingMotoristaId = null;
 function openMotoristaModal(id){
   editingMotoristaId = id || null;
@@ -2951,15 +3004,15 @@ function openMotoristaModal(id){
   document.getElementById("ia-crlv-status").style.display = "none";
   document.getElementById("ia-cnh-btn").textContent = "📄 Selecionar CNH (foto ou PDF)";
   document.getElementById("ia-crlv-btn").textContent = "📄 Selecionar CRLV (foto ou PDF)";
-  document.getElementById("mt-antecedentes-data").value = m.antecedentes_data||"";
-  document.getElementById("mt-antecedentes-status").value = m.antecedentes_status||"";
+  carregarDocPrincipal("antecedentes");
+  carregarDocPrincipal("endereco");
   document.getElementById("mt-status").value = m.status||"Candidatura recebida";
   document.getElementById("mt-origem").value = m.origem||"Site";
   document.getElementById("mt-auth-uid").value = m.auth_user_id||"";
   document.getElementById("mt-acesso-status").innerHTML = m.auth_user_id
     ? '<span class="tag ativo">✓ Login vinculado</span>'
     : '<span class="tag urg-media">Sem login vinculado ainda</span>';
-  document.getElementById("mt-doc-tipo").value = "CNH";
+  document.getElementById("mt-doc-tipo").value = "CNH EAR";
   document.getElementById("mt-doc-validade").value = "";
   document.getElementById("mt-doc-status").value = "Pendente";
   document.getElementById("mo-data").value = "";
@@ -2994,7 +3047,7 @@ function renderDocumentosMotorista(){
     return;
   }
   campos.forEach(el=>el.disabled = false);
-  const docs = documentosMotorista.filter(d=>d.motorista_id===editingMotoristaId);
+  const docs = documentosMotorista.filter(d=>d.motorista_id===editingMotoristaId && d.tipo_documento!=="Antecedentes Criminais" && d.tipo_documento!=="Comprovante de Endereço");
   wrap.innerHTML = docs.map(d=>`
     <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f4eaf0; font-size:12.5px;">
       <span>${d.tipo_documento}${d.validade?" · até "+d.validade:""} <span class="tag ${d.status_verificacao==='Verificado'?'ativo':d.status_verificacao==='Vencido'?'perdido':d.status_verificacao==='Lido por IA'?'negociacao':'urg-media'}">${d.status_verificacao}</span>${d.url?` <a href="#" onclick="abrirDocumentoMotorista('${d.url}');return false;" style="font-size:11.5px;">📎 ver arquivo</a>`:""}</span>
@@ -3009,17 +3062,27 @@ async function abrirDocumentoMotorista(path){
 }
 async function addDocumentoMotorista(){
   if(!editingMotoristaId) return;
+  const tipo = document.getElementById("mt-doc-tipo").value;
   const payload = {
     motorista_id: editingMotoristaId,
-    tipo_documento: document.getElementById("mt-doc-tipo").value,
+    tipo_documento: tipo,
     validade: document.getElementById("mt-doc-validade").value || null,
     status_verificacao: document.getElementById("mt-doc-status").value,
   };
+  const arquivoInput = document.getElementById("mt-doc-file");
+  const arquivo = arquivoInput.files[0];
+  if(arquivo){
+    const path = `${editingMotoristaId}/${Date.now()}_${tipo}_${arquivo.name}`;
+    const { error: ue } = await sb.storage.from("documentos-motoristas").upload(path, arquivo);
+    if(ue){ alert("Erro ao subir o arquivo: " + ue.message); return; }
+    payload.url = path;
+  }
   const { error } = await sb.from("documentos_motorista").insert(payload);
   if(error){ alert("Erro ao adicionar documento: " + error.message); return; }
   const { data } = await sb.from("documentos_motorista").select("*").order("id");
   documentosMotorista = data || [];
   document.getElementById("mt-doc-validade").value = "";
+  arquivoInput.value = "";
   renderDocumentosMotorista();
   renderTransporteMotoristas();
 }
@@ -3102,8 +3165,6 @@ async function saveMotorista(){
     cnh_categoria: [...document.querySelectorAll("#mt-cnh-categoria-wrap input[type=checkbox]:checked")].map(cb=>cb.value).join(", "),
     cnh_validade: document.getElementById("mt-cnh-validade").value || null,
     cnh_ear: document.getElementById("mt-cnh-ear").value || null,
-    antecedentes_data: document.getElementById("mt-antecedentes-data").value || null,
-    antecedentes_status: document.getElementById("mt-antecedentes-status").value || null,
     status: document.getElementById("mt-status").value,
     origem: document.getElementById("mt-origem").value,
     auth_user_id: document.getElementById("mt-auth-uid").value.trim() || null,
@@ -3121,6 +3182,8 @@ async function saveMotorista(){
     if(document.getElementById("mo-texto").value.trim()) await addObservacaoMotorista();
   }
   await salvarDocumentosPendentesIA(editingMotoristaId);
+  await salvarDocPrincipal("antecedentes", editingMotoristaId);
+  await salvarDocPrincipal("endereco", editingMotoristaId);
   await carregarDados();
   if(isNew){ renderDocumentosMotorista(); renderObservacoesMotorista(); }
   else { closeModal("motorista-modal"); }
