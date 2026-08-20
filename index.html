@@ -1026,6 +1026,11 @@ tr.tr-click:hover{background:#fff7fa;}
       </div>
     </div>
 
+    <div id="mt-historico-wrap" style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
+      <h4 style="font-size:13px; margin:0 0 8px;">Histórico de documentos</h4>
+      <div id="mt-historico-lista"></div>
+    </div>
+
     <div id="mt-acesso-wrap" style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
       <h4 style="font-size:13px; margin:0 0 8px;">Acesso ao painel da motorista</h4>
       <p style="color:var(--muted); font-size:12.5px; margin:0 0 8px;">
@@ -2978,16 +2983,41 @@ async function salvarDocPrincipal(tipo, motoristaId){
   const validade = document.getElementById(`dp-${tipo}-data`).value || null;
   const status = document.getElementById(`dp-${tipo}-status`).value || null;
   const arquivo = docPrincipalArquivoPendente[tipo];
-  const payload = { motorista_id: motoristaId, tipo_documento: DOC_PRINCIPAL_CONFIG[tipo], validade, status_verificacao: status };
   if(!docPrincipalId[tipo] && !validade && !status && !arquivo) return;
+  const payload = { motorista_id: motoristaId, tipo_documento: DOC_PRINCIPAL_CONFIG[tipo], validade, status_verificacao: status };
   if(arquivo){
     const path = `${motoristaId}/${Date.now()}_${DOC_PRINCIPAL_CONFIG[tipo]}_${arquivo.name}`;
     const { error: ue } = await sb.storage.from("documentos-motoristas").upload(path, arquivo);
     if(!ue) payload.url = path;
+    // arquivo novo = versão nova do documento; a linha anterior fica no histórico, não é sobrescrita
+    await sb.from("documentos_motorista").insert(payload);
+  } else if(docPrincipalId[tipo]){
+    // só editando data/status do documento atual, sem trocar arquivo — atualiza no lugar
+    await sb.from("documentos_motorista").update(payload).eq("id", docPrincipalId[tipo]);
+  } else {
+    await sb.from("documentos_motorista").insert(payload);
   }
-  if(docPrincipalId[tipo]) await sb.from("documentos_motorista").update(payload).eq("id", docPrincipalId[tipo]);
-  else await sb.from("documentos_motorista").insert(payload);
   docPrincipalArquivoPendente[tipo] = null;
+}
+function renderHistoricoDocumentos(){
+  const wrap = document.getElementById("mt-historico-lista");
+  if(!editingMotoristaId){
+    wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Aparece aqui quando um documento principal (CNH, CRLV, Antecedentes Criminais, Comprovante de Endereço) for substituído por uma versão mais nova — a antiga fica guardada, não é apagada.</p>`;
+    return;
+  }
+  const tiposPrincipais = Object.values(DOC_PRINCIPAL_CONFIG);
+  const antigos = [];
+  tiposPrincipais.forEach(tipo=>{
+    const doTipo = documentosMotorista.filter(d=>d.motorista_id===editingMotoristaId && d.tipo_documento===tipo).sort((a,b)=>b.id-a.id);
+    antigos.push(...doTipo.slice(1));
+  });
+  antigos.sort((a,b)=>b.id-a.id);
+  wrap.innerHTML = antigos.map(d=>`
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f4eaf0; font-size:12.5px;">
+      <span>${d.tipo_documento}${d.validade?" · "+d.validade:""} <span class="tag ${d.status_verificacao==='Verificado'?'ativo':d.status_verificacao==='Vencido'?'perdido':d.status_verificacao==='Lido por IA'?'negociacao':'urg-media'}">${d.status_verificacao||"-"}</span>${d.url?` <a href="#" onclick="abrirDocumentoMotorista('${d.url}');return false;" style="font-size:11.5px;">📎 ver arquivo</a>`:""}</span>
+      <button class="icon-btn" type="button" onclick="deleteDocumentoMotorista(${d.id})">🗑️</button>
+    </div>
+  `).join("") || `<p style="color:var(--muted); font-size:12.5px;">Nenhum documento antigo ainda.</p>`;
 }
 
 let editingMotoristaId = null;
@@ -3047,6 +3077,7 @@ function openMotoristaModal(id){
 function renderDocumentosMotorista(){
   const wrap = document.getElementById("mt-documentos-lista");
   const campos = document.querySelectorAll("#mt-documentos-wrap button");
+  renderHistoricoDocumentos();
   if(!editingMotoristaId){
     wrap.innerHTML = `<p style="color:var(--muted); font-size:12.5px;">Pode preencher o 1º documento aqui: ele é salvo junto quando você clicar em "Salvar" no cadastro.</p>`;
     campos.forEach(el=>el.disabled = true);
