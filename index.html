@@ -991,7 +991,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div class="formgrid" style="margin-top:8px;">
         <div><label>Tipo de documento</label><select id="mt-doc-tipo"><option>CNH</option><option>CNH EAR</option><option>CRLV</option><option>Antecedentes Criminais</option><option>Curso ConduApp (16h)</option><option>Curso Transporte Infantil (50h CONTRAN)</option><option>Outro</option></select></div>
         <div><label>Validade</label><input type="date" id="mt-doc-validade"></div>
-        <div><label>Status</label><select id="mt-doc-status"><option>Pendente</option><option>Verificado</option><option>Vencido</option></select></div>
+        <div><label>Status</label><select id="mt-doc-status"><option>Pendente</option><option>Lido por IA</option><option>Verificado</option><option>Vencido</option></select></div>
         <div style="display:flex; align-items:flex-end;"><button class="btn secondary small" type="button" onclick="addDocumentoMotorista()">+ Adicionar documento</button></div>
       </div>
     </div>
@@ -2776,13 +2776,13 @@ async function deleteOrcamento(id){
 
 // ===== TRANSPORTE: MOTORISTAS =====
 function documentosPendentesCount(motoristaId){
-  return documentosMotorista.filter(d=>d.motorista_id===motoristaId && d.status_verificacao!=="Verificado").length;
+  return documentosMotorista.filter(d=>d.motorista_id===motoristaId && d.status_verificacao!=="Verificado" && d.status_verificacao!=="Lido por IA").length;
 }
 function checklistDocumentosMotorista(motoristaId){
   const docs = documentosMotorista.filter(d=>d.motorista_id===motoristaId);
   return DOCUMENTOS_OBRIGATORIOS_MOTORISTA.map(tipo=>({
     tipo,
-    ok: docs.some(d=>d.tipo_documento===tipo && d.status_verificacao==="Verificado"),
+    ok: docs.some(d=>d.tipo_documento===tipo && (d.status_verificacao==="Verificado" || d.status_verificacao==="Lido por IA")),
   }));
 }
 function documentosEmDiaMotorista(motoristaId){
@@ -2997,10 +2997,15 @@ function renderDocumentosMotorista(){
   const docs = documentosMotorista.filter(d=>d.motorista_id===editingMotoristaId);
   wrap.innerHTML = docs.map(d=>`
     <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f4eaf0; font-size:12.5px;">
-      <span>${d.tipo_documento}${d.validade?" · até "+d.validade:""} <span class="tag ${d.status_verificacao==='Verificado'?'ativo':d.status_verificacao==='Vencido'?'perdido':'urg-media'}">${d.status_verificacao}</span></span>
+      <span>${d.tipo_documento}${d.validade?" · até "+d.validade:""} <span class="tag ${d.status_verificacao==='Verificado'?'ativo':d.status_verificacao==='Vencido'?'perdido':d.status_verificacao==='Lido por IA'?'negociacao':'urg-media'}">${d.status_verificacao}</span>${d.url?` <a href="#" onclick="abrirDocumentoMotorista('${d.url}');return false;" style="font-size:11.5px;">📎 ver arquivo</a>`:""}</span>
       <button class="icon-btn" type="button" onclick="deleteDocumentoMotorista(${d.id})">🗑️</button>
     </div>
   `).join("") || `<p style="color:var(--muted); font-size:12.5px;">Nenhum documento registrado ainda.</p>`;
+}
+async function abrirDocumentoMotorista(path){
+  const { data, error } = await sb.storage.from("documentos-motoristas").createSignedUrl(path, 120);
+  if(error || !data){ alert("Não foi possível abrir o arquivo: " + (error?.message||"")); return; }
+  window.open(data.signedUrl, "_blank");
 }
 async function addDocumentoMotorista(){
   if(!editingMotoristaId) return;
@@ -3131,7 +3136,7 @@ async function salvarDocumentosPendentesIA(motoristaId){
         await sb.from("documentos_motorista").insert({
           motorista_id: motoristaId,
           tipo_documento: IA_DOC_CONFIG[tipo].tipoDocumento,
-          status_verificacao: "Pendente",
+          status_verificacao: "Lido por IA",
           url: path,
         });
       }
