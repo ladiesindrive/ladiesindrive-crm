@@ -901,6 +901,20 @@ tr.tr-click:hover{background:#fff7fa;}
       <h3 id="motorista-modal-title" style="margin:0;">Nova motorista</h3>
       <button class="icon-btn" type="button" onclick="closeModal('motorista-modal')" style="font-size:18px;" aria-label="Fechar">✕</button>
     </div>
+    <div id="ia-cnh-wrap" style="background:var(--pink-light); border:1px solid var(--pink-mid); border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+      <div style="font-size:13px; font-weight:600; color:var(--pink); margin-bottom:6px;">🤖 Preencher automaticamente com a CNH</div>
+      <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">Envie uma foto ou PDF da CNH e a IA preenche os campos abaixo.</div>
+      <input type="file" id="ia-cnh-file" accept="image/*,.pdf" style="display:none" onchange="selecionarArquivoIA('cnh', this)">
+      <button type="button" class="btn secondary small" id="ia-cnh-btn" onclick="document.getElementById('ia-cnh-file').click()">📄 Selecionar CNH (foto ou PDF)</button>
+      <div id="ia-cnh-confirm" style="display:none; margin-top:10px;">
+        <div style="font-size:12px; margin-bottom:6px;">Arquivo selecionado: <strong id="ia-cnh-nome-arquivo"></strong> — é mesmo a CNH dela?</div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn small" onclick="confirmarLeituraIA('cnh')">✅ Confirmar e ler com IA</button>
+          <button type="button" class="btn ghost small" onclick="cancelarSelecaoIA('cnh')">Trocar arquivo</button>
+        </div>
+      </div>
+      <div id="ia-cnh-status" style="display:none; margin-top:8px; font-size:12.5px;"></div>
+    </div>
     <div class="formgrid">
       <div class="full"><label>Nome *</label><input type="text" id="mt-nome"></div>
       <div><label>WhatsApp</label><input type="text" id="mt-whatsapp" placeholder="(51) 99999-9999" oninput="this.value=formatarTelefoneBR(this.value)"></div>
@@ -909,38 +923,18 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Aniversário</label><input type="date" id="mt-aniversario"></div>
       <div><label>Status</label><select id="mt-status"></select></div>
       <div><label>Origem</label><select id="mt-origem"><option>Site</option><option>Instagram</option><option>Facebook</option><option>Networking</option><option>Indicação</option><option>Outro</option></select></div>
-    </div>
-
-    <div style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
-      <h4 style="font-size:13px; margin:0 0 10px;">CNH</h4>
-      <div class="full" id="ia-cnh-wrap" style="background:var(--pink-light); border:1px solid var(--pink-mid); border-radius:10px; padding:12px 14px; margin-bottom:12px;">
-        <div style="font-size:13px; font-weight:600; color:var(--pink); margin-bottom:6px;">🤖 Preencher automaticamente com a CNH</div>
-        <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">Envie uma foto ou PDF da CNH e a IA preenche os campos abaixo.</div>
-        <input type="file" id="ia-cnh-file" accept="image/*,.pdf" style="display:none" onchange="selecionarArquivoIA('cnh', this)">
-        <button type="button" class="btn secondary small" id="ia-cnh-btn" onclick="document.getElementById('ia-cnh-file').click()">📄 Selecionar CNH (foto ou PDF)</button>
-        <div id="ia-cnh-confirm" style="display:none; margin-top:10px;">
-          <div style="font-size:12px; margin-bottom:6px;">Arquivo selecionado: <strong id="ia-cnh-nome-arquivo"></strong> — é mesmo a CNH dela?</div>
-          <div style="display:flex; gap:8px;">
-            <button type="button" class="btn small" onclick="confirmarLeituraIA('cnh')">✅ Confirmar e ler com IA</button>
-            <button type="button" class="btn ghost small" onclick="cancelarSelecaoIA('cnh')">Trocar arquivo</button>
-          </div>
+      <div><label>CPF</label><input type="text" id="mt-cpf"></div>
+      <div><label>Nº de registro da CNH</label><input type="text" id="mt-cnh-registro"></div>
+      <div class="full">
+        <label>Categoria da CNH <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
+        <div id="mt-cnh-categoria-wrap" style="display:flex; flex-wrap:wrap; gap:6px;">
+          <label class="chip-check"><input type="checkbox" value="B"> B</label>
+          <label class="chip-check"><input type="checkbox" value="D"> D</label>
+          <label class="chip-check"><input type="checkbox" value="Outra"> Outra</label>
         </div>
-        <div id="ia-cnh-status" style="display:none; margin-top:8px; font-size:12.5px;"></div>
       </div>
-      <div class="formgrid">
-        <div><label>CPF</label><input type="text" id="mt-cpf"></div>
-        <div><label>Nº de registro da CNH</label><input type="text" id="mt-cnh-registro"></div>
-        <div class="full">
-          <label>Categoria da CNH <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
-          <div id="mt-cnh-categoria-wrap" style="display:flex; flex-wrap:wrap; gap:6px;">
-            <label class="chip-check"><input type="checkbox" value="B"> B</label>
-            <label class="chip-check"><input type="checkbox" value="D"> D</label>
-            <label class="chip-check"><input type="checkbox" value="Outra"> Outra</label>
-          </div>
-        </div>
-        <div><label>Validade da CNH</label><input type="date" id="mt-cnh-validade"></div>
-        <div><label>Situação do EAR</label><select id="mt-cnh-ear"><option value="">-</option><option value="Já tenho EAR">Já tenho EAR</option><option value="Não tenho EAR">Não tenho EAR</option><option value="Estou em processo">Estou em processo</option></select></div>
-      </div>
+      <div><label>Validade da CNH</label><input type="date" id="mt-cnh-validade"></div>
+      <div><label>Situação do EAR</label><select id="mt-cnh-ear"><option value="">-</option><option value="Já tenho EAR">Já tenho EAR</option><option value="Não tenho EAR">Não tenho EAR</option><option value="Estou em processo">Estou em processo</option></select></div>
     </div>
 
     <div style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
