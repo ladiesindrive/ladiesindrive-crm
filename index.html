@@ -2877,6 +2877,7 @@ async function confirmarLeituraIA(tipo){
 function aplicarDadosIACNH(d){
   const nomeAtual = document.getElementById("mt-nome");
   if(d.nome_completo && !nomeAtual.value.trim()) nomeAtual.value = d.nome_completo;
+  if(d.data_nascimento) document.getElementById("mt-aniversario").value = d.data_nascimento;
   if(d.cpf) document.getElementById("mt-cpf").value = d.cpf;
   if(d.numero_registro) document.getElementById("mt-cnh-registro").value = d.numero_registro;
   if(d.validade) document.getElementById("mt-cnh-validade").value = d.validade;
