@@ -3050,8 +3050,9 @@ function recalcularComissaoCotacao(){
     campo.value = formatarMoedaBR(comissao);
   }
   const campoPgValor = document.getElementById("vg-pg-valor");
-  if(campoPgValor.value === "" && repasseStr !== ""){
+  if(repasseStr !== "" && (campoPgValor.value === "" || campoPgValor.value === campoPgValor.dataset.autoValor)){
     campoPgValor.value = repasseStr;
+    campoPgValor.dataset.autoValor = repasseStr;
   }
   recalcularComissaoPagamento();
 }
