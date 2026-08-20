@@ -2950,7 +2950,9 @@ function carregarDocPrincipal(tipo){
   document.getElementById(`dp-${tipo}-data`).value = doc?.validade || "";
   document.getElementById(`dp-${tipo}-status`).value = doc?.status_verificacao || "";
   document.getElementById(`dp-${tipo}-file`).value = "";
-  document.getElementById(`dp-${tipo}-arquivo-atual`).textContent = doc?.url ? "📎 já tem arquivo salvo" : "";
+  document.getElementById(`dp-${tipo}-arquivo-atual`).innerHTML = doc?.url
+    ? `<a href="#" onclick="abrirDocumentoMotorista('${doc.url}');return false;">📎 ver arquivo</a>`
+    : "";
 }
 async function salvarDocPrincipal(tipo, motoristaId){
   const validade = document.getElementById(`dp-${tipo}-data`).value || null;
