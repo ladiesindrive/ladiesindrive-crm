@@ -968,18 +968,6 @@ tr.tr-click:hover{background:#fff7fa;}
       </div>
     </div>
 
-    <div id="mt-acesso-wrap" style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
-      <h4 style="font-size:13px; margin:0 0 8px;">Acesso ao painel da motorista</h4>
-      <p style="color:var(--muted); font-size:12.5px; margin:0 0 8px;">
-        Crie o login em Supabase → Authentication → Users → Add user (e-mail + senha inicial),
-        copie o UID gerado e cole aqui. Isso liga esse login ao cadastro dela.
-      </p>
-      <div class="formgrid">
-        <div class="full"><label>UID do login (Supabase Authentication)</label><input type="text" id="mt-auth-uid" placeholder="ex: 0fe07c05-f040-468b-b351-a464a3065f33"></div>
-      </div>
-      <div id="mt-acesso-status" style="font-size:12.5px; margin-top:4px;"></div>
-    </div>
-
     <div id="mt-documentos-wrap" style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
       <h4 style="font-size:13px; margin:0 0 10px;">Antecedentes Criminais</h4>
       <div style="border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:16px;">
@@ -1022,6 +1010,18 @@ tr.tr-click:hover{background:#fff7fa;}
         <div class="full"><label>Observação</label><textarea id="mo-texto" rows="2"></textarea></div>
         <div style="display:flex; align-items:flex-end;"><button class="btn secondary small" type="button" onclick="addObservacaoMotorista()">+ Adicionar observação</button></div>
       </div>
+    </div>
+
+    <div id="mt-acesso-wrap" style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
+      <h4 style="font-size:13px; margin:0 0 8px;">Acesso ao painel da motorista</h4>
+      <p style="color:var(--muted); font-size:12.5px; margin:0 0 8px;">
+        Crie o login em Supabase → Authentication → Users → Add user (e-mail + senha inicial),
+        copie o UID gerado e cole aqui. Isso liga esse login ao cadastro dela.
+      </p>
+      <div class="formgrid">
+        <div class="full"><label>UID do login (Supabase Authentication)</label><input type="text" id="mt-auth-uid" placeholder="ex: 0fe07c05-f040-468b-b351-a464a3065f33"></div>
+      </div>
+      <div id="mt-acesso-status" style="font-size:12.5px; margin-top:4px;"></div>
     </div>
 
     <div class="modal-actions">
