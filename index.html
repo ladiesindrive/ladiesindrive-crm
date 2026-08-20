@@ -99,6 +99,9 @@ select,input[type=text],input[type=number],input[type=date],input[type=email],in
 .formgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
 .formgrid .full{grid-column:1/-1;}
 .formgrid label{font-size:12px; color:var(--muted); display:block; margin-bottom:3px;}
+.campo-moeda{position:relative;}
+.campo-moeda .prefixo{position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:13px; pointer-events:none;}
+.campo-moeda input{padding-left:30px !important;}
 .formgrid select,.formgrid input,.formgrid textarea{width:100%;}
 .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:16px;}
 .chartwrap{height:230px;}
@@ -1032,10 +1035,10 @@ tr.tr-click:hover{background:#fff7fa;}
         </div>
       </div>
       <div><label>Distância (km)</label><input type="number" id="vg-distancia-km" step="0.1" oninput="recalcularCotacao()"></div>
-      <div><label>Tarifa fixa (R$)</label><input type="number" id="vg-tarifa-fixa" step="0.01" oninput="recalcularCotacao()"></div>
-      <div><label>Valor por km (R$)</label><input type="number" id="vg-valor-km" step="0.01" oninput="recalcularCotacao()"></div>
-      <div><label>Preço cotado <span style="font-weight:400; color:var(--muted);">(cobrado da cliente)</span></label><input type="number" id="vg-preco-cotado" step="0.01" oninput="recalcularComissaoCotacao()"></div>
-      <div><label>Repasse motorista <span style="font-weight:400; color:var(--muted);">(oferta, aparece pra ela antes de aceitar)</span></label><input type="number" id="vg-preco-motorista" step="0.01" oninput="recalcularComissaoCotacao()"></div>
+      <div><label>Tarifa fixa</label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-tarifa-fixa" step="0.01" oninput="recalcularCotacao()"></div></div>
+      <div><label>Valor por km</label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-valor-km" step="0.01" oninput="recalcularCotacao()"></div></div>
+      <div><label>Preço cotado <span style="font-weight:400; color:var(--muted);">(cobrado da cliente)</span></label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-preco-cotado" step="0.01" oninput="recalcularComissaoCotacao()"></div></div>
+      <div><label>Repasse motorista <span style="font-weight:400; color:var(--muted);">(oferta, aparece pra ela antes de aceitar)</span></label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-preco-motorista" step="0.01" oninput="recalcularComissaoCotacao()"></div></div>
       <div><label>Comissão Ladies in Drive <span style="font-weight:400; color:var(--muted);">(calculada: cotado − repasse)</span></label><input type="text" id="vg-comissao-ladies" readonly style="background:var(--border); cursor:not-allowed;"></div>
       <div class="full"><label>Motivo (se não fechou)</label><textarea id="vg-motivo-perda" rows="2" placeholder="Ex: preço, motorista indisponível, cliente desistiu, prazo, concorrência..."></textarea></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-preparacao" style="width:auto;"> Preparação pré-viagem confirmada</label></div>
@@ -1045,7 +1048,7 @@ tr.tr-click:hover{background:#fff7fa;}
 
     <h4 style="font-size:13px; margin:18px 0 8px; border-top:1px solid var(--border); padding-top:14px;">💰 Pagamento à motorista</h4>
     <div class="formgrid">
-      <div><label>Valor repassado (R$)</label><input type="number" id="vg-pg-valor" step="0.01" oninput="recalcularComissaoPagamento()"></div>
+      <div><label>Valor repassado</label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-pg-valor" step="0.01" oninput="recalcularComissaoPagamento()"></div></div>
       <div><label>Comissão da plataforma <span style="font-weight:400; color:var(--muted);">(calculada: cotado − repassado)</span></label><input type="text" id="vg-pg-comissao" readonly style="background:var(--border); cursor:not-allowed;"></div>
       <div><label>Forma de pagamento</label><select id="vg-pg-forma"><option value="">-</option><option>Pix</option><option>Dinheiro</option><option>Transferência</option><option>Outro</option></select></div>
       <div><label>Status do pagamento</label><select id="vg-pg-status"><option>Pendente</option><option>Pago</option></select></div>
