@@ -1,0 +1,23 @@
+-- Ladies in Drive — Pagamento da cliente diretamente à Ladies in Drive
+-- Fluxo real: a cliente paga a LID, e a LID repassa à motorista a cada
+-- 15 dias (inicialmente). Espelha a estrutura de pagamentos_motorista,
+-- mas do lado da cliente — previsto fica em viagens.preco_cotado,
+-- realizado fica aqui.
+-- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
+
+create table if not exists public.pagamentos_cliente (
+  id bigint generated always as identity primary key,
+  viagem_id bigint references public.viagens(id) on delete cascade,
+  valor_recebido numeric,
+  forma_pagamento text,
+  status text default 'Pendente',
+  data_pagamento date,
+  notas text,
+  criado_em timestamptz default now()
+);
+
+alter table public.pagamentos_cliente enable row level security;
+
+create policy "Staff podem tudo - pagamentos_cliente" on public.pagamentos_cliente
+  for all using (auth.role() = 'authenticated' and public.motorista_id_atual() is null)
+  with check (auth.role() = 'authenticated' and public.motorista_id_atual() is null);

@@ -1046,10 +1046,19 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-grupo-whats" style="width:auto;"> Grupo de WhatsApp criado</label></div>
     </div>
 
-    <h4 style="font-size:13px; margin:18px 0 8px; border-top:1px solid var(--border); padding-top:14px;">💰 Pagamento à motorista</h4>
+    <h4 style="font-size:13px; margin:18px 0 8px; border-top:1px solid var(--border); padding-top:14px;">💵 Pagamento da cliente à Ladies in Drive</h4>
     <div class="formgrid">
-      <div><label>Valor repassado</label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-pg-valor" step="0.01" oninput="recalcularComissaoPagamento()"></div></div>
-      <div><label>Comissão da plataforma <span style="font-weight:400; color:var(--muted);">(calculada: cotado − repassado)</span></label><input type="text" id="vg-pg-comissao" readonly style="background:var(--border); cursor:not-allowed;"></div>
+      <div><label>Valor recebido <span style="font-weight:400; color:var(--muted);">(realizado — previsto é o Preço cotado)</span></label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-lid-valor" step="0.01" oninput="recalcularComissaoPagamento()"></div></div>
+      <div><label>Forma de pagamento</label><select id="vg-lid-forma"><option value="">-</option><option>Pix</option><option>Dinheiro</option><option>Transferência</option><option>Outro</option></select></div>
+      <div><label>Status do pagamento</label><select id="vg-lid-status"><option>Pendente</option><option>Pago</option></select></div>
+      <div><label>Data do pagamento</label><input type="date" id="vg-lid-data"></div>
+      <div class="full"><label>Notas</label><textarea id="vg-lid-notas" rows="2"></textarea></div>
+    </div>
+
+    <h4 style="font-size:13px; margin:18px 0 8px; border-top:1px solid var(--border); padding-top:14px;">💰 Pagamento à motorista <span style="font-weight:400; color:var(--muted);">(repasse quinzenal)</span></h4>
+    <div class="formgrid">
+      <div><label>Valor repassado <span style="font-weight:400; color:var(--muted);">(realizado — previsto é o Repasse motorista acima)</span></label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-pg-valor" step="0.01" oninput="recalcularComissaoPagamento()"></div></div>
+      <div><label>Comissão da plataforma <span style="font-weight:400; color:var(--muted);">(calculada: recebido/cotado − repassado)</span></label><input type="text" id="vg-pg-comissao" readonly style="background:var(--border); cursor:not-allowed;"></div>
       <div><label>Forma de pagamento</label><select id="vg-pg-forma"><option value="">-</option><option>Pix</option><option>Dinheiro</option><option>Transferência</option><option>Outro</option></select></div>
       <div><label>Status do pagamento</label><select id="vg-pg-status"><option>Pendente</option><option>Pago</option></select></div>
       <div><label>Data do pagamento</label><input type="date" id="vg-pg-data"></div>
@@ -1290,6 +1299,7 @@ let clientesTransporte = [];
 let viagens = [];
 let avaliacoes = [];
 let pagamentosMotorista = [];
+let pagamentosCliente = [];
 let parceiroContatos = [];
 let parceiroInteracoes = [];
 let parceiroEnderecos = [];
@@ -1378,13 +1388,14 @@ async function carregarDados(){
 
   // Módulo de Transporte — tolerante a erro (ex: SQL ainda não rodado),
   // pra não travar o resto do painel enquanto isso.
-  const [rm, rd, rc, rv, ra, rp, rpc, rpi, rpe, rli, rvd, rvp, rcp, rmf, rpp, rpt, rpl, rdv, rvg, rvc, rmo] = await Promise.all([
+  const [rm, rd, rc, rv, ra, rp, rpay, rpc, rpi, rpe, rli, rvd, rvp, rcp, rmf, rpp, rpt, rpl, rdv, rvg, rvc, rmo] = await Promise.all([
     sb.from("motoristas").select("*").order("id"),
     sb.from("documentos_motorista").select("*").order("id"),
     sb.from("clientes_transporte").select("*").order("id"),
     sb.from("viagens").select("*").order("id"),
     sb.from("avaliacoes").select("*").order("id"),
     sb.from("pagamentos_motorista").select("*").order("id"),
+    sb.from("pagamentos_cliente").select("*").order("id"),
     sb.from("parceiro_contatos").select("*").order("id"),
     sb.from("parceiro_interacoes").select("*").order("id"),
     sb.from("parceiro_enderecos").select("*").order("id"),
@@ -1407,6 +1418,7 @@ async function carregarDados(){
   viagens = rv.data || [];
   avaliacoes = ra.data || [];
   pagamentosMotorista = rp.data || [];
+  pagamentosCliente = rpay.data || [];
   parceiroContatos = rpc.data || [];
   parceiroInteracoes = rpi.data || [];
   parceiroEnderecos = rpe.data || [];
@@ -3057,15 +3069,17 @@ function recalcularComissaoCotacao(){
   recalcularComissaoPagamento();
 }
 function recalcularComissaoPagamento(){
+  const recebidoStr = document.getElementById("vg-lid-valor").value;
   const cotadoStr = document.getElementById("vg-preco-cotado").value;
+  const baseStr = recebidoStr !== "" ? recebidoStr : cotadoStr;
   const repassadoStr = document.getElementById("vg-pg-valor").value;
   const campo = document.getElementById("vg-pg-comissao");
-  if(cotadoStr === "" && repassadoStr === ""){
+  if(baseStr === "" && repassadoStr === ""){
     campo.value = "";
     campo.dataset.valor = "";
     return;
   }
-  const comissao = (Number(cotadoStr) || 0) - (Number(repassadoStr) || 0);
+  const comissao = (Number(baseStr) || 0) - (Number(repassadoStr) || 0);
   campo.dataset.valor = comissao;
   campo.value = formatarMoedaBR(comissao);
 }
@@ -3153,6 +3167,13 @@ function openViagemModal(id){
   document.getElementById("vg-saida").checked = !!v.saida_confirmada;
   document.getElementById("vg-grupo-whats").checked = !!v.grupo_whatsapp_criado;
 
+  const pgc = pagamentosCliente.find(p=>p.viagem_id===id) || {};
+  document.getElementById("vg-lid-valor").value = pgc.valor_recebido ?? "";
+  document.getElementById("vg-lid-forma").value = pgc.forma_pagamento || "";
+  document.getElementById("vg-lid-status").value = pgc.status || "Pendente";
+  document.getElementById("vg-lid-data").value = pgc.data_pagamento || "";
+  document.getElementById("vg-lid-notas").value = pgc.notas || "";
+
   const pg = pagamentosMotorista.find(p=>p.viagem_id===id) || {};
   document.getElementById("vg-pg-valor").value = pg.valor_repassado ?? "";
   document.getElementById("vg-pg-forma").value = pg.forma_pagamento || "";
@@ -3203,6 +3224,23 @@ async function saveViagem(){
     const { data, error } = await sb.from("viagens").insert(payload).select();
     if(error){ alert("Erro ao salvar viagem: " + error.message); return; }
     viagemId = data[0].id;
+  }
+
+  const pgcPayload = {
+    viagem_id: viagemId,
+    valor_recebido: document.getElementById("vg-lid-valor").value === "" ? null : Number(document.getElementById("vg-lid-valor").value),
+    forma_pagamento: document.getElementById("vg-lid-forma").value || null,
+    status: document.getElementById("vg-lid-status").value,
+    data_pagamento: document.getElementById("vg-lid-data").value || null,
+    notas: document.getElementById("vg-lid-notas").value,
+  };
+  const temDadoPagamentoCliente = pgcPayload.valor_recebido != null || pgcPayload.forma_pagamento || pgcPayload.data_pagamento || pgcPayload.notas;
+  if(temDadoPagamentoCliente){
+    const existentePgc = pagamentosCliente.find(p=>p.viagem_id===viagemId);
+    const { error } = existentePgc
+      ? await sb.from("pagamentos_cliente").update(pgcPayload).eq("id", existentePgc.id)
+      : await sb.from("pagamentos_cliente").insert(pgcPayload);
+    if(error){ alert("Erro ao salvar pagamento da cliente: " + error.message); return; }
   }
 
   const pgPayload = {
