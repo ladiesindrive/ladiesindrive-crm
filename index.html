@@ -907,7 +907,8 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>E-mail</label><input type="text" id="mt-email"></div>
       <div><label>Região</label><input type="text" id="mt-regiao"></div>
       <div><label>Aniversário</label><input type="date" id="mt-aniversario"></div>
-      <div><label>Veículo</label><input type="text" id="mt-veiculo"></div>
+      <div><label>Veículo</label><input type="text" id="mt-veiculo" placeholder="Ex: Fiat Argo prata"></div>
+      <div><label>Placa</label><input type="text" id="mt-placa" placeholder="ABC1D23"></div>
       <div class="full">
         <label>Categoria da CNH <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
         <div id="mt-cnh-categoria-wrap" style="display:flex; flex-wrap:wrap; gap:6px;">
@@ -2790,6 +2791,7 @@ function openMotoristaModal(id){
   document.getElementById("mt-regiao").value = m.regiao||"";
   document.getElementById("mt-aniversario").value = m.aniversario||"";
   document.getElementById("mt-veiculo").value = m.veiculo||"";
+  document.getElementById("mt-placa").value = m.placa||"";
   const cnhCategoriasMarcadas = (m.cnh_categoria||"").split(",").map(c=>c.trim()).filter(Boolean);
   document.querySelectorAll("#mt-cnh-categoria-wrap input[type=checkbox]").forEach(cb=>{
     cb.checked = cnhCategoriasMarcadas.includes(cb.value);
@@ -2927,6 +2929,7 @@ async function saveMotorista(){
     regiao: document.getElementById("mt-regiao").value,
     aniversario: document.getElementById("mt-aniversario").value || null,
     veiculo: document.getElementById("mt-veiculo").value,
+    placa: document.getElementById("mt-placa").value,
     cnh_categoria: [...document.querySelectorAll("#mt-cnh-categoria-wrap input[type=checkbox]:checked")].map(cb=>cb.value).join(", "),
     cnh_validade: document.getElementById("mt-cnh-validade").value || null,
     cnh_ear: document.getElementById("mt-cnh-ear").value || null,
