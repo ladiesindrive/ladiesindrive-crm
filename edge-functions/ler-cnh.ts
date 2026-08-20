@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
               nome_completo: { type: "string", description: "Nome completo do condutor, como impresso no documento. Vazio se ilegível." },
               cpf: { type: "string", description: "CPF como impresso (com pontuação se houver). Vazio se ilegível." },
               numero_registro: { type: "string", description: "Número de registro da CNH. Vazio se ilegível." },
-              categoria: { type: "string", description: "Categoria da habilitação, ex: 'B', 'AB', 'D'. Vazio se ilegível." },
+              categoria: { type: "string", description: "Categoria da habilitação. Use o campo rotulado 'CAT HAB' (ou 'Categoria') na frente do documento — NÃO use o campo 'ACC', que é outra informação. Se o verso do documento também estiver na imagem, confira a grade de categorias (colunas 9-12): a(s) categoria(s) com uma data preenchida na linha são as válidas, use isso pra confirmar ou corrigir o que leu na frente. Ex: 'B', 'AB', 'D'. Vazio se ilegível." },
               validade: { type: "string", description: "Data de validade no formato AAAA-MM-DD. Vazio se ilegível." },
               tem_ear: { type: "boolean", description: "true se o campo de observações do documento contém 'EAR' (Exerce Atividade Remunerada), false se as observações estão visíveis e não contêm EAR, null se não foi possível ler o campo de observações." },
             },
