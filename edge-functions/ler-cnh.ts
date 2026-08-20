@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
             type: "object",
             properties: {
               nome_completo: { type: "string", description: "Nome completo do condutor, como impresso no documento. Vazio se ilegível." },
-              data_nascimento: { type: "string", description: "Data de nascimento, do campo '3 DATA, LOCAL E UF DE NASCIMENTO' — só a data, no formato AAAA-MM-DD. Vazio se ilegível." },
+              data_nascimento: { type: "string", description: "Data de nascimento. Está no campo '3 DATA, LOCAL E UF DE NASCIMENTO', que traz data, cidade e UF juntos separados por vírgula — pegue só a primeira parte (a data) e converta pra AAAA-MM-DD. Exemplo: se o campo mostra '08/08/1981, PORTO ALEGRE, RS', o valor aqui é '1981-08-08'. Vazio se ilegível." },
               cpf: { type: "string", description: "CPF como impresso (com pontuação se houver). Vazio se ilegível." },
               numero_registro: { type: "string", description: "Número de registro da CNH. Vazio se ilegível." },
               categoria: { type: "string", description: "Categoria da habilitação. Use o campo rotulado 'CAT HAB' (ou 'Categoria') na frente do documento — NÃO use o campo 'ACC', que é outra informação. Se o verso do documento também estiver na imagem, confira a grade de categorias (colunas 9-12): a(s) categoria(s) com uma data preenchida na linha são as válidas, use isso pra confirmar ou corrigir o que leu na frente. Ex: 'B', 'AB', 'D'. Vazio se ilegível." },
