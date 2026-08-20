@@ -1025,7 +1025,12 @@ tr.tr-click:hover{background:#fff7fa;}
           <label class="chip-check"><input type="checkbox" value="Domingo"> Domingo</label>
         </div>
       </div>
-      <div><label>Link de acompanhamento</label><input type="text" id="vg-link"></div>
+      <div><label>Link de acompanhamento <span style="font-weight:400; color:var(--muted);">(gerado sozinho, aparece depois de salvar)</span></label>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="vg-link" readonly style="background:var(--border); cursor:not-allowed; flex:1;">
+          <button type="button" class="btn ghost small" onclick="copiarLinkAcompanhamento()">Copiar</button>
+        </div>
+      </div>
       <div><label>Distância (km)</label><input type="number" id="vg-distancia-km" step="0.1" oninput="recalcularCotacao()"></div>
       <div><label>Tarifa fixa (R$)</label><input type="number" id="vg-tarifa-fixa" step="0.01" oninput="recalcularCotacao()"></div>
       <div><label>Valor por km (R$)</label><input type="number" id="vg-valor-km" step="0.01" oninput="recalcularCotacao()"></div>
@@ -1167,6 +1172,7 @@ const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Idoso","Recorrente","Diário"
 const CANAL_RECEPCAO = ["Telefone","Redes sociais","Site","E-mail"];
 const VIAGEM_STATUS = ["Solicitada","Confirmada","Em andamento","Concluída","Cancelada"];
 const VIAGEM_STATUS_CLASS = {"Solicitada":"orc-sol","Confirmada":"negociacao","Em andamento":"contato","Concluída":"ganho","Cancelada":"perdido"};
+const LINK_ACOMPANHAMENTO_BASE = "https://www.ladiesindrive.com.br/acompanhar.html?t=";
 // Tarifas sugeridas pra calcular preço a partir da distância (km).
 // Ponto de partida baseado em pesquisa de mercado (motorista particular/executivo
 // e apps de transporte em POA, ago/2026) — ajustar aqui conforme fechar viagens reais.
@@ -3011,6 +3017,11 @@ function abrirRotaMaps(){
   const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origem)}&destination=${encodeURIComponent(destino)}`;
   window.open(url, "_blank");
 }
+function copiarLinkAcompanhamento(){
+  const val = document.getElementById("vg-link").value;
+  if(!val) return;
+  navigator.clipboard.writeText(val).then(()=> showToast("Link copiado!"));
+}
 function recalcularCotacao(){
   const km = Number(document.getElementById("vg-distancia-km").value) || 0;
   const tarifaFixa = Number(document.getElementById("vg-tarifa-fixa").value) || 0;
@@ -3123,7 +3134,7 @@ function openViagemModal(id){
   document.getElementById("vg-destino-retorno").value = v.destino_retorno_endereco || "";
   const diasMarcados = (v.dias_semana||"").split(",").map(d=>d.trim()).filter(Boolean);
   document.querySelectorAll("#vg-dias-semana-wrap input[type=checkbox]").forEach(cb=>{ cb.checked = diasMarcados.includes(cb.value); });
-  document.getElementById("vg-link").value = v.link_acompanhamento||"";
+  document.getElementById("vg-link").value = v.tracking_token ? (LINK_ACOMPANHAMENTO_BASE + v.tracking_token) : "";
   document.getElementById("vg-distancia-km").value = v.distancia_km ?? "";
   document.getElementById("vg-tarifa-fixa").value = v.tarifa_fixa ?? TAXA_FIXA_CLIENTE;
   document.getElementById("vg-valor-km").value = v.valor_km ?? TARIFA_KM_CLIENTE;
