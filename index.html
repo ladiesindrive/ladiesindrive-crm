@@ -47,7 +47,7 @@ body{
 .nav-item:hover{background:rgba(255,255,255,.1);}
 .nav-item.active{background:rgba(255,255,255,.18); border-left-color:#fff; font-weight:600; opacity:1;}
 .nav-logout{margin-top:auto; border-top:1px solid rgba(255,255,255,.25); opacity:.85;}
-.main{flex:1; padding:26px 32px; max-width:1400px;}
+.main{flex:1; padding:26px 32px; max-width:1180px;}
 .pagehead{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;}
 .pagehead h2{margin:0 0 4px; font-size:20px;}
 .pagehead p{margin:0; color:var(--muted); font-size:13px;}
@@ -66,7 +66,6 @@ body{
 .panel{background:#fff; border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:20px;}
 .panel h3{margin:0 0 12px; font-size:14.5px;}
 table{width:100%; border-collapse:collapse; font-size:13px;}
-table.tbl td.acoes{white-space:nowrap;}
 th{text-align:left; color:var(--muted); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; padding:8px 10px; border-bottom:1px solid var(--border);}
 td{padding:9px 10px; border-bottom:1px solid #f4eaf0; vertical-align:top;}
 tr:last-child td{border-bottom:none;}
@@ -922,6 +921,18 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Origem</label><select id="mt-origem"><option>Site</option><option>Instagram</option><option>Facebook</option><option>Networking</option><option>Indicação</option><option>Outro</option></select></div>
     </div>
 
+    <div id="mt-acesso-wrap" style="margin-top:18px; border-top:1px solid var(--border); padding-top:14px;">
+      <h4 style="font-size:13px; margin:0 0 8px;">Acesso ao painel da motorista</h4>
+      <p style="color:var(--muted); font-size:12.5px; margin:0 0 8px;">
+        Crie o login em Supabase → Authentication → Users → Add user (e-mail + senha inicial),
+        copie o UID gerado e cole aqui. Isso liga esse login ao cadastro dela.
+      </p>
+      <div class="formgrid">
+        <div class="full"><label>UID do login (Supabase Authentication)</label><input type="text" id="mt-auth-uid" placeholder="ex: 0fe07c05-f040-468b-b351-a464a3065f33"></div>
+      </div>
+      <div id="mt-acesso-status" style="font-size:12.5px; margin-top:4px;"></div>
+    </div>
+
     <div id="mt-documentos-wrap" style="margin-top:18px;">
       <h4 style="font-size:13px; margin:0 0 8px;">Documentos</h4>
       <div id="mt-checklist-documentos" style="margin-bottom:12px;"></div>
@@ -998,6 +1009,10 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Data</label><input type="date" id="vg-data"></div>
       <div><label>Horário previsto de partida</label><input type="time" id="vg-horario-partida"></div>
       <div><label>Horário previsto de chegada</label><input type="time" id="vg-horario-chegada"></div>
+      <div><label>Data do retorno <span style="font-weight:400; color:var(--muted);">(ida e volta)</span></label><input type="date" id="vg-data-retorno"></div>
+      <div><label>Horário do retorno</label><input type="time" id="vg-horario-retorno"></div>
+      <div class="full"><label>Endereço de origem do retorno <span style="font-weight:400; color:var(--muted);">(se vazio, é o mesmo destino de ida)</span></label><input type="text" id="vg-origem-retorno"></div>
+      <div class="full"><label>Endereço de destino do retorno <span style="font-weight:400; color:var(--muted);">(se vazio, é o mesmo origem de ida)</span></label><input type="text" id="vg-destino-retorno"></div>
       <div class="full">
         <label>Dias da semana <span style="font-weight:400; color:var(--muted);">(pra cliente fixa, ex: segunda a sexta, mesmo horário)</span></label>
         <div style="display:flex; flex-wrap:wrap; gap:6px;" id="vg-dias-semana-wrap">
@@ -1011,10 +1026,12 @@ tr.tr-click:hover{background:#fff7fa;}
         </div>
       </div>
       <div><label>Link de acompanhamento</label><input type="text" id="vg-link"></div>
-      <div><label>Distância (km)</label><input type="number" id="vg-distancia-km" step="0.1" oninput="calcularSugestaoViagem()"></div>
-      <div class="full" id="vg-sugestao" style="color:var(--muted); font-size:12.5px;"></div>
-      <div><label>Preço cotado (R$)</label><input type="number" id="vg-preco-cotado"></div>
-      <div><label>Preço final (R$)</label><input type="number" id="vg-preco-final"></div>
+      <div><label>Distância (km)</label><input type="number" id="vg-distancia-km" step="0.1" oninput="recalcularCotacao()"></div>
+      <div><label>Tarifa fixa (R$)</label><input type="number" id="vg-tarifa-fixa" step="0.01" oninput="recalcularCotacao()"></div>
+      <div><label>Valor por km (R$)</label><input type="number" id="vg-valor-km" step="0.01" oninput="recalcularCotacao()"></div>
+      <div><label>Preço cotado <span style="font-weight:400; color:var(--muted);">(cobrado da cliente)</span></label><input type="number" id="vg-preco-cotado" step="0.01" oninput="recalcularComissaoCotacao()"></div>
+      <div><label>Repasse motorista <span style="font-weight:400; color:var(--muted);">(oferta, aparece pra ela antes de aceitar)</span></label><input type="number" id="vg-preco-motorista" step="0.01" oninput="recalcularComissaoCotacao()"></div>
+      <div><label>Comissão Ladies in Drive <span style="font-weight:400; color:var(--muted);">(calculada: cotado − repasse)</span></label><input type="text" id="vg-comissao-ladies" readonly style="background:var(--border); cursor:not-allowed;"></div>
       <div class="full"><label>Motivo (se não fechou)</label><textarea id="vg-motivo-perda" rows="2" placeholder="Ex: preço, motorista indisponível, cliente desistiu, prazo, concorrência..."></textarea></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-preparacao" style="width:auto;"> Preparação pré-viagem confirmada</label></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-saida" style="width:auto;"> Saída do veículo confirmada</label></div>
@@ -1023,8 +1040,8 @@ tr.tr-click:hover{background:#fff7fa;}
 
     <h4 style="font-size:13px; margin:18px 0 8px; border-top:1px solid var(--border); padding-top:14px;">💰 Pagamento à motorista</h4>
     <div class="formgrid">
-      <div><label>Valor repassado (R$)</label><input type="number" id="vg-pg-valor"></div>
-      <div><label>Comissão da plataforma (R$)</label><input type="number" id="vg-pg-comissao"></div>
+      <div><label>Valor repassado (R$)</label><input type="number" id="vg-pg-valor" step="0.01" oninput="recalcularComissaoPagamento()"></div>
+      <div><label>Comissão da plataforma <span style="font-weight:400; color:var(--muted);">(calculada: cotado − repassado)</span></label><input type="text" id="vg-pg-comissao" readonly style="background:var(--border); cursor:not-allowed;"></div>
       <div><label>Forma de pagamento</label><select id="vg-pg-forma"><option value="">-</option><option>Pix</option><option>Dinheiro</option><option>Transferência</option><option>Outro</option></select></div>
       <div><label>Status do pagamento</label><select id="vg-pg-status"><option>Pendente</option><option>Pago</option></select></div>
       <div><label>Data do pagamento</label><input type="date" id="vg-pg-data"></div>
@@ -1332,12 +1349,10 @@ sb.auth.onAuthStateChange(async (event, session)=>{
     }
     document.getElementById("login-screen").style.display = "none";
     document.querySelector(".app").style.display = "flex";
-    window.scrollTo(0, 0);
     carregarDados();
   } else {
     document.querySelector(".app").style.display = "none";
     document.getElementById("login-screen").style.display = "flex";
-    document.getElementById("login-email").focus();
   }
 });
 
@@ -1498,9 +1513,9 @@ function renderLeads(){
   ));
   document.getElementById("leads-body").innerHTML = filtered.map(l=>`
     <tr class="tr-click" onclick="openLeadModal(${l.id})">
-      <td><strong>${l.nome}</strong>${l.exemplo?' <span style="color:var(--muted); font-size:11px;">(exemplo)</span>':''}<br><span style="color:var(--muted); font-size:12px;">${[l.bairro,l.cidade].filter(Boolean).join(", ")}</span></td>
-      <td><span>${numeroClicavel(l.whatsapp)}${l.email?"<br>"+l.email:""}</span></td>
-      <td><span>${l.categoria||"-"}<br><span style="color:var(--muted); font-size:12px;">${l.servico||""}</span></span></td>
+      <td><strong>${l.nome}</strong>${l.exemplo?' <span style="color:var(--muted); font-size:11px;">(exemplo)</span>':''}<br><span style="color:var(--muted); font-size:12px;">${l.bairro||""} ${l.cidade?", "+l.cidade:""}</span></td>
+      <td>${numeroClicavel(l.whatsapp)}${l.email?"<br>"+l.email:""}</td>
+      <td>${l.categoria||"-"}<br><span style="color:var(--muted); font-size:12px;">${l.servico||""}</span></td>
       <td><span class="tag ${URG_CLASS[l.urgencia]||''}">${l.urgencia||"-"}</span></td>
       <td><span class="tag ${ETAPA_CLASS[l.etapa]||''}">${l.etapa}</span></td>
       <td>${l.origem||"-"}</td>
@@ -1556,7 +1571,7 @@ function renderParceiros(){
       <td>${p.nome}${p.exemplo?' <span style="color:var(--muted); font-size:11px;">(exemplo)</span>':''}</td>
       <td>${p.categoria||"-"}</td>
       <td>${p.regiao||"-"}</td>
-      <td><span>${(p.tipo_parceria||"").split(",").map(s=>s.trim()).filter(Boolean).map(t=>`<span class="tag ${TIPO_PARCERIA_CLASS[t]||''}">${t}</span>`).join(" ")||"-"}</span></td>
+      <td>${(p.tipo_parceria||"").split(",").map(s=>s.trim()).filter(Boolean).map(t=>`<span class="tag ${TIPO_PARCERIA_CLASS[t]||''}">${t}</span>`).join(" ")||"-"}</td>
       <td>${p.selo==="sim"?'<span class="badge-seal">✓ Ladies Approved</span>':'-'}</td>
       <td><span class="tag ${PARCEIRO_ETAPA_CLASS[p.status]||''}">${p.status||"-"}</span></td>
       <td>${ultimoContato||"-"}</td>
@@ -2732,7 +2747,7 @@ function renderTransporteMotoristas(){
     return `<tr class="tr-click" onclick="openMotoristaModal(${m.id})">
       <td><strong>${m.nome}</strong></td>
       <td>${numeroClicavel(m.whatsapp)}</td>
-      <td><span>${m.regiao||"-"}${m.veiculo?"<br><span style='color:var(--muted); font-size:12px;'>"+m.veiculo+"</span>":""}</span></td>
+      <td>${m.regiao||"-"}${m.veiculo?"<br><span style='color:var(--muted); font-size:12px;'>"+m.veiculo+"</span>":""}</td>
       <td>${emDia?'<span class="tag urg-baixa">Em dia</span>':`<span class="tag urg-alta">${faltam} pendente${faltam>1?"s":""}</span>`}</td>
       <td><span class="tag ${MOTORISTA_ETAPA_CLASS[m.status]||''}">${m.status}</span></td>
       <td>${media?media+" ★":"-"}</td>
@@ -2763,6 +2778,10 @@ function openMotoristaModal(id){
   document.getElementById("mt-antecedentes-status").value = m.antecedentes_status||"";
   document.getElementById("mt-status").value = m.status||"Candidatura recebida";
   document.getElementById("mt-origem").value = m.origem||"Site";
+  document.getElementById("mt-auth-uid").value = m.auth_user_id||"";
+  document.getElementById("mt-acesso-status").innerHTML = m.auth_user_id
+    ? '<span class="tag ativo">✓ Login vinculado</span>'
+    : '<span class="tag urg-media">Sem login vinculado ainda</span>';
   document.getElementById("mt-doc-tipo").value = "CNH";
   document.getElementById("mt-doc-validade").value = "";
   document.getElementById("mt-doc-status").value = "Pendente";
@@ -2893,6 +2912,7 @@ async function saveMotorista(){
     antecedentes_status: document.getElementById("mt-antecedentes-status").value || null,
     status: document.getElementById("mt-status").value,
     origem: document.getElementById("mt-origem").value,
+    auth_user_id: document.getElementById("mt-auth-uid").value.trim() || null,
   };
   const isNew = !editingMotoristaId;
   const { data, error } = editingMotoristaId
@@ -2991,19 +3011,44 @@ function abrirRotaMaps(){
   const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origem)}&destination=${encodeURIComponent(destino)}`;
   window.open(url, "_blank");
 }
-function calcularSugestaoViagem(){
+function recalcularCotacao(){
   const km = Number(document.getElementById("vg-distancia-km").value) || 0;
-  const el = document.getElementById("vg-sugestao");
-  if(!km){ el.innerHTML = ""; return; }
-  const precoCliente = TAXA_FIXA_CLIENTE + TARIFA_KM_CLIENTE * km;
-  const repasseMotorista = precoCliente * PERCENTUAL_REPASSE_MOTORISTA;
-  el.innerHTML = `Sugestão pra ${km} km: cliente ${formatarMoedaBR(precoCliente)} · motorista ${formatarMoedaBR(repasseMotorista)} `
-    + `<button type="button" class="btn ghost" style="padding:2px 8px; font-size:11px;" onclick="aplicarSugestaoViagem(${precoCliente.toFixed(2)},${repasseMotorista.toFixed(2)})">Usar valores</button>`;
+  const tarifaFixa = Number(document.getElementById("vg-tarifa-fixa").value) || 0;
+  const valorKm = Number(document.getElementById("vg-valor-km").value) || 0;
+  if(km){
+    const precoCotado = tarifaFixa + valorKm * km;
+    const repasseMotorista = precoCotado * PERCENTUAL_REPASSE_MOTORISTA;
+    document.getElementById("vg-preco-cotado").value = precoCotado.toFixed(2);
+    document.getElementById("vg-preco-motorista").value = repasseMotorista.toFixed(2);
+  }
+  recalcularComissaoCotacao();
 }
-function aplicarSugestaoViagem(precoCliente, repasseMotorista){
-  document.getElementById("vg-preco-cotado").value = precoCliente;
-  document.getElementById("vg-pg-valor").value = repasseMotorista;
-  showToast("Valores aplicados!");
+function recalcularComissaoCotacao(){
+  const cotadoStr = document.getElementById("vg-preco-cotado").value;
+  const repasseStr = document.getElementById("vg-preco-motorista").value;
+  const campo = document.getElementById("vg-comissao-ladies");
+  if(cotadoStr === "" && repasseStr === ""){
+    campo.value = "";
+    campo.dataset.valor = "";
+  } else {
+    const comissao = (Number(cotadoStr) || 0) - (Number(repasseStr) || 0);
+    campo.dataset.valor = comissao;
+    campo.value = formatarMoedaBR(comissao);
+  }
+  recalcularComissaoPagamento();
+}
+function recalcularComissaoPagamento(){
+  const cotadoStr = document.getElementById("vg-preco-cotado").value;
+  const repassadoStr = document.getElementById("vg-pg-valor").value;
+  const campo = document.getElementById("vg-pg-comissao");
+  if(cotadoStr === "" && repassadoStr === ""){
+    campo.value = "";
+    campo.dataset.valor = "";
+    return;
+  }
+  const comissao = (Number(cotadoStr) || 0) - (Number(repassadoStr) || 0);
+  campo.dataset.valor = comissao;
+  campo.value = formatarMoedaBR(comissao);
 }
 function idsMotoristasViagem(v){
   return (v.motorista_ids && v.motorista_ids.length) ? v.motorista_ids : (v.motorista_id ? [v.motorista_id] : []);
@@ -3072,25 +3117,30 @@ function openViagemModal(id){
   document.getElementById("vg-data").value = v.data || "";
   document.getElementById("vg-horario-partida").value = v.horario_partida ? v.horario_partida.slice(0,5) : "";
   document.getElementById("vg-horario-chegada").value = v.horario_chegada ? v.horario_chegada.slice(0,5) : "";
+  document.getElementById("vg-data-retorno").value = v.data_retorno || "";
+  document.getElementById("vg-horario-retorno").value = v.horario_retorno ? v.horario_retorno.slice(0,5) : "";
+  document.getElementById("vg-origem-retorno").value = v.origem_retorno_endereco || "";
+  document.getElementById("vg-destino-retorno").value = v.destino_retorno_endereco || "";
   const diasMarcados = (v.dias_semana||"").split(",").map(d=>d.trim()).filter(Boolean);
   document.querySelectorAll("#vg-dias-semana-wrap input[type=checkbox]").forEach(cb=>{ cb.checked = diasMarcados.includes(cb.value); });
   document.getElementById("vg-link").value = v.link_acompanhamento||"";
   document.getElementById("vg-distancia-km").value = v.distancia_km ?? "";
+  document.getElementById("vg-tarifa-fixa").value = v.tarifa_fixa ?? TAXA_FIXA_CLIENTE;
+  document.getElementById("vg-valor-km").value = v.valor_km ?? TARIFA_KM_CLIENTE;
   document.getElementById("vg-preco-cotado").value = v.preco_cotado ?? "";
-  document.getElementById("vg-preco-final").value = v.preco_final ?? "";
+  document.getElementById("vg-preco-motorista").value = v.preco_motorista ?? "";
   document.getElementById("vg-motivo-perda").value = v.motivo_perda || "";
-  calcularSugestaoViagem();
   document.getElementById("vg-preparacao").checked = !!v.preparacao_confirmada;
   document.getElementById("vg-saida").checked = !!v.saida_confirmada;
   document.getElementById("vg-grupo-whats").checked = !!v.grupo_whatsapp_criado;
 
   const pg = pagamentosMotorista.find(p=>p.viagem_id===id) || {};
   document.getElementById("vg-pg-valor").value = pg.valor_repassado ?? "";
-  document.getElementById("vg-pg-comissao").value = pg.comissao_plataforma ?? "";
   document.getElementById("vg-pg-forma").value = pg.forma_pagamento || "";
   document.getElementById("vg-pg-status").value = pg.status || "Pendente";
   document.getElementById("vg-pg-data").value = pg.data_pagamento || "";
   document.getElementById("vg-pg-notas").value = pg.notas || "";
+  recalcularComissaoCotacao();
 
   document.getElementById("btn-excluir-viagem").style.display = id ? "inline-block" : "none";
   document.getElementById("viagem-modal").classList.add("open");
@@ -3109,11 +3159,17 @@ async function saveViagem(){
     data: document.getElementById("vg-data").value || null,
     horario_partida: document.getElementById("vg-horario-partida").value || null,
     horario_chegada: document.getElementById("vg-horario-chegada").value || null,
+    data_retorno: document.getElementById("vg-data-retorno").value || null,
+    horario_retorno: document.getElementById("vg-horario-retorno").value || null,
+    origem_retorno_endereco: document.getElementById("vg-origem-retorno").value || null,
+    destino_retorno_endereco: document.getElementById("vg-destino-retorno").value || null,
     dias_semana: [...document.querySelectorAll("#vg-dias-semana-wrap input[type=checkbox]:checked")].map(cb=>cb.value).join(", "),
     link_acompanhamento: document.getElementById("vg-link").value,
     distancia_km: document.getElementById("vg-distancia-km").value === "" ? null : Number(document.getElementById("vg-distancia-km").value),
+    tarifa_fixa: document.getElementById("vg-tarifa-fixa").value === "" ? null : Number(document.getElementById("vg-tarifa-fixa").value),
+    valor_km: document.getElementById("vg-valor-km").value === "" ? null : Number(document.getElementById("vg-valor-km").value),
     preco_cotado: document.getElementById("vg-preco-cotado").value === "" ? null : Number(document.getElementById("vg-preco-cotado").value),
-    preco_final: document.getElementById("vg-preco-final").value === "" ? null : Number(document.getElementById("vg-preco-final").value),
+    preco_motorista: document.getElementById("vg-preco-motorista").value === "" ? null : Number(document.getElementById("vg-preco-motorista").value),
     motivo_perda: document.getElementById("vg-motivo-perda").value,
     preparacao_confirmada: document.getElementById("vg-preparacao").checked,
     saida_confirmada: document.getElementById("vg-saida").checked,
@@ -3133,7 +3189,7 @@ async function saveViagem(){
   const pgPayload = {
     viagem_id: viagemId,
     valor_repassado: document.getElementById("vg-pg-valor").value === "" ? null : Number(document.getElementById("vg-pg-valor").value),
-    comissao_plataforma: document.getElementById("vg-pg-comissao").value === "" ? null : Number(document.getElementById("vg-pg-comissao").value),
+    comissao_plataforma: document.getElementById("vg-pg-comissao").dataset.valor ? Number(document.getElementById("vg-pg-comissao").dataset.valor) : null,
     forma_pagamento: document.getElementById("vg-pg-forma").value || null,
     status: document.getElementById("vg-pg-status").value,
     data_pagamento: document.getElementById("vg-pg-data").value || null,
