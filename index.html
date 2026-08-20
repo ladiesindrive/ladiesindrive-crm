@@ -1246,7 +1246,7 @@ const CATEGORIAS = [...new Set(SERVICOS.map(s=>s.categoria))];
 
 const MOTORISTA_ETAPAS = ["Candidatura recebida","Em entrevista","Documentos pendentes","Em treinamento","Ativa","Inativa","Recusada"];
 const MOTORISTA_ETAPA_CLASS = {"Candidatura recebida":"novo","Em entrevista":"contato","Documentos pendentes":"urg-media","Em treinamento":"negociacao","Ativa":"ativo","Inativa":"perdido","Recusada":"perdido"};
-const DOCUMENTOS_OBRIGATORIOS_MOTORISTA = ["CNH","CNH EAR","Curso ConduApp (16h)","Curso Transporte Infantil (50h CONTRAN)"];
+const DOCUMENTOS_OBRIGATORIOS_MOTORISTA = ["CNH","CRLV","Antecedentes Criminais","Comprovante de Endereço"];
 const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Idoso","Recorrente","Diário","Evento"];
 const CANAL_RECEPCAO = ["Telefone","Redes sociais","Site","E-mail"];
 const VIAGEM_STATUS = ["Solicitada","Confirmada","Em andamento","Concluída","Cancelada"];
@@ -2793,14 +2793,17 @@ async function deleteOrcamento(id){
 }
 
 // ===== TRANSPORTE: MOTORISTAS =====
-function documentosPendentesCount(motoristaId){
-  return documentosMotorista.filter(d=>d.motorista_id===motoristaId && d.status_verificacao!=="Verificado" && d.status_verificacao!=="Lido por IA").length;
-}
+const STATUS_OK_DOCUMENTO_POR_TIPO = {
+  "CNH": ["Verificado","Lido por IA"],
+  "CRLV": ["Verificado","Lido por IA"],
+  "Antecedentes Criminais": ["Aprovado"],
+  "Comprovante de Endereço": ["Verificado"],
+};
 function checklistDocumentosMotorista(motoristaId){
   const docs = documentosMotorista.filter(d=>d.motorista_id===motoristaId);
   return DOCUMENTOS_OBRIGATORIOS_MOTORISTA.map(tipo=>({
     tipo,
-    ok: docs.some(d=>d.tipo_documento===tipo && (d.status_verificacao==="Verificado" || d.status_verificacao==="Lido por IA")),
+    ok: docs.some(d=>d.tipo_documento===tipo && (STATUS_OK_DOCUMENTO_POR_TIPO[tipo]||["Verificado"]).includes(d.status_verificacao)),
   }));
 }
 function documentosEmDiaMotorista(motoristaId){
