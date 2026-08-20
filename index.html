@@ -907,8 +907,23 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>E-mail</label><input type="text" id="mt-email"></div>
       <div><label>Região</label><input type="text" id="mt-regiao"></div>
       <div><label>Aniversário</label><input type="date" id="mt-aniversario"></div>
-      <div><label>Veículo</label><input type="text" id="mt-veiculo" placeholder="Ex: Fiat Argo prata"></div>
-      <div><label>Placa</label><input type="text" id="mt-placa" placeholder="ABC1D23"></div>
+
+      <div class="full" id="ia-cnh-wrap" style="background:var(--pink-light); border:1px solid var(--pink-mid); border-radius:10px; padding:12px 14px;">
+        <div style="font-size:13px; font-weight:600; color:var(--pink); margin-bottom:6px;">🤖 Preencher automaticamente com a CNH</div>
+        <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">Envie uma foto ou PDF da CNH e a IA preenche os campos abaixo.</div>
+        <input type="file" id="ia-cnh-file" accept="image/*,.pdf" style="display:none" onchange="selecionarArquivoIA('cnh', this)">
+        <button type="button" class="btn secondary small" id="ia-cnh-btn" onclick="document.getElementById('ia-cnh-file').click()">📄 Selecionar CNH (foto ou PDF)</button>
+        <div id="ia-cnh-confirm" style="display:none; margin-top:10px;">
+          <div style="font-size:12px; margin-bottom:6px;">Arquivo selecionado: <strong id="ia-cnh-nome-arquivo"></strong> — é mesmo a CNH dela?</div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn small" onclick="confirmarLeituraIA('cnh')">✅ Confirmar e ler com IA</button>
+            <button type="button" class="btn ghost small" onclick="cancelarSelecaoIA('cnh')">Trocar arquivo</button>
+          </div>
+        </div>
+        <div id="ia-cnh-status" style="display:none; margin-top:8px; font-size:12.5px;"></div>
+      </div>
+      <div><label>CPF</label><input type="text" id="mt-cpf"></div>
+      <div><label>Nº de registro da CNH</label><input type="text" id="mt-cnh-registro"></div>
       <div class="full">
         <label>Categoria da CNH <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
         <div id="mt-cnh-categoria-wrap" style="display:flex; flex-wrap:wrap; gap:6px;">
@@ -919,6 +934,33 @@ tr.tr-click:hover{background:#fff7fa;}
       </div>
       <div><label>Validade da CNH</label><input type="date" id="mt-cnh-validade"></div>
       <div><label>Situação do EAR</label><select id="mt-cnh-ear"><option value="">-</option><option value="Já tenho EAR">Já tenho EAR</option><option value="Não tenho EAR">Não tenho EAR</option><option value="Estou em processo">Estou em processo</option></select></div>
+
+      <div class="full" id="ia-crlv-wrap" style="background:var(--pink-light); border:1px solid var(--pink-mid); border-radius:10px; padding:12px 14px;">
+        <div style="font-size:13px; font-weight:600; color:var(--pink); margin-bottom:6px;">🤖 Preencher automaticamente com o CRLV</div>
+        <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">Envie uma foto ou PDF do CRLV (documento do carro) e a IA preenche os campos abaixo. Se ela trocar de carro, é só ler o CRLV novo de novo.</div>
+        <input type="file" id="ia-crlv-file" accept="image/*,.pdf" style="display:none" onchange="selecionarArquivoIA('crlv', this)">
+        <button type="button" class="btn secondary small" id="ia-crlv-btn" onclick="document.getElementById('ia-crlv-file').click()">📄 Selecionar CRLV (foto ou PDF)</button>
+        <div id="ia-crlv-confirm" style="display:none; margin-top:10px;">
+          <div style="font-size:12px; margin-bottom:6px;">Arquivo selecionado: <strong id="ia-crlv-nome-arquivo"></strong> — é mesmo o CRLV do carro dela?</div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn small" onclick="confirmarLeituraIA('crlv')">✅ Confirmar e ler com IA</button>
+            <button type="button" class="btn ghost small" onclick="cancelarSelecaoIA('crlv')">Trocar arquivo</button>
+          </div>
+        </div>
+        <div id="ia-crlv-status" style="display:none; margin-top:8px; font-size:12.5px;"></div>
+      </div>
+      <div><label>Veículo</label><input type="text" id="mt-veiculo" placeholder="Ex: Fiat Argo prata"></div>
+      <div><label>Placa</label><input type="text" id="mt-placa" placeholder="ABC1D23"></div>
+      <div><label>Marca</label><input type="text" id="mt-marca"></div>
+      <div><label>Modelo</label><input type="text" id="mt-modelo"></div>
+      <div><label>Ano de fabricação</label><input type="text" id="mt-ano-fab"></div>
+      <div><label>Ano do modelo</label><input type="text" id="mt-ano-mod"></div>
+      <div><label>Cor</label><input type="text" id="mt-cor"></div>
+      <div><label>Combustível</label><input type="text" id="mt-combustivel"></div>
+      <div><label>Renavam</label><input type="text" id="mt-renavam"></div>
+      <div><label>Chassi</label><input type="text" id="mt-chassi"></div>
+      <div><label>Proprietário do veículo <span style="font-weight:400; color:var(--muted);">(no documento)</span></label><input type="text" id="mt-proprietario"></div>
+
       <div><label>Antecedentes — data</label><input type="date" id="mt-antecedentes-data"></div>
       <div><label>Antecedentes — status</label><select id="mt-antecedentes-status"><option value="">-</option><option>Pendente</option><option>Aprovado</option><option>Reprovado</option></select></div>
       <div><label>Status</label><select id="mt-status"></select></div>
@@ -942,7 +984,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div id="mt-checklist-documentos" style="margin-bottom:12px;"></div>
       <div id="mt-documentos-lista"></div>
       <div class="formgrid" style="margin-top:8px;">
-        <div><label>Tipo de documento</label><select id="mt-doc-tipo"><option>CNH</option><option>CNH EAR</option><option>Antecedentes Criminais</option><option>Curso ConduApp (16h)</option><option>Curso Transporte Infantil (50h CONTRAN)</option><option>Outro</option></select></div>
+        <div><label>Tipo de documento</label><select id="mt-doc-tipo"><option>CNH</option><option>CNH EAR</option><option>CRLV</option><option>Antecedentes Criminais</option><option>Curso ConduApp (16h)</option><option>Curso Transporte Infantil (50h CONTRAN)</option><option>Outro</option></select></div>
         <div><label>Validade</label><input type="date" id="mt-doc-validade"></div>
         <div><label>Status</label><select id="mt-doc-status"><option>Pendente</option><option>Verificado</option><option>Vencido</option></select></div>
         <div style="display:flex; align-items:flex-end;"><button class="btn secondary small" type="button" onclick="addDocumentoMotorista()">+ Adicionar documento</button></div>
@@ -2779,6 +2821,94 @@ function renderTransporteMotoristas(){
   }).join("") || `<tr><td class="empty" colspan="7">Nenhuma motorista cadastrada ainda</td></tr>`;
 }
 
+// ===== LEITURA DE CNH/CRLV COM IA =====
+const IA_DOC_CONFIG = {
+  cnh: { endpoint: "ler-cnh", tipoDocumento: "CNH", aplicarDados: aplicarDadosIACNH },
+  crlv: { endpoint: "ler-crlv", tipoDocumento: "CRLV", aplicarDados: aplicarDadosIACRLV },
+};
+let iaArquivoSelecionado = { cnh: null, crlv: null };
+let iaArquivoPendente = { cnh: null, crlv: null };
+function selecionarArquivoIA(tipo, input){
+  const arquivo = input.files[0]; if(!arquivo) return;
+  iaArquivoSelecionado[tipo] = arquivo;
+  document.getElementById(`ia-${tipo}-nome-arquivo`).textContent = arquivo.name;
+  document.getElementById(`ia-${tipo}-confirm`).style.display = "block";
+  document.getElementById(`ia-${tipo}-status`).style.display = "none";
+}
+function cancelarSelecaoIA(tipo){
+  iaArquivoSelecionado[tipo] = null;
+  document.getElementById(`ia-${tipo}-confirm`).style.display = "none";
+  document.getElementById(`ia-${tipo}-file`).value = "";
+}
+async function confirmarLeituraIA(tipo){
+  const arquivo = iaArquivoSelecionado[tipo]; if(!arquivo) return;
+  document.getElementById(`ia-${tipo}-confirm`).style.display = "none";
+  const status = document.getElementById(`ia-${tipo}-status`);
+  const btn = document.getElementById(`ia-${tipo}-btn`);
+  status.style.display = "block"; status.style.color = "var(--amber)";
+  status.textContent = "⏳ Lendo documento com IA...";
+  btn.disabled = true; btn.style.opacity = ".6";
+  try{
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session) throw new Error("Não autenticado");
+    const formData = new FormData(); formData.append("arquivo", arquivo);
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/${IA_DOC_CONFIG[tipo].endpoint}`, {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + session.access_token, "apikey": SUPABASE_KEY },
+      body: formData,
+    });
+    const result = await resp.json();
+    if(!resp.ok || result.error) throw new Error(result.error || "Erro na leitura");
+    IA_DOC_CONFIG[tipo].aplicarDados(result.dados);
+    status.style.color = "var(--green)";
+    status.textContent = "✅ Dados preenchidos! O documento é salvo junto quando você clicar em \"Salvar\".";
+    iaArquivoPendente[tipo] = arquivo;
+  }catch(e){
+    status.style.color = "var(--red)";
+    status.textContent = "❌ " + (e.message || "Erro ao ler. Preencha manualmente.");
+    console.error(e);
+  }finally{
+    btn.disabled = false; btn.style.opacity = "1";
+    btn.textContent = tipo==="cnh" ? "📄 Trocar CNH" : "📄 Trocar CRLV";
+    document.getElementById(`ia-${tipo}-file`).value = "";
+    iaArquivoSelecionado[tipo] = null;
+  }
+}
+function aplicarDadosIACNH(d){
+  const nomeAtual = document.getElementById("mt-nome");
+  if(d.nome_completo && !nomeAtual.value.trim()) nomeAtual.value = d.nome_completo;
+  if(d.cpf) document.getElementById("mt-cpf").value = d.cpf;
+  if(d.numero_registro) document.getElementById("mt-cnh-registro").value = d.numero_registro;
+  if(d.validade) document.getElementById("mt-cnh-validade").value = d.validade;
+  if(d.categoria){
+    const letras = d.categoria.toUpperCase().replace(/[^A-Z]/g,"").split("");
+    document.querySelectorAll("#mt-cnh-categoria-wrap input[type=checkbox]").forEach(cb=>{ cb.checked = false; });
+    let marcouOutra = false;
+    letras.forEach(l=>{
+      const cb = document.querySelector(`#mt-cnh-categoria-wrap input[value="${l}"]`);
+      if(cb) cb.checked = true;
+      else if(!marcouOutra){ document.querySelector('#mt-cnh-categoria-wrap input[value="Outra"]').checked = true; marcouOutra = true; }
+    });
+  }
+  if(d.tem_ear === true) document.getElementById("mt-cnh-ear").value = "Já tenho EAR";
+  else if(d.tem_ear === false) document.getElementById("mt-cnh-ear").value = "Não tenho EAR";
+}
+function aplicarDadosIACRLV(d){
+  if(d.placa) document.getElementById("mt-placa").value = d.placa;
+  if(d.marca) document.getElementById("mt-marca").value = d.marca;
+  if(d.modelo) document.getElementById("mt-modelo").value = d.modelo;
+  if(d.ano_fabricacao) document.getElementById("mt-ano-fab").value = d.ano_fabricacao;
+  if(d.ano_modelo) document.getElementById("mt-ano-mod").value = d.ano_modelo;
+  if(d.cor) document.getElementById("mt-cor").value = d.cor;
+  if(d.combustivel) document.getElementById("mt-combustivel").value = d.combustivel;
+  if(d.renavam) document.getElementById("mt-renavam").value = d.renavam;
+  if(d.chassi) document.getElementById("mt-chassi").value = d.chassi;
+  if(d.proprietario_nome) document.getElementById("mt-proprietario").value = d.proprietario_nome;
+  if(d.marca || d.modelo){
+    document.getElementById("mt-veiculo").value = [d.marca, d.modelo].filter(Boolean).join(" ");
+  }
+}
+
 let editingMotoristaId = null;
 function openMotoristaModal(id){
   editingMotoristaId = id || null;
@@ -2792,12 +2922,29 @@ function openMotoristaModal(id){
   document.getElementById("mt-aniversario").value = m.aniversario||"";
   document.getElementById("mt-veiculo").value = m.veiculo||"";
   document.getElementById("mt-placa").value = m.placa||"";
+  document.getElementById("mt-cpf").value = m.cpf||"";
+  document.getElementById("mt-cnh-registro").value = m.cnh_numero_registro||"";
+  document.getElementById("mt-marca").value = m.marca||"";
+  document.getElementById("mt-modelo").value = m.modelo||"";
+  document.getElementById("mt-ano-fab").value = m.ano_fabricacao||"";
+  document.getElementById("mt-ano-mod").value = m.ano_modelo||"";
+  document.getElementById("mt-cor").value = m.cor||"";
+  document.getElementById("mt-combustivel").value = m.combustivel||"";
+  document.getElementById("mt-renavam").value = m.renavam||"";
+  document.getElementById("mt-chassi").value = m.chassi||"";
+  document.getElementById("mt-proprietario").value = m.proprietario_veiculo||"";
   const cnhCategoriasMarcadas = (m.cnh_categoria||"").split(",").map(c=>c.trim()).filter(Boolean);
   document.querySelectorAll("#mt-cnh-categoria-wrap input[type=checkbox]").forEach(cb=>{
     cb.checked = cnhCategoriasMarcadas.includes(cb.value);
   });
   document.getElementById("mt-cnh-validade").value = m.cnh_validade||"";
   document.getElementById("mt-cnh-ear").value = m.cnh_ear || "";
+  cancelarSelecaoIA("cnh"); cancelarSelecaoIA("crlv");
+  iaArquivoPendente.cnh = null; iaArquivoPendente.crlv = null;
+  document.getElementById("ia-cnh-status").style.display = "none";
+  document.getElementById("ia-crlv-status").style.display = "none";
+  document.getElementById("ia-cnh-btn").textContent = "📄 Selecionar CNH (foto ou PDF)";
+  document.getElementById("ia-crlv-btn").textContent = "📄 Selecionar CRLV (foto ou PDF)";
   document.getElementById("mt-antecedentes-data").value = m.antecedentes_data||"";
   document.getElementById("mt-antecedentes-status").value = m.antecedentes_status||"";
   document.getElementById("mt-status").value = m.status||"Candidatura recebida";
@@ -2930,6 +3077,17 @@ async function saveMotorista(){
     aniversario: document.getElementById("mt-aniversario").value || null,
     veiculo: document.getElementById("mt-veiculo").value,
     placa: document.getElementById("mt-placa").value,
+    cpf: document.getElementById("mt-cpf").value,
+    cnh_numero_registro: document.getElementById("mt-cnh-registro").value,
+    marca: document.getElementById("mt-marca").value,
+    modelo: document.getElementById("mt-modelo").value,
+    ano_fabricacao: document.getElementById("mt-ano-fab").value,
+    ano_modelo: document.getElementById("mt-ano-mod").value,
+    cor: document.getElementById("mt-cor").value,
+    combustivel: document.getElementById("mt-combustivel").value,
+    renavam: document.getElementById("mt-renavam").value,
+    chassi: document.getElementById("mt-chassi").value,
+    proprietario_veiculo: document.getElementById("mt-proprietario").value,
     cnh_categoria: [...document.querySelectorAll("#mt-cnh-categoria-wrap input[type=checkbox]:checked")].map(cb=>cb.value).join(", "),
     cnh_validade: document.getElementById("mt-cnh-validade").value || null,
     cnh_ear: document.getElementById("mt-cnh-ear").value || null,
@@ -2951,9 +3109,29 @@ async function saveMotorista(){
     if(document.getElementById("mt-doc-validade").value.trim()) await addDocumentoMotorista();
     if(document.getElementById("mo-texto").value.trim()) await addObservacaoMotorista();
   }
+  await salvarDocumentosPendentesIA(editingMotoristaId);
   await carregarDados();
   if(isNew){ renderDocumentosMotorista(); renderObservacoesMotorista(); }
   else { closeModal("motorista-modal"); }
+}
+async function salvarDocumentosPendentesIA(motoristaId){
+  for(const tipo of ["cnh","crlv"]){
+    const arquivo = iaArquivoPendente[tipo];
+    if(!arquivo || !motoristaId) continue;
+    try{
+      const path = `${motoristaId}/${Date.now()}_${IA_DOC_CONFIG[tipo].tipoDocumento}_${arquivo.name}`;
+      const { error: ue } = await sb.storage.from("documentos-motoristas").upload(path, arquivo);
+      if(!ue){
+        await sb.from("documentos_motorista").insert({
+          motorista_id: motoristaId,
+          tipo_documento: IA_DOC_CONFIG[tipo].tipoDocumento,
+          status_verificacao: "Pendente",
+          url: path,
+        });
+      }
+    }catch(e){ console.error(e); }
+    iaArquivoPendente[tipo] = null;
+  }
 }
 async function deleteMotorista(id){
   if(!confirm('Excluir esta motorista? Os documentos e observações dela também são excluídos; viagens ligadas a ela ficam sem motorista definida (não são apagadas).')) return;
