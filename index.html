@@ -200,11 +200,21 @@ a.icon-btn{text-decoration:none; display:inline-block;}
 .kanban{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; align-items:start;}
 .kanban-col{background:#fdf6f9; border:1px solid var(--border); border-radius:10px; padding:10px; min-width:0;}
 .kanban-col h4{margin:0 0 10px; font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; display:flex; justify-content:space-between;}
-.kanban-card{background:#fff; border:1px solid var(--border); border-radius:8px; padding:10px; margin-bottom:8px; cursor:pointer; font-size:12.5px;}
+.kanban-card{background:#fff; border:1px solid var(--border); border-left:4px solid transparent; border-radius:8px; padding:10px; margin-bottom:8px; cursor:pointer; font-size:12.5px;}
 .kanban-card:hover{border-color:var(--pink);}
 .kanban-card .kc-top{font-weight:700; margin-bottom:2px;}
 .kanban-card .kc-tag{display:inline-block; margin-top:6px;}
 .kanban-vazio{color:var(--muted); font-size:12px; margin:0;}
+.kanban-card.urg-60{border-left-color:#F2A900;}
+.kanban-card.urg-30{border-left-color:#E86A1C;}
+.kanban-card.urg-15{border-left-color:#D62839;}
+.kanban-card.urg-atraso{border-left-color:#8B0000; background:#FCE0E2; animation:pulseAtraso 1.6s infinite;}
+@keyframes pulseAtraso{0%,100%{box-shadow:0 1px 4px rgba(139,0,0,.12);} 50%{box-shadow:0 1px 12px rgba(139,0,0,.4);}}
+.kc-alerta{display:block; font-size:10.5px; font-weight:800; margin-bottom:4px;}
+.kc-alerta.urg-60{color:#8a6200;}
+.kc-alerta.urg-30{color:#a34710;}
+.kc-alerta.urg-15{color:#D62839;}
+.kc-alerta.urg-atraso{color:#8B0000;}
 .chip-check{display:inline-flex; align-items:center; gap:5px; background:var(--pink-light); border:1px solid var(--border); border-radius:16px; padding:4px 10px; font-size:12px; cursor:pointer; user-select:none;}
 .chip-check input{margin:0;}
 .chip-check:has(input:checked){border-color:var(--pink); color:var(--pink); font-weight:600;}
@@ -801,6 +811,14 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Tipo</label><select id="dv-tipo"></select></div>
       <div><label>Parceira (o) ligada</label><select id="dv-parceiro"><option value="">-</option></select></div>
       <div><label>Status</label><select id="dv-status"></select></div>
+      <div class="full">
+        <label>Público-alvo <span style="font-weight:400; color:var(--muted);">(quem vê isso no próprio painel — pode marcar mais de um)</span></label>
+        <div id="dv-publico-alvo-wrap" style="display:flex; flex-wrap:wrap; gap:6px;">
+          <label class="chip-check"><input type="checkbox" value="Motoristas"> Motoristas</label>
+          <label class="chip-check"><input type="checkbox" value="Clientes"> Clientes</label>
+          <label class="chip-check"><input type="checkbox" value="Parceiras (os)"> Parceiras (os)</label>
+        </div>
+      </div>
       <div><label>Data início</label><input type="date" id="dv-data-inicio"></div>
       <div><label>Data fim</label><input type="date" id="dv-data-fim"></div>
       <div><label>Carga horária</label><input type="text" id="dv-carga-horaria"></div>
@@ -1147,7 +1165,9 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Comissão da plataforma <span style="font-weight:400; color:var(--muted);">(calculada: recebido/cotado − repassado)</span></label><input type="text" id="vg-pg-comissao" readonly style="background:var(--border); cursor:not-allowed;"></div>
       <div><label>Forma de pagamento</label><select id="vg-pg-forma"><option value="">-</option><option>Pix</option><option>Dinheiro</option><option>Transferência</option><option>Outro</option></select></div>
       <div><label>Status do pagamento</label><select id="vg-pg-status"><option>Pendente</option><option>Pago</option></select></div>
-      <div><label>Data do pagamento</label><input type="date" id="vg-pg-data"></div>
+      <div><label>Data prevista</label><input type="date" id="vg-pg-data-prevista"></div>
+      <div><label>Data do pagamento <span style="font-weight:400; color:var(--muted);">(realizada)</span></label><input type="date" id="vg-pg-data"></div>
+      <div class="full"><label>Comprovante <span style="font-weight:400; color:var(--muted);">(link do PIX/print, aparece pra ela no painel)</span></label><input type="text" id="vg-pg-comprovante" placeholder="https://..."></div>
       <div class="full"><label>Notas (incentivo, reembolso etc.)</label><textarea id="vg-pg-notas" rows="2"></textarea></div>
     </div>
 
@@ -2051,6 +2071,8 @@ function openDivulgacaoModal(id){
   document.getElementById("dv-tipo").value = d.tipo||"Terceiro - divulgação";
   document.getElementById("dv-parceiro").value = d.parceiro_id||"";
   document.getElementById("dv-status").value = d.status||"Planejado";
+  const publicoMarcado = (d.publico_alvo||"").split(",").map(x=>x.trim()).filter(Boolean);
+  document.querySelectorAll("#dv-publico-alvo-wrap input[type=checkbox]").forEach(cb=>{ cb.checked = publicoMarcado.includes(cb.value); });
   document.getElementById("dv-data-inicio").value = d.data_inicio||"";
   document.getElementById("dv-data-fim").value = d.data_fim||"";
   document.getElementById("dv-carga-horaria").value = d.carga_horaria||"";
@@ -2072,6 +2094,7 @@ async function saveDivulgacao(){
     tipo: document.getElementById("dv-tipo").value,
     parceiro_id: document.getElementById("dv-parceiro").value || null,
     status: document.getElementById("dv-status").value,
+    publico_alvo: [...document.querySelectorAll("#dv-publico-alvo-wrap input[type=checkbox]:checked")].map(cb=>cb.value).join(","),
     data_inicio: document.getElementById("dv-data-inicio").value || null,
     data_fim: document.getElementById("dv-data-fim").value || null,
     carga_horaria: document.getElementById("dv-carga-horaria").value,
@@ -3393,6 +3416,20 @@ function labelViagem(v){
   const data = v.data ? formatarDataBR(v.data) : "sem data";
   return `#${v.id} · ${data} · ${cliente?cliente.nome:"sem cliente"} / ${nomesMotoristas || "sem motorista"}`;
 }
+function urgenciaViagem(v){
+  if(!v.data || !v.horario_partida) return null;
+  if(v.status==='Em andamento' || v.status==='Concluída' || v.status==='Cancelada' || v.saida_confirmada) return null;
+  const partida = new Date(v.data + "T" + v.horario_partida);
+  const diffMin = (partida - new Date()) / 60000;
+  if(diffMin < 0) return {classe:"urg-atraso", texto:"⚠️ Atrasada, sem confirmação"};
+  if(diffMin <= 15) return {classe:"urg-15", texto:"🔴 Faltam " + Math.max(0,Math.round(diffMin)) + " min"};
+  if(diffMin <= 30) return {classe:"urg-30", texto:"🟠 Faltam ~30 min"};
+  if(diffMin <= 60) return {classe:"urg-60", texto:"🟡 Falta ~1h"};
+  return null;
+}
+if(!window._intervaloUrgenciaKanban){
+  window._intervaloUrgenciaKanban = setInterval(()=>{ if(document.getElementById("kanban-viagens")) renderTransporteViagens(); }, 30000);
+}
 function renderTransporteViagens(){
   const ft = document.getElementById("filter-viagem-tipo");
   if(!ft.dataset.filled){ fillSelect(ft, ["",...TIPO_SERVICO_VIAGEM], ""); ft.querySelector("option").textContent="Todos os tipos"; ft.dataset.filled=1; }
@@ -3406,7 +3443,9 @@ function renderTransporteViagens(){
       ${doColuna.map(v=>{
         const cliente = clientesTransporte.find(c=>c.id===v.cliente_id);
         const nomesMotoristas = nomesMotoristasViagem(v);
-        return `<div class="kanban-card" onclick="openViagemModal(${v.id})">
+        const urg = urgenciaViagem(v);
+        return `<div class="kanban-card ${urg?urg.classe:''}" onclick="openViagemModal(${v.id})">
+          ${urg?`<span class="kc-alerta ${urg.classe}">${urg.texto}</span>`:""}
           <div class="kc-top">${cliente?cliente.nome:"Cliente não definido"}</div>
           <div style="color:var(--muted);">${nomesMotoristas || "Sem motorista"}</div>
           <div style="color:var(--muted); font-size:11.5px; margin-top:4px;">${v.data?`${formatarDataBR(v.data)}${v.horario_partida?" "+v.horario_partida.slice(0,5):""}`:"Sem data"}</div>
@@ -3468,7 +3507,9 @@ function openViagemModal(id){
   document.getElementById("vg-pg-valor").value = pg.valor_repassado ?? "";
   document.getElementById("vg-pg-forma").value = pg.forma_pagamento || "";
   document.getElementById("vg-pg-status").value = pg.status || "Pendente";
+  document.getElementById("vg-pg-data-prevista").value = pg.data_prevista_pagamento || "";
   document.getElementById("vg-pg-data").value = pg.data_pagamento || "";
+  document.getElementById("vg-pg-comprovante").value = pg.comprovante_url || "";
   document.getElementById("vg-pg-notas").value = pg.notas || "";
   recalcularComissaoCotacao();
 
@@ -3540,10 +3581,12 @@ async function saveViagem(){
     comissao_plataforma: document.getElementById("vg-pg-comissao").dataset.valor ? Number(document.getElementById("vg-pg-comissao").dataset.valor) : null,
     forma_pagamento: document.getElementById("vg-pg-forma").value || null,
     status: document.getElementById("vg-pg-status").value,
+    data_prevista_pagamento: document.getElementById("vg-pg-data-prevista").value || null,
     data_pagamento: document.getElementById("vg-pg-data").value || null,
+    comprovante_url: document.getElementById("vg-pg-comprovante").value || null,
     notas: document.getElementById("vg-pg-notas").value,
   };
-  const temDadoPagamento = pgPayload.valor_repassado != null || pgPayload.comissao_plataforma != null || pgPayload.forma_pagamento || pgPayload.data_pagamento || pgPayload.notas;
+  const temDadoPagamento = pgPayload.valor_repassado != null || pgPayload.comissao_plataforma != null || pgPayload.forma_pagamento || pgPayload.data_prevista_pagamento || pgPayload.data_pagamento || pgPayload.comprovante_url || pgPayload.notas;
   if(temDadoPagamento){
     const existente = pagamentosMotorista.find(p=>p.viagem_id===viagemId);
     const { error } = existente

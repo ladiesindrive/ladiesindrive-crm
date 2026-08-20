@@ -19,6 +19,12 @@
       --verde-claro: #DFF5EA;
       --azul: #2A6FE0;
       --azul-claro: #E1EBFB;
+      --amarelo: #F2A900;
+      --amarelo-claro: #FFF4DC;
+      --laranja: #E86A1C;
+      --laranja-claro: #FDE6D6;
+      --vermelho: #D62839;
+      --vermelho-claro: #FCE0E2;
       --preto: #1a1a1a;
       --branco: #ffffff;
       --cinza: #f5f5f5;
@@ -44,7 +50,7 @@
     nav a, nav button { color: var(--preto); text-decoration: none; font-weight: 600; font-size: 14px; background: none; border: none; cursor: pointer; font-family: inherit; }
     nav a:hover, nav button:hover { color: var(--rosa); }
 
-    .container { max-width: 560px; margin: 0 auto; padding: 28px 18px 60px; }
+    .container { max-width: 560px; margin: 0 auto; padding: 20px 18px 60px; }
 
     /* ── LOGIN ── */
     #login-screen { display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 20px; }
@@ -90,7 +96,7 @@
       align-items: center;
       justify-content: space-between;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     .disponibilidade strong { display: block; }
     .disponibilidade span { font-size: 0.8rem; color: var(--cinza-texto); }
@@ -106,17 +112,39 @@
     .toggle input:checked + .trilho { background: var(--verde); }
     .toggle input:checked + .trilho::before { transform: translateX(22px); }
 
+    /* ── ABAS ── */
+    .tabs {
+      display: flex; gap: 6px; overflow-x: auto; margin-bottom: 16px; padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab-btn {
+      position: relative; flex-shrink: 0; background: var(--branco); border: none; border-radius: 999px;
+      padding: 9px 16px; font-size: 0.83rem; font-weight: 700; color: var(--cinza-texto); cursor: pointer;
+      font-family: inherit; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .tab-btn.active { background: var(--rosa); color: var(--branco); }
+    .tab-badge {
+      display: inline-block; background: var(--vermelho); color: var(--branco); font-size: 0.68rem;
+      font-weight: 800; border-radius: 999px; padding: 1px 6px; margin-left: 5px;
+    }
+    .aba-conteudo { display: none; }
+    .aba-conteudo.ativa { display: block; }
+
     .viagem-card {
       background: var(--branco);
       border-radius: 14px;
       padding: 18px 20px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       margin-bottom: 14px;
+      border-left: 5px solid transparent;
     }
     .viagem-card .status-tag {
       display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 3px 10px;
       border-radius: 999px; background: var(--azul-claro); color: var(--azul); margin-bottom: 8px;
     }
+    .viagem-card .status-tag.recusada, .viagem-card .status-tag.cancelada { background: var(--cinza); color: var(--cinza-texto); }
+    .viagem-card .status-tag.perdida { background: #F1E9FF; color: #7C4DBD; }
+    .viagem-card .status-tag.concluida { background: var(--verde-claro); color: var(--verde); }
     .viagem-card .linha { font-size: 0.9rem; margin: 3px 0; }
     .viagem-card .linha b { color: var(--cinza-texto); font-weight: 600; }
     .viagem-card .valor { color: var(--verde); font-weight: 800; font-size: 1.15rem; margin: 8px 0; }
@@ -127,10 +155,42 @@
     }
     .viagem-card .acoes button:disabled { opacity: 0.5; cursor: default; }
     .viagem-card .acoes button.feito { background: var(--verde-claro); color: var(--verde); }
+    .viagem-card .acoes button.recusar { background: var(--cinza); color: var(--cinza-texto); }
+
+    .viagem-card.urg-60 { border-left-color: var(--amarelo); }
+    .viagem-card.urg-30 { border-left-color: var(--laranja); }
+    .viagem-card.urg-15 { border-left-color: var(--vermelho); }
+    .viagem-card.urg-atraso { border-left-color: #8B0000; background: var(--vermelho-claro); animation: pulseAtraso 1.6s infinite; }
+    @keyframes pulseAtraso { 0%,100% { box-shadow: 0 2px 10px rgba(139,0,0,0.12); } 50% { box-shadow: 0 2px 22px rgba(139,0,0,0.4); } }
+
+    .alerta-tempo { font-size: 0.8rem; font-weight: 800; padding: 5px 10px; border-radius: 8px; display: inline-block; margin-bottom: 8px; }
+    .alerta-tempo.urg-60 { background: var(--amarelo-claro); color: #8a6200; }
+    .alerta-tempo.urg-30 { background: var(--laranja-claro); color: #a34710; }
+    .alerta-tempo.urg-15 { background: var(--vermelho-claro); color: var(--vermelho); }
+    .alerta-tempo.urg-atraso { background: #8B0000; color: var(--branco); }
+
+    .pgto-tag { display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+    .pgto-tag.pago { background: var(--verde-claro); color: var(--verde); }
+    .pgto-tag.pendente { background: var(--amarelo-claro); color: #8a6200; }
+    .pgto-link { display: inline-block; margin-top: 6px; font-size: 0.82rem; color: var(--azul); font-weight: 700; text-decoration: none; }
 
     .vazio { text-align: center; color: var(--cinza-texto); padding: 40px 10px; }
-    .secao-titulo { font-size: 1.05rem; font-weight: 800; margin: 24px 0 12px; }
-    .secao-titulo:first-of-type { margin-top: 0; }
+    .secao-titulo { font-size: 1.05rem; font-weight: 800; margin: 4px 0 12px; }
+
+    /* ── FINANCEIRO ── */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+    .stat-card { background: var(--branco); border-radius: 14px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .stat-card.destaque { grid-column: 1 / -1; background: linear-gradient(135deg, var(--rosa), #ff6fbf); color: var(--branco); }
+    .stat-card .stat-label { font-size: 0.75rem; font-weight: 600; opacity: 0.85; margin-bottom: 4px; }
+    .stat-card .stat-valor { font-size: 1.5rem; font-weight: 800; }
+    .stat-card.destaque .stat-valor { font-size: 1.9rem; }
+
+    /* ── CURSOS ── */
+    .curso-card { background: var(--branco); border-radius: 14px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 14px; }
+    .curso-card .formato-tag { display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--rosa-claro); color: var(--rosa); margin-bottom: 8px; }
+    .curso-card h4 { font-size: 1rem; margin-bottom: 4px; }
+    .curso-card .linha { font-size: 0.87rem; color: var(--cinza-texto); margin: 2px 0; }
+    .curso-card a.btn-inscrever { display: block; text-align: center; margin-top: 12px; background: var(--rosa); color: var(--branco); text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; }
   </style>
 </head>
 <body>
@@ -173,8 +233,19 @@
         </label>
       </div>
 
-      <div class="secao-titulo">Minhas viagens</div>
-      <div id="lista-viagens"><div class="vazio">Carregando...</div></div>
+      <div class="tabs">
+        <button class="tab-btn active" data-aba="ofertas" onclick="trocarAba('ofertas')">Ofertas <span class="tab-badge" id="badge-ofertas" style="display:none;">0</span></button>
+        <button class="tab-btn" data-aba="viagens" onclick="trocarAba('viagens')">Minhas viagens</button>
+        <button class="tab-btn" data-aba="historico" onclick="trocarAba('historico')">Histórico</button>
+        <button class="tab-btn" data-aba="financeiro" onclick="trocarAba('financeiro')">Financeiro</button>
+        <button class="tab-btn" data-aba="cursos" onclick="trocarAba('cursos')">Cursos &amp; Eventos</button>
+      </div>
+
+      <div class="aba-conteudo ativa" id="aba-ofertas"><div class="vazio">Carregando...</div></div>
+      <div class="aba-conteudo" id="aba-viagens"></div>
+      <div class="aba-conteudo" id="aba-historico"></div>
+      <div class="aba-conteudo" id="aba-financeiro"></div>
+      <div class="aba-conteudo" id="aba-cursos"></div>
     </div>
   </div>
 
@@ -188,6 +259,9 @@
     let motorista = null;
     let watchId = null;
     let intervaloLocalizacao = null;
+    let intervaloUrgencia = null;
+    let historico = [];
+    let cursos = [];
 
     // ── LOGIN ──
     document.getElementById('toggle-senha').addEventListener('click', function () {
@@ -220,6 +294,7 @@
 
     document.getElementById('btn-sair').addEventListener('click', async () => {
       pararLocalizacao();
+      pararAtualizacaoUrgencia();
       await sb.auth.signOut();
     });
 
@@ -239,8 +314,17 @@
         document.getElementById('painel').style.display = 'none';
         document.getElementById('login-screen').style.display = 'flex';
         pararLocalizacao();
+        pararAtualizacaoUrgencia();
       }
     });
+
+    // ── ABAS ──
+    function trocarAba(nome) {
+      document.querySelectorAll('.aba-conteudo').forEach(function (el) { el.classList.remove('ativa'); });
+      document.querySelectorAll('.tab-btn').forEach(function (el) { el.classList.remove('active'); });
+      document.getElementById('aba-' + nome).classList.add('ativa');
+      document.querySelector('.tab-btn[data-aba="' + nome + '"]').classList.add('active');
+    }
 
     // ── PAINEL ──
     async function carregarPainel(minhaSessao) {
@@ -248,7 +332,7 @@
       if (minhaSessao !== sessaoAtual) return;
 
       if (!meuId) {
-        document.getElementById('lista-viagens').innerHTML = '<div class="vazio">Não encontramos seu cadastro de motorista vinculado a este login. Fale com a equipe.</div>';
+        document.getElementById('aba-ofertas').innerHTML = '<div class="vazio">Não encontramos seu cadastro de motorista vinculado a este login. Fale com a equipe.</div>';
         return;
       }
 
@@ -256,7 +340,7 @@
       if (minhaSessao !== sessaoAtual) return;
 
       if (error || !data) {
-        document.getElementById('lista-viagens').innerHTML = '<div class="vazio">Não encontramos seu cadastro de motorista vinculado a este login. Fale com a equipe.</div>';
+        document.getElementById('aba-ofertas').innerHTML = '<div class="vazio">Não encontramos seu cadastro de motorista vinculado a este login. Fale com a equipe.</div>';
         return;
       }
 
@@ -265,7 +349,7 @@
       document.getElementById('toggle-disponivel').checked = !!motorista.disponivel;
       if (motorista.disponivel) iniciarLocalizacao();
 
-      carregarViagens(minhaSessao);
+      carregarDados(minhaSessao);
     }
 
     document.getElementById('toggle-disponivel').addEventListener('change', async (e) => {
@@ -286,6 +370,10 @@
       if (intervaloLocalizacao) { clearInterval(intervaloLocalizacao); intervaloLocalizacao = null; }
     }
 
+    function pararAtualizacaoUrgencia() {
+      if (intervaloUrgencia) { clearInterval(intervaloUrgencia); intervaloUrgencia = null; }
+    }
+
     function atualizarLocalizacao() {
       navigator.geolocation.getCurrentPosition(async (pos) => {
         if (!motorista) return;
@@ -299,18 +387,27 @@
       });
     }
 
-    async function carregarViagens(minhaSessao) {
-      var { data, error } = await sb.from('viagens').select('*').order('data', { ascending: true });
-      if (minhaSessao !== sessaoAtual) return;
-      var lista = document.getElementById('lista-viagens');
+    // ── DADOS ──
+    async function carregarDados(minhaSessao) {
+      var [{ data: h, error: eh }, { data: c, error: ec }] = await Promise.all([
+        sb.rpc('historico_ofertas_motorista'),
+        sb.rpc('divulgacoes_da_motorista')
+      ]);
+      if (minhaSessao !== undefined && minhaSessao !== sessaoAtual) return;
 
-      if (error || !data || data.length === 0) {
-        lista.innerHTML = '<div class="vazio">Nenhuma viagem atribuída no momento.</div>';
-        return;
-      }
+      historico = h || [];
+      cursos = c || [];
+      renderTudo();
 
-      lista.innerHTML = '';
-      data.forEach(function(v) { lista.appendChild(cartaoViagem(v)); });
+      if (!intervaloUrgencia) intervaloUrgencia = setInterval(function () { renderOfertas(); renderMinhasViagens(); }, 30000);
+    }
+
+    function renderTudo() {
+      renderOfertas();
+      renderMinhasViagens();
+      renderHistorico();
+      renderFinanceiro();
+      renderCursos();
     }
 
     function formatarData(data, horario) {
@@ -320,31 +417,101 @@
       return dataFmt + (horario ? ' às ' + horario.slice(0, 5) : '');
     }
 
-    function cartaoViagem(v) {
-      var div = document.createElement('div');
-      div.className = 'viagem-card';
+    function formatarMoeda(n) {
+      return 'R$ ' + Number(n || 0).toFixed(2).replace('.', ',');
+    }
 
-      var html = '<span class="status-tag">' + v.status + '</span>';
-      if (v.origem_endereco) html += '<div class="linha"><b>De:</b> ' + v.origem_endereco + '</div>';
-      if (v.destino_endereco) html += '<div class="linha"><b>Para:</b> ' + v.destino_endereco + '</div>';
-      if (v.data) html += '<div class="linha"><b>Quando:</b> ' + formatarData(v.data, v.horario_partida) + '</div>';
-      if (v.preco_motorista) html += '<div class="valor">R$ ' + Number(v.preco_motorista).toFixed(2).replace('.', ',') + ' <span style="font-size:0.7rem;color:var(--cinza-texto);font-weight:400">(seu repasse)</span></div>';
+    function linhasComuns(o) {
+      var html = '';
+      if (o.cliente_nome) html += '<div class="linha"><b>Cliente:</b> ' + o.cliente_nome + '</div>';
+      if (o.origem_endereco) html += '<div class="linha"><b>De:</b> ' + o.origem_endereco + '</div>';
+      if (o.destino_endereco) html += '<div class="linha"><b>Para:</b> ' + o.destino_endereco + '</div>';
+      if (o.data) html += '<div class="linha"><b>Quando:</b> ' + formatarData(o.data, o.horario_partida) + '</div>';
+      if (o.distancia_km) html += '<div class="linha"><b>Distância:</b> ' + o.distancia_km + ' km</div>';
+      if (o.duracao_prevista_min) html += '<div class="linha"><b>Tempo previsto:</b> ' + o.duracao_prevista_min + ' min</div>';
+      return html;
+    }
 
-      html += '<div class="acoes">';
-      html += '<button data-acao="preparacao"' + (v.preparacao_confirmada ? ' class="feito" disabled' : '') + '>' + (v.preparacao_confirmada ? '✓ Preparação ok' : 'Confirmar preparação') + '</button>';
-      html += '<button data-acao="saida"' + (v.saida_confirmada ? ' class="feito" disabled' : '') + '>' + (v.saida_confirmada ? '✓ Saída confirmada' : 'Confirmar saída') + '</button>';
-      if (v.status !== 'Concluída' && v.status !== 'Cancelada') {
-        html += '<button data-acao="concluir">Concluir viagem</button>';
+    // ── URGÊNCIA (1h / 30min / 15min / atrasada) ──
+    function calcularUrgencia(o) {
+      if (!o.data || !o.horario_partida) return null;
+      if (o.status_viagem === 'Em andamento' || o.status_viagem === 'Concluída' || o.status_viagem === 'Cancelada' || o.saida_confirmada) return null;
+      var partida = new Date(o.data + 'T' + o.horario_partida);
+      var diffMin = (partida - new Date()) / 60000;
+      if (diffMin < 0) return { classe: 'urg-atraso', texto: '⚠️ Passou da hora e a saída ainda não foi confirmada' };
+      if (diffMin <= 15) return { classe: 'urg-15', texto: '🔴 Faltam ' + Math.max(0, Math.round(diffMin)) + ' min' };
+      if (diffMin <= 30) return { classe: 'urg-30', texto: '🟠 Faltam ~30 min' };
+      if (diffMin <= 60) return { classe: 'urg-60', texto: '🟡 Falta ~1h' };
+      return null;
+    }
+
+    // ── OFERTAS (pendentes) ──
+    function renderOfertas() {
+      var lista = historico.filter(function (o) { return o.desfecho === 'Pendente' && o.status_viagem !== 'Cancelada'; });
+      var el = document.getElementById('aba-ofertas');
+      var badge = document.getElementById('badge-ofertas');
+      badge.textContent = lista.length;
+      badge.style.display = lista.length ? 'inline-block' : 'none';
+
+      if (!lista.length) {
+        el.innerHTML = '<div class="vazio">Nenhuma corrida oferecida no momento. Fica de olho, alerta chega por aqui e no WhatsApp!</div>';
+        return;
       }
-      html += '</div>';
+      el.innerHTML = lista.map(function (o) {
+        var div = '<div class="viagem-card">';
+        div += '<span class="status-tag">Oferecida</span>';
+        div += linhasComuns(o);
+        if (o.preco_motorista) div += '<div class="valor">' + formatarMoeda(o.preco_motorista) + ' <span style="font-size:0.7rem;color:var(--cinza-texto);font-weight:400">(seu repasse)</span></div>';
+        div += '<div class="acoes">';
+        div += '<button onclick="aceitarOferta(' + o.viagem_id + ', this)">✅ Aceitar</button>';
+        div += '<button class="recusar" onclick="recusarOferta(' + o.viagem_id + ', this)">Recusar</button>';
+        div += '</div></div>';
+        return div;
+      }).join('');
+    }
 
-      div.innerHTML = html;
+    async function aceitarOferta(viagemId, btn) {
+      btn.closest('.acoes').querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+      var { data, error } = await sb.rpc('aceitar_viagem_motorista', { p_viagem_id: viagemId });
+      if (error || !data) {
+        alert('Essa corrida já não está mais disponível pra você (outra motorista pode ter aceitado primeiro). Vou atualizar a lista.');
+      }
+      carregarDados();
+    }
 
-      div.querySelectorAll('button[data-acao]').forEach(function(btn) {
-        btn.addEventListener('click', function() { executarAcao(v.id, btn.dataset.acao, btn); });
+    async function recusarOferta(viagemId, btn) {
+      btn.closest('.acoes').querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+      await sb.rpc('recusar_viagem_motorista', { p_viagem_id: viagemId });
+      carregarDados();
+    }
+
+    // ── MINHAS VIAGENS (aceitas, ativas) ──
+    function renderMinhasViagens() {
+      var lista = historico.filter(function (o) { return o.desfecho === 'Aceita' && o.status_viagem !== 'Concluída' && o.status_viagem !== 'Cancelada'; });
+      var el = document.getElementById('aba-viagens');
+
+      if (!lista.length) {
+        el.innerHTML = '<div class="vazio">Nenhuma viagem confirmada no momento.</div>';
+        return;
+      }
+      el.innerHTML = lista.map(function (o) {
+        var urg = calcularUrgencia(o);
+        var div = '<div class="viagem-card' + (urg ? ' ' + urg.classe : '') + '">';
+        if (urg) div += '<div class="alerta-tempo ' + urg.classe + '">' + urg.texto + '</div><br>';
+        div += '<span class="status-tag">' + o.status_viagem + '</span>';
+        div += linhasComuns(o);
+        if (o.preco_motorista) div += '<div class="valor">' + formatarMoeda(o.preco_motorista) + ' <span style="font-size:0.7rem;color:var(--cinza-texto);font-weight:400">(seu repasse)</span></div>';
+        div += '<div class="acoes">';
+        div += '<button data-acao="preparacao"' + (o.preparacao_confirmada ? ' class="feito" disabled' : '') + ' data-id="' + o.viagem_id + '">' + (o.preparacao_confirmada ? '✓ Preparação ok' : 'Confirmar preparação') + '</button>';
+        div += '<button data-acao="saida"' + (o.saida_confirmada ? ' class="feito" disabled' : '') + ' data-id="' + o.viagem_id + '">' + (o.saida_confirmada ? '✓ Saída confirmada' : 'Confirmar saída') + '</button>';
+        div += '<button data-acao="concluir" data-id="' + o.viagem_id + '">Concluir viagem</button>';
+        div += '</div></div>';
+        return div;
+      }).join('');
+
+      el.querySelectorAll('button[data-acao]').forEach(function (btn) {
+        btn.addEventListener('click', function () { executarAcao(Number(btn.dataset.id), btn.dataset.acao, btn); });
       });
-
-      return div;
     }
 
     async function executarAcao(viagemId, acao, btn) {
@@ -360,7 +527,114 @@
         btn.disabled = false;
         return;
       }
-      carregarViagens();
+      carregarDados();
+    }
+
+    // ── HISTÓRICO (tudo que passou por ela, mesmo sem aceitar) ──
+    function rotuloDesfecho(o) {
+      if (o.desfecho === 'Recusada') return { classe: 'recusada', texto: 'Você recusou' };
+      if (o.desfecho === 'Perdida') return { classe: 'perdida', texto: 'Outra motorista aceitou primeiro' };
+      if (o.status_viagem === 'Cancelada') return { classe: 'cancelada', texto: 'Cancelada' };
+      if (o.status_viagem === 'Concluída') return { classe: 'concluida', texto: 'Concluída' };
+      return { classe: '', texto: o.status_viagem || o.desfecho };
+    }
+
+    function renderHistorico() {
+      var lista = historico.filter(function (o) {
+        return o.desfecho === 'Recusada' || o.desfecho === 'Perdida' ||
+          (o.desfecho === 'Aceita' && (o.status_viagem === 'Concluída' || o.status_viagem === 'Cancelada'));
+      });
+      var el = document.getElementById('aba-historico');
+
+      if (!lista.length) {
+        el.innerHTML = '<div class="vazio">Ainda não há histórico. Toda corrida oferecida a você vai aparecer aqui, mesmo quando não vira viagem sua.</div>';
+        return;
+      }
+      el.innerHTML = lista.map(function (o) {
+        var rot = rotuloDesfecho(o);
+        var div = '<div class="viagem-card">';
+        div += '<span class="status-tag ' + rot.classe + '">' + rot.texto + '</span>';
+        div += linhasComuns(o);
+        if (o.desfecho === 'Aceita' && o.preco_motorista) {
+          div += '<div class="valor">' + formatarMoeda(o.preco_motorista) + '</div>';
+          div += pagamentoResumo(o);
+        }
+        div += '</div>';
+        return div;
+      }).join('');
+    }
+
+    function pagamentoResumo(o) {
+      if (!o.pgto_status && !o.pgto_valor_repassado) return '';
+      var pago = o.pgto_status === 'Pago';
+      var html = '<div><span class="pgto-tag ' + (pago ? 'pago' : 'pendente') + '">' + (pago ? 'Pago' : 'Pagamento pendente') + '</span></div>';
+      if (o.pgto_data_prevista) html += '<div class="linha"><b>Previsto:</b> ' + formatarData(o.pgto_data_prevista) + '</div>';
+      if (o.pgto_data_realizada) html += '<div class="linha"><b>Pago em:</b> ' + formatarData(o.pgto_data_realizada) + '</div>';
+      if (o.pgto_comprovante_url) html += '<a class="pgto-link" href="' + o.pgto_comprovante_url + '" target="_blank" rel="noopener">📄 Ver comprovante</a>';
+      return html;
+    }
+
+    // ── FINANCEIRO ──
+    function renderFinanceiro() {
+      var aceitas = historico.filter(function (o) { return o.desfecho === 'Aceita'; });
+      var pagas = aceitas.filter(function (o) { return o.pgto_status === 'Pago'; });
+      var pendentes = aceitas.filter(function (o) { return o.pgto_status !== 'Pago' && (o.pgto_valor_repassado || o.preco_motorista); });
+
+      var totalRecebido = pagas.reduce(function (s, o) { return s + Number(o.pgto_valor_repassado || 0); }, 0);
+      var totalPendente = pendentes.reduce(function (s, o) { return s + Number(o.pgto_valor_repassado || o.preco_motorista || 0); }, 0);
+      var media = pagas.length ? totalRecebido / pagas.length : 0;
+
+      var hoje = new Date();
+      var totalMes = pagas.filter(function (o) {
+        if (!o.pgto_data_realizada) return false;
+        var d = new Date(o.pgto_data_realizada + 'T00:00:00');
+        return d.getFullYear() === hoje.getFullYear() && d.getMonth() === hoje.getMonth();
+      }).reduce(function (s, o) { return s + Number(o.pgto_valor_repassado || 0); }, 0);
+
+      var html = '<div class="stats-grid">';
+      html += '<div class="stat-card destaque"><div class="stat-label">Você já recebeu pela Ladies in Drive</div><div class="stat-valor">' + formatarMoeda(totalRecebido) + '</div></div>';
+      html += '<div class="stat-card"><div class="stat-label">Este mês</div><div class="stat-valor">' + formatarMoeda(totalMes) + '</div></div>';
+      html += '<div class="stat-card"><div class="stat-label">Média por corrida</div><div class="stat-valor">' + formatarMoeda(media) + '</div></div>';
+      html += '<div class="stat-card" style="grid-column:1/-1;"><div class="stat-label">A receber</div><div class="stat-valor" style="color:var(--laranja);">' + formatarMoeda(totalPendente) + '</div></div>';
+      html += '</div>';
+
+      html += '<div class="secao-titulo">Pagamentos por corrida</div>';
+      if (!aceitas.length) {
+        html += '<div class="vazio">Suas corridas concluídas vão aparecer aqui com o valor e a data do repasse.</div>';
+      } else {
+        html += aceitas.map(function (o) {
+          var div = '<div class="viagem-card">';
+          div += '<span class="status-tag">' + (o.status_viagem || '') + '</span>';
+          if (o.data) div += '<div class="linha"><b>Data da corrida:</b> ' + formatarData(o.data, o.horario_partida) + '</div>';
+          if (o.preco_motorista) div += '<div class="valor">' + formatarMoeda(o.pgto_valor_repassado || o.preco_motorista) + '</div>';
+          div += pagamentoResumo(o);
+          div += '</div>';
+          return div;
+        }).join('');
+      }
+      document.getElementById('aba-financeiro').innerHTML = html;
+    }
+
+    // ── CURSOS & EVENTOS ──
+    function renderCursos() {
+      var el = document.getElementById('aba-cursos');
+      if (!cursos.length) {
+        el.innerHTML = '<div class="vazio">Nenhum curso ou evento no momento. Assim que a equipe divulgar algo pra motoristas, aparece aqui.</div>';
+        return;
+      }
+      el.innerHTML = cursos.map(function (c) {
+        var div = '<div class="curso-card">';
+        div += '<span class="formato-tag">' + (c.formato || '') + '</span>';
+        div += '<h4>' + c.titulo + '</h4>';
+        if (c.descricao) div += '<div class="linha">' + c.descricao + '</div>';
+        if (c.data_inicio) div += '<div class="linha"><b>Quando:</b> ' + formatarData(c.data_inicio) + (c.data_fim && c.data_fim !== c.data_inicio ? ' até ' + formatarData(c.data_fim) : '') + '</div>';
+        if (c.carga_horaria) div += '<div class="linha"><b>Carga horária:</b> ' + c.carga_horaria + '</div>';
+        if (c.local) div += '<div class="linha"><b>Local:</b> ' + c.local + '</div>';
+        div += '<div class="linha"><b>Investimento:</b> ' + (c.preco ? formatarMoeda(c.preco) : 'Gratuito') + '</div>';
+        if (c.link_inscricao) div += '<a class="btn-inscrever" href="' + c.link_inscricao + '" target="_blank" rel="noopener">Quero saber mais</a>';
+        div += '</div>';
+        return div;
+      }).join('');
     }
 
     if ("serviceWorker" in navigator) {
