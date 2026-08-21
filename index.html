@@ -83,6 +83,15 @@ tr:last-child td{border-bottom:none;}
 .tag.tipo-mensalidade{background:#e6f7ef; color:#1FAA72;}
 .tag.tipo-patrocinio{background:#eeeef0; color:#6B6B76;}
 .tag.tipo-embaixadora{background:#ffe6f4; color:#FF3EA5;}
+.status-badge{display:inline-block; padding:3px 11px; border-radius:20px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:#fff;}
+.status-badge.blue{background:#2A6FE0;}
+.status-badge.amber{background:#B8730A;}
+.status-badge.red{background:var(--red);}
+.status-badge.purple{background:#7C4DBD;}
+.status-badge.teal{background:#0F8A8A;}
+.status-badge.green{background:var(--green);}
+.status-badge.gray{background:#6B6470;}
+.status-badge.pink{background:var(--pink);}
 .filters{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
 select,input[type=text],input[type=number],input[type=date],input[type=email],input[type=password],textarea{
   border:1px solid var(--border); border-radius:7px; padding:7px 10px; font-size:13px; font-family:inherit; background:#fff;
@@ -1289,7 +1298,7 @@ const DOCUMENTOS_OBRIGATORIOS_MOTORISTA = ["CNH","CRLV","Antecedentes Criminais"
 const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Idoso","Recorrente","Diário","Evento"];
 const CANAL_RECEPCAO = ["Telefone","Redes sociais","Site","E-mail"];
 const VIAGEM_STATUS = ["Solicitada","Aguardando cliente confirmar preço","Preço recusado pela cliente","Confirmada","Em andamento","Concluída","Cancelada"];
-const VIAGEM_STATUS_CLASS = {"Solicitada":"orc-sol","Aguardando cliente confirmar preço":"contato","Preço recusado pela cliente":"perdido","Confirmada":"negociacao","Em andamento":"contato","Concluída":"ganho","Cancelada":"perdido"};
+const VIAGEM_STATUS_CLASS = {"Solicitada":"blue","Aguardando cliente confirmar preço":"amber","Preço recusado pela cliente":"red","Confirmada":"purple","Em andamento":"teal","Concluída":"green","Cancelada":"gray"};
 const LINK_ACOMPANHAMENTO_BASE = "https://www.ladiesindrive.com.br/acompanhar.html?t=";
 // Tarifas sugeridas pra calcular preço a partir da distância (km).
 // Ponto de partida baseado em pesquisa de mercado (motorista particular/executivo
@@ -3446,7 +3455,7 @@ function renderTransporteViagens(){
   document.getElementById("kanban-viagens").innerHTML = VIAGEM_STATUS.map(status=>{
     const doColuna = filtradas.filter(v=>v.status===status);
     return `<div class="kanban-col">
-      <h4>${status}<span>${doColuna.length}</span></h4>
+      <h4><span class="status-badge ${VIAGEM_STATUS_CLASS[status]}">${status}</span><span>${doColuna.length}</span></h4>
       ${doColuna.map(v=>{
         const cliente = clientesTransporte.find(c=>c.id===v.cliente_id);
         const nomesMotoristas = nomesMotoristasViagem(v);
