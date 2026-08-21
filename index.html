@@ -92,6 +92,7 @@ tr:last-child td{border-bottom:none;}
 .status-badge.green{background:var(--green);}
 .status-badge.gray{background:#6B6470;}
 .status-badge.pink{background:var(--pink);}
+.status-badge.indigo{background:#3B4EC2;}
 .filters{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
 select,input[type=text],input[type=number],input[type=date],input[type=email],input[type=password],textarea{
   border:1px solid var(--border); border-radius:7px; padding:7px 10px; font-size:13px; font-family:inherit; background:#fff;
@@ -1261,7 +1262,7 @@ const { createClient } = window.supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const ETAPAS = ["Novo lead","Contato iniciado","Orçamento solicitado","Orçamento enviado","Negociação","Fechado - Ganho","Cliente ativo","Perdido"];
-const ETAPA_CLASS = {"Novo lead":"novo","Contato iniciado":"contato","Orçamento solicitado":"orc-sol","Orçamento enviado":"orc-env","Negociação":"negociacao","Fechado - Ganho":"ganho","Cliente ativo":"ativo","Perdido":"perdido"};
+const ETAPA_CLASS = {"Novo lead":"indigo","Contato iniciado":"amber","Orçamento solicitado":"pink","Orçamento enviado":"pink","Negociação":"teal","Fechado - Ganho":"green","Cliente ativo":"green","Perdido":"red"};
 const URG_CLASS = {"Urgente":"urg-alta","Essa semana":"urg-media","Sem pressa":"urg-baixa"};
 
 const SERVICOS = [
@@ -1293,7 +1294,7 @@ const SERVICOS = [
 const CATEGORIAS = [...new Set(SERVICOS.map(s=>s.categoria))];
 
 const MOTORISTA_ETAPAS = ["Candidatura recebida","Em entrevista","Documentos pendentes","Em treinamento","Ativa","Inativa","Recusada"];
-const MOTORISTA_ETAPA_CLASS = {"Candidatura recebida":"novo","Em entrevista":"contato","Documentos pendentes":"urg-media","Em treinamento":"negociacao","Ativa":"ativo","Inativa":"perdido","Recusada":"perdido"};
+const MOTORISTA_ETAPA_CLASS = {"Candidatura recebida":"indigo","Em entrevista":"amber","Documentos pendentes":"amber","Em treinamento":"teal","Ativa":"green","Inativa":"red","Recusada":"red"};
 const DOCUMENTOS_OBRIGATORIOS_MOTORISTA = ["CNH","CRLV","Antecedentes Criminais","Comprovante de Endereço"];
 const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Idoso","Recorrente","Diário","Evento"];
 const CANAL_RECEPCAO = ["Telefone","Redes sociais","Site","E-mail"];
@@ -1311,9 +1312,9 @@ const SEGMENTO_CLIENTE = ["Frequente","Ocasional","Empresarial"];
 // Funil de parceiros — o mesmo que a Juliana já documenta e usa
 // (Processo_Parceiros_LadiesInDrive.docx), não o funil de leads.
 const PARCEIRO_ETAPAS = ["Prospecto","Qualificado","Abordado","Em negociação","Parceiro ativo","Descartado"];
-const PARCEIRO_ETAPA_CLASS = {"Prospecto":"novo","Qualificado":"contato","Abordado":"orc-sol","Em negociação":"negociacao","Parceiro ativo":"ativo","Descartado":"perdido"};
+const PARCEIRO_ETAPA_CLASS = {"Prospecto":"indigo","Qualificado":"amber","Abordado":"pink","Em negociação":"teal","Parceiro ativo":"green","Descartado":"red"};
 const STATUS_PECA = ["Aberto","Em busca","Encontrado","Não encontrado","Encerrado"];
-const STATUS_PECA_CLASS = {"Aberto":"novo","Em busca":"contato","Encontrado":"ganho","Não encontrado":"perdido","Encerrado":"ativo"};
+const STATUS_PECA_CLASS = {"Aberto":"indigo","Em busca":"amber","Encontrado":"green","Não encontrado":"red","Encerrado":"green"};
 
 const TIPO_PARCERIA = ["Mensalidade","Patrocínio","Embaixadora"];
 const TIPO_PARCERIA_CLASS = {"Mensalidade":"tipo-mensalidade","Patrocínio":"tipo-patrocinio","Embaixadora":"tipo-embaixadora"};
@@ -1321,10 +1322,10 @@ const TIPO_PARCERIA_CLASS = {"Mensalidade":"tipo-mensalidade","Patrocínio":"tip
 const DIVULGACAO_FORMATOS = ["Evento","Curso"];
 const DIVULGACAO_TIPOS = ["Próprio Ladies","Terceiro - divulgação","Terceiro - com comissão"];
 const DIVULGACAO_STATUS = ["Planejado","Divulgado","Inscrições abertas","Em andamento","Concluído","Cancelado"];
-const DIVULGACAO_STATUS_CLASS = {"Planejado":"novo","Divulgado":"contato","Inscrições abertas":"orc-sol","Em andamento":"negociacao","Concluído":"ganho","Cancelado":"perdido"};
+const DIVULGACAO_STATUS_CLASS = {"Planejado":"indigo","Divulgado":"amber","Inscrições abertas":"pink","Em andamento":"teal","Concluído":"green","Cancelado":"red"};
 
 const VAGA_STATUS = ["Em triagem","Aberta","Em processo","Preenchida","Cancelada"];
-const VAGA_STATUS_CLASS = {"Em triagem":"contato","Aberta":"ganho","Em processo":"negociacao","Preenchida":"ativo","Cancelada":"perdido"};
+const VAGA_STATUS_CLASS = {"Em triagem":"amber","Aberta":"green","Em processo":"teal","Preenchida":"green","Cancelada":"red"};
 const VAGA_CANDIDATA_STATUS = ["Recebida","Triagem","Indicada","Contratada","Recusada"];
 
 // ===== ORDENAÇÃO DE TABELAS (clicar no cabeçalho da coluna) =====
@@ -1595,7 +1596,7 @@ function renderDashboard(){
   }).join("");
   const recentes = [...leads].sort((a,b)=> (b.data||"").localeCompare(a.data||"")).slice(0,6);
   document.getElementById("dash-leads-recentes").innerHTML = recentes.map(l=>`
-    <tr><td>${escapeHtml(l.nome)}</td><td>${escapeHtml(l.categoria||"-")}</td><td><span class="tag ${ETAPA_CLASS[l.etapa]||''}">${escapeHtml(l.etapa)}</span></td></tr>
+    <tr><td>${escapeHtml(l.nome)}</td><td>${escapeHtml(l.categoria||"-")}</td><td><span class="status-badge ${ETAPA_CLASS[l.etapa]||''}">${escapeHtml(l.etapa)}</span></td></tr>
   `).join("") || `<tr><td class="empty" colspan="3">Sem leads ainda</td></tr>`;
 
   const counts = {};
@@ -1660,7 +1661,7 @@ function renderLeads(){
       <td>${numeroClicavel(l.whatsapp)}${l.email?"<br>"+escapeHtml(l.email):""}</td>
       <td>${escapeHtml(l.categoria||"-")}<br><span style="color:var(--muted); font-size:12px;">${escapeHtml(l.servico||"")}</span></td>
       <td><span class="tag ${URG_CLASS[l.urgencia]||''}">${escapeHtml(l.urgencia||"-")}</span></td>
-      <td><span class="tag ${ETAPA_CLASS[l.etapa]||''}">${escapeHtml(l.etapa)}</span></td>
+      <td><span class="status-badge ${ETAPA_CLASS[l.etapa]||''}">${escapeHtml(l.etapa)}</span></td>
       <td>${escapeHtml(l.origem||"-")}</td>
       <td>${l.data||"-"}</td>
       <td onclick="event.stopPropagation()">${botaoWhats(l.whatsapp, l.nome)} <button class="icon-btn" onclick="openLeadModal(${l.id})">✏️</button> <button class="icon-btn" onclick="deleteLead(${l.id})">🗑️</button></td>
@@ -1682,7 +1683,7 @@ function renderClientes(){
       <td>${numeroClicavel(l.whatsapp)}</td>
       <td>${escapeHtml(l.cidade||"-")}</td>
       <td>${qtdServicos}</td>
-      <td><span class="tag ${ETAPA_CLASS[l.etapa]}">${escapeHtml(l.etapa)}</span></td>
+      <td><span class="status-badge ${ETAPA_CLASS[l.etapa]}">${escapeHtml(l.etapa)}</span></td>
       <td onclick="event.stopPropagation()">${botaoWhats(l.whatsapp, l.nome)} <button class="icon-btn" onclick="openLeadModal(${l.id})">✏️</button> <button class="icon-btn" onclick="deleteLead(${l.id})">🗑️</button></td>
     </tr>`;
   }).join("") || `<tr><td class="empty" colspan="6">Nenhum cliente convertido ainda</td></tr>`;
@@ -1716,7 +1717,7 @@ function renderParceiros(){
       <td>${escapeHtml(p.regiao||"-")}</td>
       <td>${(p.tipo_parceria||"").split(",").map(s=>s.trim()).filter(Boolean).map(t=>`<span class="tag ${TIPO_PARCERIA_CLASS[t]||''}">${t}</span>`).join(" ")||"-"}</td>
       <td>${p.selo==="sim"?'<span class="badge-seal">✓ Ladies Approved</span>':'-'}</td>
-      <td><span class="tag ${PARCEIRO_ETAPA_CLASS[p.status]||''}">${p.status||"-"}</span></td>
+      <td><span class="status-badge ${PARCEIRO_ETAPA_CLASS[p.status]||''}">${p.status||"-"}</span></td>
       <td>${ultimoContato||"-"}</td>
       <td onclick="event.stopPropagation()">${botaoWhats(celular, p.nome)} <button class="icon-btn" onclick="openParceiroModal(${p.id})">✏️</button> <button class="icon-btn" onclick="deleteParceiro(${p.id})">🗑️</button></td>
     </tr>`;
@@ -1763,7 +1764,7 @@ function renderPecas(){
       <td>${p.cliente_nome||"-"}${p.cliente_whatsapp?" "+numeroClicavel(p.cliente_whatsapp):""}</td>
       <td>${p.origem||"-"}</td>
       <td>${qtd}</td>
-      <td><span class="tag ${STATUS_PECA_CLASS[p.status]||''}">${p.status}</span></td>
+      <td><span class="status-badge ${STATUS_PECA_CLASS[p.status]||''}">${p.status}</span></td>
       <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openPedidoModal(${p.id})">✏️</button> <button class="icon-btn" onclick="deletePedido(${p.id})">🗑️</button></td>
     </tr>`;
   }).join("") || `<tr><td class="empty" colspan="7">Nenhum pedido de peça registrado</td></tr>`;
@@ -2069,7 +2070,7 @@ function renderDivulgacoes(){
       <td>${escapeHtml(d.tipo)}</td>
       <td>${escapeHtml(parceiro?parceiro.nome:"-")}</td>
       <td>${d.data_inicio||"-"}</td>
-      <td><span class="tag ${DIVULGACAO_STATUS_CLASS[d.status]||''}">${escapeHtml(d.status)}</span></td>
+      <td><span class="status-badge ${DIVULGACAO_STATUS_CLASS[d.status]||''}">${escapeHtml(d.status)}</span></td>
       <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openDivulgacaoModal(${d.id})">✏️</button> <button class="icon-btn" onclick="deleteDivulgacao(${d.id})">🗑️</button></td>
     </tr>`;
   }).join("") || `<tr><td class="empty" colspan="7">Nenhuma divulgação cadastrada</td></tr>`;
@@ -2157,7 +2158,7 @@ function renderVagas(){
       <td>${escapeHtml(parceiro?parceiro.nome:(v.empresa_nome||"-"))}</td>
       <td>${escapeHtml(v.local||"-")}</td>
       <td>${qtd}</td>
-      <td><span class="tag ${VAGA_STATUS_CLASS[v.status]||''}">${escapeHtml(v.status)}</span></td>
+      <td><span class="status-badge ${VAGA_STATUS_CLASS[v.status]||''}">${escapeHtml(v.status)}</span></td>
       <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openVagaModal(${v.id})">✏️</button> <button class="icon-btn" onclick="deleteVaga(${v.id})">🗑️</button></td>
     </tr>`;
   }).join("") || `<tr><td class="empty" colspan="6">Nenhuma vaga cadastrada</td></tr>`;
@@ -2898,7 +2899,7 @@ function renderTransporteMotoristas(){
       <td>${numeroClicavel(m.whatsapp)}</td>
       <td>${escapeHtml(m.regiao||"-")}${m.veiculo?"<br><span style='color:var(--muted); font-size:12px;'>"+escapeHtml(m.veiculo)+"</span>":""}</td>
       <td>${emDia?'<span class="tag urg-baixa">Em dia</span>':`<span class="tag urg-alta">${faltam} pendente${faltam>1?"s":""}</span>`}</td>
-      <td><span class="tag ${MOTORISTA_ETAPA_CLASS[m.status]||''}">${m.status}</span></td>
+      <td><span class="status-badge ${MOTORISTA_ETAPA_CLASS[m.status]||''}">${m.status}</span></td>
       <td>${media?media+" ★":"-"}</td>
       <td onclick="event.stopPropagation()">${botaoWhats(m.whatsapp, m.nome)} <button class="icon-btn" onclick="openMotoristaModal(${m.id})">✏️</button> <button class="icon-btn" onclick="deleteMotorista(${m.id})">🗑️</button></td>
     </tr>`;
