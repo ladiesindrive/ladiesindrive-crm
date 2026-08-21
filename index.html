@@ -1145,9 +1145,11 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Preço cotado <span style="font-weight:400; color:var(--muted);">(cobrado da cliente)</span></label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-preco-cotado" step="0.01" oninput="recalcularComissaoCotacao()"></div></div>
       <div><label>Repasse motorista <span style="font-weight:400; color:var(--muted);">(oferta, aparece pra ela antes de aceitar)</span></label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-preco-motorista" step="0.01" oninput="recalcularComissaoCotacao()"></div></div>
       <div><label>Comissão Ladies in Drive <span style="font-weight:400; color:var(--muted);">(calculada: cotado − repasse)</span></label><input type="text" id="vg-comissao-ladies" readonly style="background:var(--border); cursor:not-allowed;"></div>
+      <div class="full" id="vg-status-preco-cliente" style="display:none; font-size:12.5px; color:var(--muted);"></div>
       <div class="full"><label>Motivo (se não fechou)</label><textarea id="vg-motivo-perda" rows="2" placeholder="Ex: preço, motorista indisponível, cliente desistiu, prazo, concorrência..."></textarea></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-preparacao" style="width:auto;"> Preparação pré-viagem confirmada</label></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-saida" style="width:auto;"> Saída do veículo confirmada</label></div>
+      <div id="vg-liberar-manual-wrap" style="display:none;"><label style="visibility:hidden;">.</label><button type="button" class="btn secondary small" onclick="liberarViagemManualmente()">Liberar viagem manualmente</button></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-grupo-whats" style="width:auto;"> Grupo de WhatsApp criado</label></div>
     </div>
 
@@ -1289,8 +1291,8 @@ const MOTORISTA_ETAPA_CLASS = {"Candidatura recebida":"novo","Em entrevista":"co
 const DOCUMENTOS_OBRIGATORIOS_MOTORISTA = ["CNH","CRLV","Antecedentes Criminais","Comprovante de Endereço"];
 const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Idoso","Recorrente","Diário","Evento"];
 const CANAL_RECEPCAO = ["Telefone","Redes sociais","Site","E-mail"];
-const VIAGEM_STATUS = ["Solicitada","Confirmada","Em andamento","Concluída","Cancelada"];
-const VIAGEM_STATUS_CLASS = {"Solicitada":"orc-sol","Confirmada":"negociacao","Em andamento":"contato","Concluída":"ganho","Cancelada":"perdido"};
+const VIAGEM_STATUS = ["Solicitada","Aguardando cliente confirmar preço","Preço recusado pela cliente","Confirmada","Em andamento","Concluída","Cancelada"];
+const VIAGEM_STATUS_CLASS = {"Solicitada":"orc-sol","Aguardando cliente confirmar preço":"contato","Preço recusado pela cliente":"perdido","Confirmada":"negociacao","Em andamento":"contato","Concluída":"ganho","Cancelada":"perdido"};
 const LINK_ACOMPANHAMENTO_BASE = "https://www.ladiesindrive.com.br/acompanhar.html?t=";
 // Tarifas sugeridas pra calcular preço a partir da distância (km).
 // Ponto de partida baseado em pesquisa de mercado (motorista particular/executivo
@@ -3499,10 +3501,25 @@ function openViagemModal(id){
   document.getElementById("vg-valor-km").value = v.valor_km ?? TARIFA_KM_CLIENTE;
   document.getElementById("vg-preco-cotado").value = v.preco_cotado ?? "";
   document.getElementById("vg-preco-motorista").value = v.preco_motorista ?? "";
+  const statusPreco = document.getElementById("vg-status-preco-cliente");
+  if(v.preco_confirmado_cliente){
+    statusPreco.style.display = "block";
+    statusPreco.textContent = "✅ Preço confirmado pela cliente" + (v.preco_confirmado_em ? " em " + new Date(v.preco_confirmado_em).toLocaleString("pt-BR") : "");
+  } else if(v.preco_recusado_em){
+    statusPreco.style.display = "block";
+    statusPreco.textContent = "✋ Cliente pediu ajuste no preço em " + new Date(v.preco_recusado_em).toLocaleString("pt-BR") + " — ajuste o valor acima e mude o status pra 'Aguardando cliente confirmar preço' de novo pra reenviar.";
+  } else if(v.preco_confirmacao_enviada_em){
+    statusPreco.style.display = "block";
+    statusPreco.textContent = "⏳ Confirmação de preço enviada pra cliente em " + new Date(v.preco_confirmacao_enviada_em).toLocaleString("pt-BR") + ", aguardando resposta.";
+  } else {
+    statusPreco.style.display = "none";
+    statusPreco.textContent = "";
+  }
   document.getElementById("vg-motivo-perda").value = v.motivo_perda || "";
   document.getElementById("vg-preparacao").checked = !!v.preparacao_confirmada;
   document.getElementById("vg-saida").checked = !!v.saida_confirmada;
   document.getElementById("vg-grupo-whats").checked = !!v.grupo_whatsapp_criado;
+  document.getElementById("vg-liberar-manual-wrap").style.display = (id && !v.saida_confirmada) ? "block" : "none";
 
   const pgc = pagamentosCliente.find(p=>p.viagem_id===id) || {};
   document.getElementById("vg-lid-valor").value = pgc.valor_recebido ?? "";
@@ -3604,6 +3621,15 @@ async function saveViagem(){
   }
 
   showToast("Salvo!");
+  closeModal("viagem-modal");
+  await carregarDados();
+}
+async function liberarViagemManualmente(){
+  if(!editingViagemId) return;
+  if(!confirm("Liberar essa viagem manualmente pra 'Em andamento', sem o código de início?")) return;
+  const { error } = await sb.rpc("liberar_viagem_manualmente", { p_viagem_id: editingViagemId });
+  if(error){ alert("Erro ao liberar: " + error.message); return; }
+  showToast("Viagem liberada!");
   closeModal("viagem-modal");
   await carregarDados();
 }
