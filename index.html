@@ -198,8 +198,8 @@ a.icon-btn{text-decoration:none; display:inline-block;}
 .subnav-item{background:#fff; border:1px solid var(--border); color:var(--muted); padding:7px 14px; border-radius:20px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit;}
 .subnav-item:hover{color:var(--pink);}
 .subnav-item.active{background:var(--pink); border-color:var(--pink); color:#fff;}
-.kanban{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; align-items:start;}
-.kanban-col{background:#fdf6f9; border:1px solid var(--border); border-radius:10px; padding:10px; min-width:0;}
+.kanban{display:flex; flex-wrap:wrap; gap:12px; align-items:start;}
+.kanban-col{background:#fdf6f9; border:1px solid var(--border); border-radius:10px; padding:10px; min-width:0; flex:1 1 190px;}
 .kanban-col h4{margin:0 0 10px; font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; display:flex; justify-content:space-between;}
 .kanban-card{background:#fff; border:1px solid var(--border); border-left:4px solid transparent; border-radius:8px; padding:10px; margin-bottom:8px; cursor:pointer; font-size:12.5px;}
 .kanban-card:hover{border-color:var(--pink);}
@@ -232,11 +232,8 @@ tr.tr-click:hover{background:#fff7fa;}
   text-decoration:none;
 }
 .analytics-atalhos a:hover{border-color:var(--pink); color:var(--pink);}
-@media (max-width:1024px){
-  .kanban{grid-template-columns:repeat(3,1fr); overflow-x:auto;}
-}
 @media (max-width:700px){
-  .kanban{grid-template-columns:1fr;}
+  .kanban-col{flex-basis:100%;}
 }
 .toast{
   position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(12px);
