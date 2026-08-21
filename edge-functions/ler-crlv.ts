@@ -11,11 +11,15 @@
 //    (a mesma criada pra ler-cnh serve pras duas funções)
 // 5. Confirme que "Verify JWT" está ligado nas configurações da função
 //    (é o padrão) — assim só quem está logada no CRM consegue chamar.
+// 6. Se já existia antes: cole este arquivo atualizado e clique em Deploy
+//    de novo — a mudança só vale depois de reimplantar.
 
 import Anthropic from "npm:@anthropic-ai/sdk";
 
+// Só o painel do CRM chama essa function — restringe CORS a esses domínios
+// em vez de aceitar qualquer origem.
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://crm.ladiesindrive.com.br",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
@@ -26,6 +30,8 @@ const TIPOS_ACEITOS: Record<string, string> = {
   "image/webp": "image/webp",
   "application/pdf": "application/pdf",
 };
+
+const TAMANHO_MAXIMO_BYTES = 10 * 1024 * 1024; // 10MB
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -41,6 +47,9 @@ Deno.serve(async (req) => {
     const mediaType = TIPOS_ACEITOS[arquivo.type];
     if (!mediaType) {
       throw new Error("Envie uma foto (JPG/PNG/WEBP) ou PDF do CRLV.");
+    }
+    if (arquivo.size > TAMANHO_MAXIMO_BYTES) {
+      throw new Error("Arquivo muito grande (máximo 10MB).");
     }
 
     const bytes = new Uint8Array(await arquivo.arrayBuffer());
