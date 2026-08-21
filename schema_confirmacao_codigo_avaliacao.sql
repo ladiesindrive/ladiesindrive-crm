@@ -55,6 +55,7 @@ begin
 end;
 $$;
 
+revoke execute on function public.aceitar_viagem_motorista(bigint) from public;
 grant execute on function public.aceitar_viagem_motorista(bigint) to authenticated;
 
 -- ── Motorista digita no painel dela o código que a cliente falou
@@ -101,11 +102,14 @@ begin
 end;
 $$;
 
+revoke execute on function public.confirmar_inicio_com_codigo(bigint, text) from public;
 grant execute on function public.confirmar_inicio_com_codigo(bigint, text) to authenticated;
 
 -- ── Quando o código falha ou trava por qualquer motivo, a Juliana libera
 -- manualmente pelo CRM (botão em crm/index.html) sem depender de código.
--- Só staff (motorista_id_atual() null) pode chamar — não é a motorista.
+-- Só staff logada (authenticated e não motorista) pode chamar — checar só
+-- "não é motorista" não basta, porque anon (sem login nenhum) também
+-- passa nesse teste.
 create or replace function public.liberar_viagem_manualmente(p_viagem_id bigint)
 returns void
 language plpgsql
@@ -113,8 +117,8 @@ security definer
 set search_path = public
 as $$
 begin
-  if public.motorista_id_atual() is not null then
-    raise exception 'Só a equipe Ladies in Drive pode liberar viagem manualmente.';
+  if auth.role() <> 'authenticated' or public.motorista_id_atual() is not null then
+    raise exception 'Só a equipe Ladies in Drive logada pode liberar viagem manualmente.';
   end if;
 
   update public.viagens
@@ -124,6 +128,7 @@ begin
 end;
 $$;
 
+revoke execute on function public.liberar_viagem_manualmente(bigint) from public;
 grant execute on function public.liberar_viagem_manualmente(bigint) to authenticated;
 
 -- ── Dia de pagamento seguinte (regra de repasse quinzenal): antes do dia
@@ -175,6 +180,7 @@ begin
 end;
 $$;
 
+revoke execute on function public.concluir_viagem_motorista(bigint) from public;
 grant execute on function public.concluir_viagem_motorista(bigint) to authenticated;
 
 -- ── Cliente avalia a motorista pela página pública (token), opcional.
@@ -234,6 +240,7 @@ begin
 end;
 $$;
 
+revoke execute on function public.motorista_avaliar_cliente(bigint, numeric) from public;
 grant execute on function public.motorista_avaliar_cliente(bigint, numeric) to authenticated;
 
 -- ── get_viagem_por_token (atualizada de novo): acrescenta viagem_id,
