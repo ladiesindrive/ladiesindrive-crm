@@ -3608,8 +3608,8 @@ async function saveViagem(){
     notas: document.getElementById("vg-lid-notas").value,
   };
   const temDadoPagamentoCliente = pgcPayload.valor_recebido != null || pgcPayload.forma_pagamento || pgcPayload.data_pagamento || pgcPayload.notas;
-  if(temDadoPagamentoCliente){
-    const existentePgc = pagamentosCliente.find(p=>p.viagem_id===viagemId);
+  const existentePgc = pagamentosCliente.find(p=>p.viagem_id===viagemId);
+  if(temDadoPagamentoCliente || existentePgc){
     const { error } = existentePgc
       ? await sb.from("pagamentos_cliente").update(pgcPayload).eq("id", existentePgc.id)
       : await sb.from("pagamentos_cliente").insert(pgcPayload);
@@ -3628,8 +3628,8 @@ async function saveViagem(){
     notas: document.getElementById("vg-pg-notas").value,
   };
   const temDadoPagamento = pgPayload.valor_repassado != null || pgPayload.comissao_plataforma != null || pgPayload.forma_pagamento || pgPayload.data_prevista_pagamento || pgPayload.data_pagamento || pgPayload.comprovante_url || pgPayload.notas;
-  if(temDadoPagamento){
-    const existente = pagamentosMotorista.find(p=>p.viagem_id===viagemId);
+  const existente = pagamentosMotorista.find(p=>p.viagem_id===viagemId);
+  if(temDadoPagamento || existente){
     const { error } = existente
       ? await sb.from("pagamentos_motorista").update(pgPayload).eq("id", existente.id)
       : await sb.from("pagamentos_motorista").insert(pgPayload);
