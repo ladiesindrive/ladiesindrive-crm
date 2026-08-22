@@ -1259,7 +1259,13 @@ tr.tr-click:hover{background:#fff7fa;}
 const SUPABASE_URL = "https://ilhuhbcklvcdrggovmth.supabase.co";
 const SUPABASE_KEY = "sb_publishable_3nMRN_iu3rW9hzYoyVzHcA_GwAavOUN";
 const { createClient } = window.supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Evita o bug conhecido do supabase-js onde a trava interna (Web Locks API,
+// usada pra evitar 2 logins simultâneos) fica presa se uma tentativa anterior
+// for abandonada (ex: pelo timeout de segurança do login abaixo), travando
+// toda tentativa de login seguinte até trocar de navegador. Como só existe
+// uma usuária logando neste painel, não há risco real de corrida.
+const semTravaDeAuth = async (nome, tempoEspera, fn) => fn();
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: semTravaDeAuth } });
 
 const ETAPAS = ["Novo lead","Contato iniciado","Orçamento solicitado","Orçamento enviado","Negociação","Fechado - Ganho","Cliente ativo","Perdido"];
 const ETAPA_CLASS = {"Novo lead":"indigo","Contato iniciado":"amber","Orçamento solicitado":"pink","Orçamento enviado":"pink","Negociação":"teal","Fechado - Ganho":"green","Cliente ativo":"green","Perdido":"red"};
