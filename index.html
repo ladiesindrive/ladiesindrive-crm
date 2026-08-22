@@ -1449,9 +1449,18 @@ loginForm.addEventListener("submit", async (ev)=>{
   loginCarregando.style.display = "block";
   const email = document.getElementById("login-email").value.trim();
   const senha = document.getElementById("login-senha").value;
-  const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+  // Timeout de segurança: se o navegador ficar preso numa sessão antiga
+  // travada (acontece às vezes com login persistido), sem isso o
+  // "Entrando..." fica na tela pra sempre sem nenhum aviso.
+  const timeout = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), 10000));
+  const resultado = await Promise.race([sb.auth.signInWithPassword({ email, password: senha }), timeout]);
   loginCarregando.style.display = "none";
-  if(error){
+  if(resultado.timeout){
+    loginErro.textContent = "Demorou demais pra conectar. Recarregue a página (Ctrl+Shift+R) e tente de novo — se persistir, limpe os dados do site.";
+    loginErro.style.display = "block";
+    return;
+  }
+  if(resultado.error){
     loginErro.textContent = "E-mail ou senha incorretos.";
     loginErro.style.display = "block";
   }
