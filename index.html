@@ -3463,7 +3463,7 @@ function renderTransporteViagens(){
         const urg = urgenciaViagem(v);
         return `<div class="kanban-card ${urg?urg.classe:''}" onclick="openViagemModal(${v.id})">
           ${urg?`<span class="kc-alerta ${urg.classe}">${urg.texto}</span>`:""}
-          <div class="kc-top">${escapeHtml(cliente?cliente.nome:"Cliente não definido")}</div>
+          <div class="kc-top">#${v.id} · ${escapeHtml(cliente?cliente.nome:"Cliente não definido")}</div>
           <div style="color:var(--muted);">${escapeHtml(nomesMotoristas || "Sem motorista")}</div>
           <div style="color:var(--muted); font-size:11.5px; margin-top:4px;">${v.data?`${formatarDataBR(v.data)}${v.horario_partida?" "+v.horario_partida.slice(0,5):""}`:"Sem data"}</div>
           ${v.dias_semana?`<div style="color:var(--muted); font-size:11px;">${escapeHtml(v.dias_semana)}</div>`:""}
@@ -3481,7 +3481,7 @@ function openViagemModal(id){
   fillSelect(document.getElementById("vg-tipo-servico"), TIPO_SERVICO_VIAGEM, "Padrão");
   fillSelect(document.getElementById("vg-canal"), CANAL_RECEPCAO, "Telefone");
   fillSelect(document.getElementById("vg-viagem-status"), VIAGEM_STATUS, "Solicitada");
-  document.getElementById("viagem-modal-title").textContent = id ? "Editar viagem" : "Nova viagem";
+  document.getElementById("viagem-modal-title").textContent = id ? `Editar viagem #${id}` : "Nova viagem";
   const v = viagens.find(x=>x.id===id) || {};
   if(v.cliente_id) document.getElementById("vg-cliente").value = v.cliente_id;
   renderMotoristasCheckboxes(idsMotoristasViagem(v));
