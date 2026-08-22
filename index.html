@@ -4033,9 +4033,11 @@ async function limparTudo(){
   await carregarDados();
 }
 
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js").catch(()=>{});
-}
+// Registro removido de propósito (ver sw.js): o service worker antigo não
+// fazia mais nada útil e só causava sessão/cache travados em alguns
+// navegadores. Quem já tinha ele instalado vai receber a versão nova
+// (que se autodestrói) na próxima checagem automática do navegador, sem
+// precisar registrar de novo aqui.
 </script>
 </body>
 </html>
