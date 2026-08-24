@@ -1289,7 +1289,7 @@ const travaDeAuth = (nome, tempoEspera, fn) => {
   filaAutenticacao = minhaVez.catch(()=>{});
   return minhaVez;
 };
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: travaDeAuth } });
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: travaDeAuth, debug: true } });
 
 // Limpa a sessão travada localmente (sem depender de rede). Usada quando o
 // login trava: mesmo com a trava real acima, se a chamada abandonada nunca
