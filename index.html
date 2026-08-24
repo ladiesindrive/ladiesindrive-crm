@@ -1497,6 +1497,11 @@ document.getElementById("toggle-senha").addEventListener("click", ()=>{
 
 sb.auth.onAuthStateChange(async (event, session)=>{
   if(session){
+    // TOKEN_REFRESHED dispara sozinho ~1x por hora enquanto o painel fica
+    // aberto — sem esse filtro, cada renovação recarregava as ~25 tabelas
+    // do banco e redesenhava a tela inteira, travando o navegador por um
+    // instante bem na hora em que você podia estar clicando em algo.
+    if(event === "TOKEN_REFRESHED") return;
     const { data: motoristaVinculada } = await sb.rpc("motorista_id_atual");
     if(motoristaVinculada){
       loginErro.textContent = "Este login é de motorista — use o painel dela em ladiesindrive.com.br/motorista.html, não o CRM.";
