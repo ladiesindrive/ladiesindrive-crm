@@ -1583,10 +1583,10 @@ sb.auth.onAuthStateChange(async (event, session)=>{
     }
     document.getElementById("login-screen").style.display = "none";
     document.querySelector(".app").style.display = "flex";
+    await carregarDados();
     const ultimaAba = localStorage.getItem("crm-ultima-aba");
     const abaSalva = ultimaAba && document.querySelector(`.nav-item[data-tab="${ultimaAba}"]`);
     if(abaSalva) abaSalva.click();
-    carregarDados();
   } else {
     document.querySelector(".app").style.display = "none";
     document.getElementById("login-screen").style.display = "flex";
