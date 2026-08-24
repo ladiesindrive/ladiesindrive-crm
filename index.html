@@ -1260,17 +1260,32 @@ tr.tr-click:hover{background:#fff7fa;}
 const SUPABASE_URL = "https://ilhuhbcklvcdrggovmth.supabase.co";
 const SUPABASE_KEY = "sb_publishable_3nMRN_iu3rW9hzYoyVzHcA_GwAavOUN";
 const { createClient } = window.supabase;
-// Evita o bug conhecido do supabase-js onde a trava interna (Web Locks API,
-// usada pra evitar 2 logins simultâneos) fica presa se uma tentativa anterior
-// for abandonada (ex: pelo timeout de segurança do login abaixo), travando
-// toda tentativa de login seguinte até trocar de navegador. Como só existe
-// uma usuária logando neste painel, não há risco real de corrida.
-const semTravaDeAuth = async (nome, tempoEspera, fn) => fn();
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: semTravaDeAuth } });
+// Trava real (fila), no lugar da trava interna padrão do supabase-js (Web
+// Locks API), que ficava presa pra sempre se uma tentativa fosse abandonada
+// (ex: pelo timeout de segurança do login abaixo) — travando todo login
+// seguinte até trocar de navegador. Tirar a trava por completo (como estava
+// antes) resolvia isso mas causava um bug pior: duas operações de
+// autenticação podiam rodar ao mesmo tempo sem controle, e uma chamada ao
+// banco às vezes saía usando a chave pública genérica no lugar do token da
+// sessão logada, sendo tratada como se ninguém tivesse logado (erro 401 —
+// achado em 24/08/2026 no salvamento de pagamento de motorista). Esta
+// versão faz as chamadas passarem uma de cada vez (evita a corrida), mas
+// com um limite de tempo: se uma não terminar a tempo, a próxima da fila
+// segue em frente do mesmo jeito, então nunca trava pra sempre.
+let filaAutenticacao = Promise.resolve();
+const travaDeAuth = (nome, tempoEspera, fn) => {
+  const minhaVez = filaAutenticacao.catch(()=>{}).then(() => Promise.race([
+    fn(),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Trava de autenticação expirou: " + nome)), tempoEspera || 10000))
+  ]));
+  filaAutenticacao = minhaVez.catch(()=>{});
+  return minhaVez;
+};
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: travaDeAuth } });
 
 // Limpa a sessão travada localmente (sem depender de rede). Usada quando o
-// login trava: como a trava do supabase-js está desativada acima, um
-// signOut() normal (que faz chamada de rede pra encerrar a sessão no
+// login trava: mesmo com a trava real acima, se a chamada abandonada nunca
+// terminar, um signOut() normal (que faz chamada de rede pra encerrar a sessão no
 // servidor) podia ficar preso no mesmo estado travado e nunca limpar a
 // sessão velha guardada no navegador — daí precisar limpar os dados do
 // site manualmente pra conseguir logar de novo. Removendo direto do
