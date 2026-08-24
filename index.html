@@ -1268,6 +1268,21 @@ const { createClient } = window.supabase;
 const semTravaDeAuth = async (nome, tempoEspera, fn) => fn();
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: semTravaDeAuth } });
 
+// Limpa a sessão travada localmente (sem depender de rede). Usada quando o
+// login trava: como a trava do supabase-js está desativada acima, um
+// signOut() normal (que faz chamada de rede pra encerrar a sessão no
+// servidor) podia ficar preso no mesmo estado travado e nunca limpar a
+// sessão velha guardada no navegador — daí precisar limpar os dados do
+// site manualmente pra conseguir logar de novo. Removendo direto do
+// localStorage (síncrono, não depende de rede) garante que a próxima
+// tentativa comece limpa mesmo se o servidor não responder.
+function limparSessaoTravada(){
+  Object.keys(localStorage)
+    .filter(k => k.startsWith("sb-"))
+    .forEach(k => localStorage.removeItem(k));
+  sb.auth.signOut({ scope: "local" }).catch(()=>{});
+}
+
 const ETAPAS = ["Novo lead","Contato iniciado","Orçamento solicitado","Orçamento enviado","Negociação","Fechado - Ganho","Cliente ativo","Perdido"];
 const ETAPA_CLASS = {"Novo lead":"indigo","Contato iniciado":"amber","Orçamento solicitado":"pink","Orçamento enviado":"pink","Negociação":"teal","Fechado - Ganho":"green","Cliente ativo":"green","Perdido":"red"};
 const URG_CLASS = {"Urgente":"urg-alta","Essa semana":"urg-media","Sem pressa":"urg-baixa"};
@@ -1463,7 +1478,8 @@ loginForm.addEventListener("submit", async (ev)=>{
   const resultado = await Promise.race([sb.auth.signInWithPassword({ email, password: senha }), timeout]);
   loginCarregando.style.display = "none";
   if(resultado.timeout){
-    loginErro.textContent = "Demorou demais pra conectar. Recarregue a página (Ctrl+Shift+R) e tente de novo — se persistir, limpe os dados do site.";
+    limparSessaoTravada();
+    loginErro.textContent = "Demorou demais pra conectar. Recarregue a página (Ctrl+Shift+R) e tente de novo.";
     loginErro.style.display = "block";
     return;
   }
@@ -1509,16 +1525,16 @@ sb.auth.onAuthStateChange(async (event, session)=>{
     const timeoutMotorista = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), 15000));
     const resultadoMotorista = await Promise.race([sb.rpc("motorista_id_atual"), timeoutMotorista]);
     if(resultadoMotorista.timeout){
-      loginErro.textContent = "Demorou demais pra conectar. Tenta de novo em instantes.";
+      limparSessaoTravada();
+      loginErro.textContent = "Demorou demais pra conectar. Recarregue a página (Ctrl+Shift+R) e tente de novo.";
       loginErro.style.display = "block";
-      await sb.auth.signOut();
       return;
     }
     const { data: motoristaVinculada } = resultadoMotorista;
     if(motoristaVinculada){
       loginErro.textContent = "Este login é de motorista — use o painel dela em ladiesindrive.com.br/motorista.html, não o CRM.";
       loginErro.style.display = "block";
-      await sb.auth.signOut();
+      await sb.auth.signOut({ scope: "local" });
       return;
     }
     document.getElementById("login-screen").style.display = "none";
