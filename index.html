@@ -1617,6 +1617,52 @@ document.querySelectorAll(".nav-item[data-tab]").forEach(el=>{
   });
 });
 
+const TABELA_ATUALIZA = {
+  leads: v => leads = v,
+  parceiros: v => parceiros = v,
+  orcamentos: v => orcamentos = v,
+  motoristas: v => motoristas = v,
+  documentos_motorista: v => documentosMotorista = v,
+  clientes_transporte: v => clientesTransporte = v,
+  viagens: v => viagens = v,
+  avaliacoes: v => avaliacoes = v,
+  pagamentos_motorista: v => pagamentosMotorista = v,
+  pagamentos_cliente: v => pagamentosCliente = v,
+  parceiro_contatos: v => parceiroContatos = v,
+  parceiro_interacoes: v => parceiroInteracoes = v,
+  parceiro_enderecos: v => parceiroEnderecos = v,
+  lead_interacoes: v => leadInteracoes = v,
+  vendas: v => vendas = v,
+  venda_parcelas: v => vendaParcelas = v,
+  contas_pagar: v => contasPagar = v,
+  metas_financeiras: v => metasFinanceiras = v,
+  pecas_pedidos: v => pecasPedidos = v,
+  pecas_tentativas: v => pecasTentativas = v,
+  parceiro_links: v => parceiroLinks = v,
+  divulgacoes: v => divulgacoes = v,
+  vagas: v => vagas = v,
+  vagas_candidatas: v => vagasCandidatas = v,
+  motorista_observacoes: v => motoristaObservacoes = v,
+};
+// Atualiza só as tabelas que uma ação realmente mudou, em vez de recarregar
+// as ~28 tabelas inteiras a cada Salvar/Excluir — reduz a carga no banco
+// (plano gratuito, compute Nano), que fica sob pressão com o uso normal do
+// dia a dia somado ao n8n consultando ele a cada poucos minutos.
+async function recarregarTabelas(...nomes){
+  const timeoutMs = 15000;
+  const timeout = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), timeoutMs));
+  const busca = Promise.all(nomes.map(nome => sb.from(nome).select("*").order("id").then(r=>({ nome, ...r }))));
+  const resultado = await Promise.race([busca.then(rs=>({ timeout: false, rs })), timeout]);
+  if(resultado.timeout){
+    alert("Demorou demais pra atualizar os dados. Confere sua internet e tenta de novo — se continuar acontecendo, recarregue a página.");
+    return;
+  }
+  resultado.rs.forEach(r=>{
+    if(r.error){ console.error("Erro ao recarregar " + r.nome, r.error); return; }
+    TABELA_ATUALIZA[r.nome](r.data || []);
+  });
+  renderAll();
+}
 function fillSelect(el, options, selected){
   el.innerHTML = options.map(o=>`<option value="${o}" ${o===selected?"selected":""}>${o}</option>`).join("");
 }
@@ -1955,7 +2001,7 @@ async function saveLead(){
     if(document.getElementById("fv-servico").value.trim()) await addVenda();
     if(document.getElementById("fi-assunto").value.trim()) await addInteracaoLead();
   }
-  await carregarDados();
+  await recarregarTabelas("leads", "vendas", "venda_parcelas", "lead_interacoes");
   if(isNew){ renderVendasLead(); renderInteracoesLead(); }
   else { closeModal("lead-modal"); }
 }
@@ -1963,7 +2009,7 @@ async function deleteLead(id){
   if(!confirm("Excluir este lead? O histórico de conversas dele também é excluído.")) return;
   const { error } = await sb.from("leads").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
-  await carregarDados();
+  await recarregarTabelas("leads", "lead_interacoes");
 }
 
 // Pedidos de peças e tentativas por loja
@@ -2016,7 +2062,7 @@ async function savePedido(){
     document.getElementById("pedido-modal-title").textContent = "Editar pedido";
     if(document.getElementById("ft-loja-nome").value.trim()) await addTentativa();
   }
-  await carregarDados();
+  await recarregarTabelas("pecas_pedidos", "pecas_tentativas");
   if(isNew){ renderTentativasPedido(); }
   else { closeModal("pedido-modal"); }
 }
@@ -2024,7 +2070,7 @@ async function deletePedido(id){
   if(!confirm("Excluir este pedido? As tentativas registradas também são excluídas.")) return;
   const { error } = await sb.from("pecas_pedidos").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
-  await carregarDados();
+  await recarregarTabelas("pecas_pedidos", "pecas_tentativas");
 }
 function renderTentativasPedido(){
   const wrap = document.getElementById("fp-tentativas-lista");
@@ -2171,7 +2217,7 @@ async function saveDivulgacao(){
     : await sb.from("divulgacoes").insert(payload);
   if(error){ alert("Erro ao salvar: " + error.message); return; }
   showToast("Salvo!");
-  await carregarDados();
+  await recarregarTabelas("divulgacoes");
   closeModal("divulgacao-modal");
 }
 async function deleteDivulgacao(id){
@@ -2179,7 +2225,7 @@ async function deleteDivulgacao(id){
   if(!confirm("Excluir esta divulgação?")) return;
   const { error } = await sb.from("divulgacoes").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
-  await carregarDados();
+  await recarregarTabelas("divulgacoes");
   closeModal("divulgacao-modal");
 }
 
@@ -2262,7 +2308,7 @@ async function saveVaga(){
     document.getElementById("btn-excluir-vaga").style.display = "block";
     if(document.getElementById("vc-nome").value.trim()) await addCandidataVaga();
   }
-  await carregarDados();
+  await recarregarTabelas("vagas", "vagas_candidatas");
   if(isNew){ renderCandidatasVaga(); }
   else { closeModal("vaga-modal"); }
 }
@@ -2271,7 +2317,7 @@ async function deleteVaga(id){
   if(!confirm("Excluir esta vaga? As candidatas registradas também são excluídas.")) return;
   const { error } = await sb.from("vagas").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
-  await carregarDados();
+  await recarregarTabelas("vagas", "vagas_candidatas");
   closeModal("vaga-modal");
 }
 function renderCandidatasVaga(){
@@ -2564,7 +2610,7 @@ async function saveParceiro(){
     if(document.getElementById("pe-endereco").value.trim()) await addEnderecoParceiro();
     if(document.getElementById("pi-assunto").value.trim()) await addInteracaoParceiro();
   }
-  await carregarDados();
+  await recarregarTabelas("parceiros", "parceiro_contatos", "parceiro_links", "parceiro_enderecos", "parceiro_interacoes");
   if(isNew){ renderContatosParceiro(); renderLinksParceiro(); renderEnderecosParceiro(); renderInteracoesParceiro(); }
   else { closeModal("parceiro-modal"); }
 }
@@ -2572,7 +2618,7 @@ async function deleteParceiro(id){
   if(!confirm("Excluir esta parceira (o)? Os contatos, links, endereços e o histórico de conversa dela(e) também são excluídos.")) return;
   const { error } = await sb.from("parceiros").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
-  await carregarDados();
+  await recarregarTabelas("parceiros", "parceiro_contatos", "parceiro_links", "parceiro_enderecos", "parceiro_interacoes");
 }
 
 // Contatos (celular/fixo) do parceiro
@@ -2886,13 +2932,13 @@ async function saveOrcamento(){
 
   showToast("Salvo!");
   closeModal("orcamento-modal");
-  await carregarDados();
+  await recarregarTabelas("orcamentos", "leads", "vendas", "venda_parcelas");
 }
 async function deleteOrcamento(id){
   if(!confirm("Excluir este orçamento?")) return;
   const { error } = await sb.from("orcamentos").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
-  await carregarDados();
+  await recarregarTabelas("orcamentos", "vendas", "venda_parcelas");
 }
 
 // ===== TRANSPORTE: MOTORISTAS =====
@@ -3307,7 +3353,7 @@ async function saveMotorista(){
   await salvarDocPrincipal("crlv", editingMotoristaId);
   await salvarDocPrincipal("antecedentes", editingMotoristaId);
   await salvarDocPrincipal("endereco", editingMotoristaId);
-  await carregarDados();
+  await recarregarTabelas("motoristas", "documentos_motorista", "motorista_observacoes");
   if(isNew){ renderDocumentosMotorista(); renderObservacoesMotorista(); }
   else { closeModal("motorista-modal"); }
 }
@@ -3315,7 +3361,7 @@ async function deleteMotorista(id){
   if(!confirm('Excluir esta motorista? Os documentos e observações dela também são excluídos; viagens ligadas a ela ficam sem motorista definida (não são apagadas).')) return;
   const { error } = await sb.from("motoristas").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
-  await carregarDados();
+  await recarregarTabelas("motoristas", "documentos_motorista", "motorista_observacoes", "viagens");
 }
 
 // ===== TRANSPORTE: CLIENTES DE VIAGEM =====
@@ -3375,13 +3421,13 @@ async function saveClienteTransporte(){
   if(error){ alert("Erro ao salvar: " + error.message); return; }
   showToast("Salvo!");
   closeModal("cliente-transporte-modal");
-  await carregarDados();
+  await recarregarTabelas("clientes_transporte");
 }
 async function deleteClienteTransporte(id){
   if(!confirm("Excluir esta cliente? As viagens ligadas a ela ficam sem cliente definido (não são apagadas).")) return;
   const { error } = await sb.from("clientes_transporte").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
-  await carregarDados();
+  await recarregarTabelas("clientes_transporte", "viagens");
 }
 
 // ===== TRANSPORTE: VIAGENS (KANBAN) =====
@@ -3673,7 +3719,7 @@ async function saveViagem(){
 
   showToast("Salvo!");
   closeModal("viagem-modal");
-  await carregarDados();
+  await recarregarTabelas("viagens", "pagamentos_cliente", "pagamentos_motorista");
 }
 async function liberarViagemManualmente(){
   if(!editingViagemId) return;
@@ -3682,7 +3728,7 @@ async function liberarViagemManualmente(){
   if(error){ alert("Erro ao liberar: " + error.message); return; }
   showToast("Viagem liberada!");
   closeModal("viagem-modal");
-  await carregarDados();
+  await recarregarTabelas("viagens");
 }
 async function deleteViagem(){
   if(!editingViagemId) return;
@@ -3690,7 +3736,7 @@ async function deleteViagem(){
   const { error } = await sb.from("viagens").delete().eq("id", editingViagemId);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
   closeModal("viagem-modal");
-  await carregarDados();
+  await recarregarTabelas("viagens", "pagamentos_cliente", "pagamentos_motorista", "avaliacoes");
 }
 
 // ===== TRANSPORTE: AVALIAÇÕES =====
@@ -3744,13 +3790,13 @@ async function saveAvaliacao(){
   if(error){ alert("Erro ao salvar: " + error.message); return; }
   showToast("Salvo!");
   closeModal("avaliacao-modal");
-  await carregarDados();
+  await recarregarTabelas("avaliacoes");
 }
 async function deleteAvaliacao(id){
   if(!confirm("Excluir esta avaliação?")) return;
   const { error } = await sb.from("avaliacoes").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
-  await carregarDados();
+  await recarregarTabelas("avaliacoes");
 }
 
 // ===== FINANCEIRO: CONTAS A RECEBER (parcelas das vendas) =====
@@ -3789,7 +3835,7 @@ async function marcarParcelaPaga(id){
   const hoje = new Date().toISOString().slice(0,10);
   const { error } = await sb.from("venda_parcelas").update({status:"Pago", data_realizada:hoje}).eq("id", id);
   if(error){ alert("Erro ao marcar como pago: " + error.message); return; }
-  await carregarDados();
+  await recarregarTabelas("venda_parcelas");
 }
 let editingParcelaId = null;
 function openParcelaModal(id){
@@ -3819,7 +3865,7 @@ async function saveParcela(){
   if(error){ alert("Erro ao salvar: " + error.message); return; }
   showToast("Salvo!");
   closeModal("parcela-modal");
-  await carregarDados();
+  await recarregarTabelas("venda_parcelas");
 }
 
 // ===== FINANCEIRO: CONTAS A PAGAR (despesas + pagamentos de motorista) =====
@@ -3899,7 +3945,7 @@ async function saveContaPagar(){
   if(error){ alert("Erro ao salvar: " + error.message); return; }
   showToast("Salvo!");
   closeModal("conta-pagar-modal");
-  await carregarDados();
+  await recarregarTabelas("contas_pagar");
 }
 async function deleteContaPagar(){
   if(!editingContaPagarId) return;
@@ -3907,7 +3953,7 @@ async function deleteContaPagar(){
   const { error } = await sb.from("contas_pagar").delete().eq("id", editingContaPagarId);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
   closeModal("conta-pagar-modal");
-  await carregarDados();
+  await recarregarTabelas("contas_pagar");
 }
 
 // ===== FINANCEIRO: METAS =====
@@ -3958,13 +4004,13 @@ async function saveMeta(){
   showToast("Salvo!");
   document.getElementById("mf-faturamento").value = "";
   document.getElementById("mf-lucro").value = "";
-  await carregarDados();
+  await recarregarTabelas("metas_financeiras");
 }
 async function deleteMeta(id){
   if(!confirm("Excluir esta meta?")) return;
   const { error } = await sb.from("metas_financeiras").delete().eq("id", id);
   if(error){ alert("Erro ao excluir: " + error.message); return; }
-  await carregarDados();
+  await recarregarTabelas("metas_financeiras");
 }
 
 // ===== FINANCEIRO: RESUMO (Faturamento × Lucro, mensal/anual) =====
@@ -4058,14 +4104,14 @@ async function removerExemplos(){
   await sb.from("orcamentos").delete().eq("exemplo", true);
   await sb.from("leads").delete().eq("exemplo", true);
   await sb.from("parceiros").delete().eq("exemplo", true);
-  await carregarDados();
+  await recarregarTabelas("orcamentos", "leads", "parceiros");
 }
 async function limparTudo(){
   if(!confirm("Isso apaga TODOS os dados deste painel. Tem certeza?")) return;
   await sb.from("orcamentos").delete().gt("id", 0);
   await sb.from("leads").delete().gt("id", 0);
   await sb.from("parceiros").delete().gt("id", 0);
-  await carregarDados();
+  await recarregarTabelas("orcamentos", "leads", "parceiros");
 }
 
 // Registro removido de propósito (ver sw.js): o service worker antigo não
