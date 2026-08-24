@@ -1276,14 +1276,20 @@ const { createClient } = window.supabase;
 let filaAutenticacao = Promise.resolve();
 const travaDeAuth = (nome, tempoEspera, fn) => {
   // tempoEspera vem -1 do supabase-js quando ele quer esperar o tempo que
-  // for preciso pra essa chamada (sem prazo nenhum) — nesse caso só entra
-  // na fila e roda, sem corrida contra timer nenhum (um setTimeout com -1
-  // dispara quase na hora, o que travava tudo antes dessa correção).
+  // for preciso pra essa chamada (sem prazo curto imposto por nós) — mas
+  // deixar isso 100% sem prazo (rodando fn() puro) significa que, se essa
+  // chamada específica travar de verdade por qualquer motivo, ela nunca
+  // resolve nem rejeita, e como as chamadas seguintes esperam na mesma
+  // fila atrás dela, a fila trava pra sempre (só um reload de página
+  // zerava o estado) — bug achado em 24/08/2026 depois de ver rajadas de
+  // timeout de login em crm_erros_cliente. Por isso usamos um prazo de
+  // segurança generoso (30s) mesmo nesse caso, bem maior que qualquer
+  // operação legítima, só pra garantir que a fila sempre destrava sozinha.
+  const prazo = (tempoEspera == null || tempoEspera < 0) ? 30000 : tempoEspera;
   const minhaVez = filaAutenticacao.catch(()=>{}).then(() => {
-    if(tempoEspera == null || tempoEspera < 0) return fn();
     return Promise.race([
       fn(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Trava de autenticação expirou: " + nome)), tempoEspera))
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Trava de autenticação expirou: " + nome)), prazo))
     ]);
   });
   filaAutenticacao = minhaVez.catch(()=>{});
