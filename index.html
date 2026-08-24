@@ -1569,9 +1569,13 @@ sb.auth.onAuthStateChange(async (event, session)=>{
     const timeoutMotorista = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), 15000));
     const resultadoMotorista = await Promise.race([sb.rpc("motorista_id_atual"), timeoutMotorista]);
     if(resultadoMotorista.timeout){
+      // Diferente do timeout de login (abaixo): aqui a sessão já estava
+      // válida, só essa checagem específica demorou (banco momentaneamente
+      // lento) — não apaga a sessão, só avisa. Assim, ao recarregar, se o
+      // banco responder rápido dessa vez, ela não precisa digitar a senha
+      // de novo.
       logErroCliente("Timeout no rpc motorista_id_atual pós-login (15s)", "login");
-      limparSessaoTravada();
-      loginErro.textContent = "Demorou demais pra conectar. Recarregue a página (Ctrl+Shift+R) e tente de novo.";
+      loginErro.textContent = "Demorou demais pra conectar. Recarregue a página (Ctrl+Shift+R) e tente de novo — não precisa digitar a senha de novo, só recarregar.";
       loginErro.style.display = "block";
       return;
     }
