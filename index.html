@@ -1147,6 +1147,7 @@ tr.tr-click:hover{background:#fff7fa;}
           <button type="button" class="btn ghost small" onclick="copiarLinkAcompanhamento()">Copiar</button>
         </div>
       </div>
+      <div><label>Código de início <span style="font-weight:400; color:var(--muted);">(gerado quando a motorista confirma)</span></label><input type="text" id="vg-codigo-inicio" readonly style="background:var(--border); cursor:not-allowed;"></div>
       <div><label>Distância (km)</label><input type="number" id="vg-distancia-km" step="0.1" oninput="recalcularCotacao()"></div>
       <div><label>Tarifa fixa</label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-tarifa-fixa" step="0.01" oninput="recalcularCotacao()"></div></div>
       <div><label>Valor por km</label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-valor-km" step="0.01" oninput="recalcularCotacao()"></div></div>
@@ -3659,6 +3660,7 @@ function openViagemModal(id){
   const diasMarcados = (v.dias_semana||"").split(",").map(d=>d.trim()).filter(Boolean);
   document.querySelectorAll("#vg-dias-semana-wrap input[type=checkbox]").forEach(cb=>{ cb.checked = diasMarcados.includes(cb.value); });
   document.getElementById("vg-link").value = v.tracking_token ? (LINK_ACOMPANHAMENTO_BASE + v.tracking_token) : "";
+  document.getElementById("vg-codigo-inicio").value = v.codigo_inicio || "(ainda não gerado)";
   document.getElementById("vg-distancia-km").value = v.distancia_km ?? "";
   document.getElementById("vg-tarifa-fixa").value = v.tarifa_fixa ?? TAXA_FIXA_CLIENTE;
   document.getElementById("vg-valor-km").value = v.valor_km ?? TARIFA_KM_CLIENTE;
