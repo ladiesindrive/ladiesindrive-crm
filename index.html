@@ -1562,6 +1562,40 @@ document.getElementById("toggle-senha").addEventListener("click", ()=>{
   btn.setAttribute("aria-label", mostrando ? "Mostrar senha" : "Ocultar senha");
 });
 
+// Guarda no navegador (não no servidor) que esse login já foi confirmado
+// como staff (não motorista) uma vez. Usado só pra decidir se mostra o
+// painel na hora num F5 — quem bloqueia dados de verdade é o RLS no banco,
+// então guardar isso localmente não abre brecha nenhuma de segurança.
+function staffConfirmadoLocalmente(userId){
+  return localStorage.getItem("crm-staff-uid") === userId;
+}
+function marcarStaffConfirmado(userId){
+  localStorage.setItem("crm-staff-uid", userId);
+}
+function limparStaffConfirmado(){
+  localStorage.removeItem("crm-staff-uid");
+}
+
+async function liberarPainelCompleto(){
+  document.getElementById("login-screen").style.display = "none";
+  document.querySelector(".app").style.display = "flex";
+  await carregarDados();
+  const ultimaAba = localStorage.getItem("crm-ultima-aba");
+  const abaSalva = ultimaAba && document.querySelector(`.nav-item[data-tab="${ultimaAba}"]`);
+  if(abaSalva) abaSalva.click();
+}
+
+// Mesmo raciocínio do timeout de login: sem isso, se essa checagem travar
+// (rede instável, banco momentaneamente lento), a tela fica parada pra
+// sempre depois de digitar a senha, sem nenhum aviso.
+async function checarNaoEhMotorista(){
+  const timeoutMotorista = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), 15000));
+  const resultadoMotorista = await Promise.race([sb.rpc("motorista_id_atual"), timeoutMotorista]);
+  if(resultadoMotorista.timeout) return "timeout";
+  const { data: motoristaVinculada } = resultadoMotorista;
+  return motoristaVinculada ? "motorista" : "ok";
+}
+
 sb.auth.onAuthStateChange(async (event, session)=>{
   if(session){
     // TOKEN_REFRESHED dispara sozinho ~1x por hora enquanto o painel fica
@@ -1569,12 +1603,28 @@ sb.auth.onAuthStateChange(async (event, session)=>{
     // do banco e redesenhava a tela inteira, travando o navegador por um
     // instante bem na hora em que você podia estar clicando em algo.
     if(event === "TOKEN_REFRESHED") return;
-    // Mesmo raciocínio do timeout de login: sem isso, se essa checagem
-    // travar (rede instável, banco momentaneamente lento), a tela fica
-    // parada pra sempre depois de digitar a senha, sem nenhum aviso.
-    const timeoutMotorista = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), 15000));
-    const resultadoMotorista = await Promise.race([sb.rpc("motorista_id_atual"), timeoutMotorista]);
-    if(resultadoMotorista.timeout){
+
+    // Se esse login já foi confirmado como staff neste navegador antes,
+    // libera o painel na hora, sem esperar a checagem de rede — achado em
+    // 24/08/2026: um F5 com sessão válida caía de volta no login sempre que
+    // essa checagem demorava mais que 15s (banco/rede momentaneamente
+    // lentos), mesmo a sessão continuando válida por trás. A checagem real
+    // roda do mesmo jeito, só que depois e em segundo plano, e desloga se
+    // descobrir de fato que é motorista.
+    if(staffConfirmadoLocalmente(session.user.id)){
+      await liberarPainelCompleto();
+      const resultado = await checarNaoEhMotorista();
+      if(resultado === "motorista"){
+        limparStaffConfirmado();
+        loginErro.textContent = "Este login é de motorista — use o painel dela em ladiesindrive.com.br/motorista.html, não o CRM.";
+        loginErro.style.display = "block";
+        await sb.auth.signOut({ scope: "local" });
+      }
+      return;
+    }
+
+    const resultado = await checarNaoEhMotorista();
+    if(resultado === "timeout"){
       // Diferente do timeout de login (abaixo): aqui a sessão já estava
       // válida, só essa checagem específica demorou (banco momentaneamente
       // lento) — não apaga a sessão, só avisa. Assim, ao recarregar, se o
@@ -1585,20 +1635,16 @@ sb.auth.onAuthStateChange(async (event, session)=>{
       loginErro.style.display = "block";
       return;
     }
-    const { data: motoristaVinculada } = resultadoMotorista;
-    if(motoristaVinculada){
+    if(resultado === "motorista"){
       loginErro.textContent = "Este login é de motorista — use o painel dela em ladiesindrive.com.br/motorista.html, não o CRM.";
       loginErro.style.display = "block";
       await sb.auth.signOut({ scope: "local" });
       return;
     }
-    document.getElementById("login-screen").style.display = "none";
-    document.querySelector(".app").style.display = "flex";
-    await carregarDados();
-    const ultimaAba = localStorage.getItem("crm-ultima-aba");
-    const abaSalva = ultimaAba && document.querySelector(`.nav-item[data-tab="${ultimaAba}"]`);
-    if(abaSalva) abaSalva.click();
+    marcarStaffConfirmado(session.user.id);
+    await liberarPainelCompleto();
   } else {
+    limparStaffConfirmado();
     document.querySelector(".app").style.display = "none";
     document.getElementById("login-screen").style.display = "flex";
   }
