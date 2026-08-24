@@ -1274,10 +1274,17 @@ const { createClient } = window.supabase;
 // segue em frente do mesmo jeito, então nunca trava pra sempre.
 let filaAutenticacao = Promise.resolve();
 const travaDeAuth = (nome, tempoEspera, fn) => {
-  const minhaVez = filaAutenticacao.catch(()=>{}).then(() => Promise.race([
-    fn(),
-    new Promise((_, reject) => setTimeout(() => reject(new Error("Trava de autenticação expirou: " + nome)), tempoEspera || 10000))
-  ]));
+  // tempoEspera vem -1 do supabase-js quando ele quer esperar o tempo que
+  // for preciso pra essa chamada (sem prazo nenhum) — nesse caso só entra
+  // na fila e roda, sem corrida contra timer nenhum (um setTimeout com -1
+  // dispara quase na hora, o que travava tudo antes dessa correção).
+  const minhaVez = filaAutenticacao.catch(()=>{}).then(() => {
+    if(tempoEspera == null || tempoEspera < 0) return fn();
+    return Promise.race([
+      fn(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Trava de autenticação expirou: " + nome)), tempoEspera))
+    ]);
+  });
   filaAutenticacao = minhaVez.catch(()=>{});
   return minhaVez;
 };
