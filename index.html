@@ -1283,6 +1283,26 @@ function limparSessaoTravada(){
   sb.auth.signOut({ scope: "local" }).catch(()=>{});
 }
 
+// Registra erro/travamento no Supabase (tabela crm_erros_cliente), pra dar
+// pra investigar depois sem precisar pegar o problema acontecendo ao vivo.
+// Funciona mesmo antes do login. Nunca deixa o próprio log quebrar o app.
+async function logErroCliente(mensagem, contexto){
+  try {
+    await sb.from("crm_erros_cliente").insert({
+      mensagem: String(mensagem).slice(0, 2000),
+      contexto: contexto || null,
+      pagina: location.pathname,
+      user_agent: navigator.userAgent,
+    });
+  } catch(e) { /* nunca deixa o log quebrar o app */ }
+}
+window.addEventListener("error", (ev)=>{
+  logErroCliente(ev.message || String(ev.error), "window.onerror");
+});
+window.addEventListener("unhandledrejection", (ev)=>{
+  logErroCliente((ev.reason && ev.reason.message) || String(ev.reason), "unhandledrejection");
+});
+
 const ETAPAS = ["Novo lead","Contato iniciado","Orçamento solicitado","Orçamento enviado","Negociação","Fechado - Ganho","Cliente ativo","Perdido"];
 const ETAPA_CLASS = {"Novo lead":"indigo","Contato iniciado":"amber","Orçamento solicitado":"pink","Orçamento enviado":"pink","Negociação":"teal","Fechado - Ganho":"green","Cliente ativo":"green","Perdido":"red"};
 const URG_CLASS = {"Urgente":"urg-alta","Essa semana":"urg-media","Sem pressa":"urg-baixa"};
@@ -1478,6 +1498,7 @@ loginForm.addEventListener("submit", async (ev)=>{
   const resultado = await Promise.race([sb.auth.signInWithPassword({ email, password: senha }), timeout]);
   loginCarregando.style.display = "none";
   if(resultado.timeout){
+    logErroCliente("Timeout no signInWithPassword (10s)", "login");
     limparSessaoTravada();
     loginErro.textContent = "Demorou demais pra conectar. Recarregue a página (Ctrl+Shift+R) e tente de novo.";
     loginErro.style.display = "block";
@@ -1525,6 +1546,7 @@ sb.auth.onAuthStateChange(async (event, session)=>{
     const timeoutMotorista = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), 15000));
     const resultadoMotorista = await Promise.race([sb.rpc("motorista_id_atual"), timeoutMotorista]);
     if(resultadoMotorista.timeout){
+      logErroCliente("Timeout no rpc motorista_id_atual pós-login (15s)", "login");
       limparSessaoTravada();
       loginErro.textContent = "Demorou demais pra conectar. Recarregue a página (Ctrl+Shift+R) e tente de novo.";
       loginErro.style.display = "block";
@@ -1556,6 +1578,7 @@ async function carregarDados(){
   const timeoutCarregar = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), 20000));
   const resultado = await Promise.race([carregarDadosInterno().then(()=>({ timeout: false })), timeoutCarregar]);
   if(resultado.timeout){
+    logErroCliente("Timeout no carregarDados (20s)", "carregarDados");
     alert("Demorou demais pra atualizar os dados. Confere sua internet e tenta de novo — se continuar acontecendo, recarregue a página.");
   }
 }
