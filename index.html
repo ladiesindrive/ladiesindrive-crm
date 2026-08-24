@@ -1502,7 +1502,18 @@ sb.auth.onAuthStateChange(async (event, session)=>{
     // do banco e redesenhava a tela inteira, travando o navegador por um
     // instante bem na hora em que você podia estar clicando em algo.
     if(event === "TOKEN_REFRESHED") return;
-    const { data: motoristaVinculada } = await sb.rpc("motorista_id_atual");
+    // Mesmo raciocínio do timeout de login: sem isso, se essa checagem
+    // travar (rede instável, banco momentaneamente lento), a tela fica
+    // parada pra sempre depois de digitar a senha, sem nenhum aviso.
+    const timeoutMotorista = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), 15000));
+    const resultadoMotorista = await Promise.race([sb.rpc("motorista_id_atual"), timeoutMotorista]);
+    if(resultadoMotorista.timeout){
+      loginErro.textContent = "Demorou demais pra conectar. Tenta de novo em instantes.";
+      loginErro.style.display = "block";
+      await sb.auth.signOut();
+      return;
+    }
+    const { data: motoristaVinculada } = resultadoMotorista;
     if(motoristaVinculada){
       loginErro.textContent = "Este login é de motorista — use o painel dela em ladiesindrive.com.br/motorista.html, não o CRM.";
       loginErro.style.display = "block";
@@ -1518,7 +1529,20 @@ sb.auth.onAuthStateChange(async (event, session)=>{
   }
 });
 
+// Chamada depois de toda ação de Salvar/Excluir do sistema inteiro — sem
+// esse timeout, se qualquer uma das ~28 tabelas travar ao recarregar (rede
+// instável, banco momentaneamente lento), a tela fica parada pra sempre e
+// parece que o botão que você clicou não fez nada. Com o timeout, você
+// sempre recebe um aviso em até 20s, mesmo quando o carregamento de fato
+// não termina.
 async function carregarDados(){
+  const timeoutCarregar = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), 20000));
+  const resultado = await Promise.race([carregarDadosInterno().then(()=>({ timeout: false })), timeoutCarregar]);
+  if(resultado.timeout){
+    alert("Demorou demais pra atualizar os dados. Confere sua internet e tenta de novo — se continuar acontecendo, recarregue a página.");
+  }
+}
+async function carregarDadosInterno(){
   const [{data:leadsData, error:e1}, {data:parceirosData, error:e2}, {data:orcamentosData, error:e3}] = await Promise.all([
     sb.from("leads").select("*").order("id"),
     sb.from("parceiros").select("*").order("id"),
