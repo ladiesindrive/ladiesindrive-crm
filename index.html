@@ -1261,56 +1261,18 @@ tr.tr-click:hover{background:#fff7fa;}
 const SUPABASE_URL = "https://ilhuhbcklvcdrggovmth.supabase.co";
 const SUPABASE_KEY = "sb_publishable_3nMRN_iu3rW9hzYoyVzHcA_GwAavOUN";
 const { createClient } = window.supabase;
-// Trava real (fila), no lugar da trava interna padrão do supabase-js (Web
-// Locks API), que ficava presa pra sempre se uma tentativa fosse abandonada
-// (ex: pelo timeout de segurança do login abaixo) — travando todo login
-// seguinte até trocar de navegador. Tirar a trava por completo (como estava
-// antes) resolvia isso mas causava um bug pior: duas operações de
-// autenticação podiam rodar ao mesmo tempo sem controle, e uma chamada ao
-// banco às vezes saía usando a chave pública genérica no lugar do token da
-// sessão logada, sendo tratada como se ninguém tivesse logado (erro 401 —
-// achado em 24/08/2026 no salvamento de pagamento de motorista). Esta
-// versão faz as chamadas passarem uma de cada vez (evita a corrida), mas
-// com um limite de tempo: se uma não terminar a tempo, a próxima da fila
-// segue em frente do mesmo jeito, então nunca trava pra sempre.
-let filaAutenticacao = Promise.resolve();
-const travaDeAuth = (nome, tempoEspera, fn) => {
-  // tempoEspera vem -1 do supabase-js quando ele quer esperar o tempo que
-  // for preciso pra essa chamada (sem prazo curto imposto por nós) — mas
-  // deixar isso 100% sem prazo (rodando fn() puro) significa que, se essa
-  // chamada específica travar de verdade por qualquer motivo, ela nunca
-  // resolve nem rejeita, e como as chamadas seguintes esperam na mesma
-  // fila atrás dela, a fila trava pra sempre (só um reload de página
-  // zerava o estado) — bug achado em 24/08/2026 depois de ver rajadas de
-  // timeout de login em crm_erros_cliente. Por isso usamos um prazo de
-  // segurança generoso (30s) mesmo nesse caso, bem maior que qualquer
-  // operação legítima, só pra garantir que a fila sempre destrava sozinha.
-  const prazo = (tempoEspera == null || tempoEspera < 0) ? 30000 : tempoEspera;
-  const minhaVez = filaAutenticacao.catch(()=>{}).then(() => {
-    return Promise.race([
-      fn(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Trava de autenticação expirou: " + nome)), prazo))
-    ]);
-  });
-  filaAutenticacao = minhaVez.catch(()=>{});
-  return minhaVez;
-};
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: travaDeAuth } });
-
-// Limpa a sessão travada localmente (sem depender de rede). Usada quando o
-// login trava: mesmo com a trava real acima, se a chamada abandonada nunca
-// terminar, um signOut() normal (que faz chamada de rede pra encerrar a sessão no
-// servidor) podia ficar preso no mesmo estado travado e nunca limpar a
-// sessão velha guardada no navegador — daí precisar limpar os dados do
-// site manualmente pra conseguir logar de novo. Removendo direto do
-// localStorage (síncrono, não depende de rede) garante que a próxima
-// tentativa comece limpa mesmo se o servidor não responder.
-function limparSessaoTravada(){
-  Object.keys(localStorage)
-    .filter(k => k.startsWith("sb-"))
-    .forEach(k => localStorage.removeItem(k));
-  sb.auth.signOut({ scope: "local" }).catch(()=>{});
-}
+// Usa a trava interna padrão do supabase-js (Web Locks API do navegador).
+//
+// Entre 22 e 25/08/2026 essa trava foi desativada, depois substituída por
+// uma fila própria com prazo de segurança, tentando resolver os
+// travamentos. Nenhuma das duas era o problema: a trava só ficava presa
+// porque o `onAuthStateChange` lá embaixo carregava as ~28 tabelas do
+// banco DE DENTRO da trava (ver o comentário lá). Corrigido isso, a trava
+// padrão é segurada por milissegundos e nunca mais atrapalha — e voltar
+// pra ela elimina de vez o erro "Trava de autenticação expirou" e a
+// corrida que fazia uma consulta sair com a chave pública no lugar do
+// token da sessão (erro 401 / tabela aparecendo vazia).
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Registra erro/travamento no Supabase (tabela crm_erros_cliente), pra dar
 // pra investigar depois sem precisar pegar o problema acontecendo ao vivo.
@@ -1520,16 +1482,21 @@ loginForm.addEventListener("submit", async (ev)=>{
   loginCarregando.style.display = "block";
   const email = document.getElementById("login-email").value.trim();
   const senha = document.getElementById("login-senha").value;
-  // Timeout de segurança: se o navegador ficar preso numa sessão antiga
-  // travada (acontece às vezes com login persistido), sem isso o
-  // "Entrando..." fica na tela pra sempre sem nenhum aviso.
-  const timeout = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), 10000));
+  // Timeout de segurança só pra não deixar o "Entrando..." pra sempre na
+  // tela se a rede cair no meio. Até 25/08/2026 esse prazo era de 10s e
+  // media a coisa errada: o `signInWithPassword` só terminava depois do
+  // painel inteiro carregar (ver comentário no onAuthStateChange), então
+  // qualquer carregamento acima de 10s caía aqui — e o pior, chamava
+  // limparSessaoTravada(), APAGANDO uma sessão que tinha acabado de ser
+  // criada com sucesso. Era isso que obrigava a "limpar cookie" e digitar
+  // a senha de novo a cada tentativa. Agora o prazo cobre só a
+  // autenticação de verdade e nunca apaga a sessão.
+  const timeout = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), 20000));
   const resultado = await Promise.race([sb.auth.signInWithPassword({ email, password: senha }), timeout]);
   loginCarregando.style.display = "none";
   if(resultado.timeout){
-    logErroCliente("Timeout no signInWithPassword (10s)", "login");
-    limparSessaoTravada();
-    loginErro.textContent = "Demorou demais pra conectar. Recarregue a página (Ctrl+Shift+R) e tente de novo.";
+    logErroCliente("Timeout no signInWithPassword (20s)", "login");
+    loginErro.textContent = "Demorou demais pra conectar. Confere a internet e tenta de novo.";
     loginErro.style.display = "block";
     return;
   }
@@ -1596,14 +1563,42 @@ async function checarNaoEhMotorista(){
   return motoristaVinculada ? "motorista" : "ok";
 }
 
-sb.auth.onAuthStateChange(async (event, session)=>{
-  if(session){
-    // TOKEN_REFRESHED dispara sozinho ~1x por hora enquanto o painel fica
-    // aberto — sem esse filtro, cada renovação recarregava as ~25 tabelas
-    // do banco e redesenhava a tela inteira, travando o navegador por um
-    // instante bem na hora em que você podia estar clicando em algo.
-    if(event === "TOKEN_REFRESHED") return;
+// ATENÇÃO ao mexer aqui: o supabase-js chama este callback DE DENTRO da
+// trava de autenticação, e o `signInWithPassword` do login só termina
+// depois que ele terminar. Fazer trabalho pesado aqui dentro (a checagem
+// de motorista + as ~28 tabelas + redesenhar a tela) era a causa raiz da
+// saga de travamentos de 22 a 25/08/2026: a trava ficava segurada por 10,
+// 20, 30 segundos seguidos; o login "estourava o tempo" e apagava a
+// sessão mesmo tendo dado certo; e as consultas que disputavam a trava às
+// vezes saíam sem o token da sessão, voltando vazias (as viagens sumindo
+// do Kanban) ou com erro 401.
+//
+// Por isso o callback é síncrono e só agenda o trabalho pra rodar logo em
+// seguida, FORA da trava (é a recomendação oficial do Supabase). Assim a
+// trava é segurada por milissegundos e o login termina na hora.
+sb.auth.onAuthStateChange((event, session)=>{
+  // TOKEN_REFRESHED dispara sozinho ~1x por hora enquanto o painel fica
+  // aberto — sem esse filtro, cada renovação recarregava as ~25 tabelas
+  // do banco e redesenhava a tela inteira, travando o navegador por um
+  // instante bem na hora em que você podia estar clicando em algo.
+  if(event === "TOKEN_REFRESHED") return;
+  setTimeout(()=>{ aoMudarAutenticacao(session); }, 0);
+});
 
+// Evita que dois eventos seguidos (ex: INITIAL_SESSION logo antes de
+// SIGNED_IN) disparem dois carregamentos completos ao mesmo tempo.
+let entradaEmAndamento = null;
+function aoMudarAutenticacao(session){
+  // Sair (session nula) nunca é bloqueado pela trava: é uma ação leve e
+  // precisa acontecer na hora, mesmo com um carregamento em andamento.
+  if(session && entradaEmAndamento) return;
+  entradaEmAndamento = tratarMudancaAutenticacao(session)
+    .catch(e => logErroCliente((e && e.message) || String(e), "onAuthStateChange"))
+    .finally(()=>{ entradaEmAndamento = null; });
+}
+
+async function tratarMudancaAutenticacao(session){
+  if(session){
     // Se esse login já foi confirmado como staff neste navegador antes,
     // libera o painel na hora, sem esperar a checagem de rede — achado em
     // 24/08/2026: um F5 com sessão válida caía de volta no login sempre que
@@ -1648,7 +1643,7 @@ sb.auth.onAuthStateChange(async (event, session)=>{
     document.querySelector(".app").style.display = "none";
     document.getElementById("login-screen").style.display = "flex";
   }
-});
+}
 
 // Chamada depois de toda ação de Salvar/Excluir do sistema inteiro — sem
 // esse timeout, se qualquer uma das ~28 tabelas travar ao recarregar (rede
@@ -1664,16 +1659,31 @@ async function carregarDados(){
     alert("Demorou demais pra atualizar os dados. Confere sua internet e tenta de novo — se continuar acontecendo, recarregue a página.");
   }
 }
+// Aplica o resultado de uma consulta SÓ se ela deu certo. Se deu erro
+// (rede caiu, token expirado, RLS recusou), mantém o que já estava na
+// tela em vez de trocar por uma lista vazia — era isso que fazia "as
+// viagens sumirem" do Kanban sem nenhum aviso: `viagens = rv.data || []`
+// virava `viagens = []` a cada consulta que falhava em silêncio.
+let tabelasComFalha = [];
+function aplicarConsulta(nome, resultado, valorAtual){
+  if(!resultado || resultado.error){
+    tabelasComFalha.push(nome);
+    console.error("Erro ao carregar " + nome, resultado && resultado.error);
+    return valorAtual;
+  }
+  return resultado.data || [];
+}
+
 async function carregarDadosInterno(){
-  const [{data:leadsData, error:e1}, {data:parceirosData, error:e2}, {data:orcamentosData, error:e3}] = await Promise.all([
+  tabelasComFalha = [];
+  const [rlead, rparc, rorc] = await Promise.all([
     sb.from("leads").select("*").order("id"),
     sb.from("parceiros").select("*").order("id"),
     sb.from("orcamentos").select("*").order("id"),
   ]);
-  if(e1 || e2 || e3){ alert("Erro ao carregar dados: " + (e1||e2||e3).message); return; }
-  leads = leadsData || [];
-  parceiros = parceirosData || [];
-  orcamentos = orcamentosData || [];
+  leads = aplicarConsulta("leads", rlead, leads);
+  parceiros = aplicarConsulta("parceiros", rparc, parceiros);
+  orcamentos = aplicarConsulta("orcamentos", rorc, orcamentos);
 
   // Módulo de Transporte — tolerante a erro (ex: SQL ainda não rodado),
   // pra não travar o resto do painel enquanto isso.
@@ -1701,30 +1711,37 @@ async function carregarDadosInterno(){
     sb.from("vagas_candidatas").select("*").order("id"),
     sb.from("motorista_observacoes").select("*").order("id"),
   ]);
-  motoristas = rm.data || [];
-  documentosMotorista = rd.data || [];
-  clientesTransporte = rc.data || [];
-  viagens = rv.data || [];
-  avaliacoes = ra.data || [];
-  pagamentosMotorista = rp.data || [];
-  pagamentosCliente = rpay.data || [];
-  parceiroContatos = rpc.data || [];
-  parceiroInteracoes = rpi.data || [];
-  parceiroEnderecos = rpe.data || [];
-  leadInteracoes = rli.data || [];
-  vendas = rvd.data || [];
-  vendaParcelas = rvp.data || [];
-  contasPagar = rcp.data || [];
-  metasFinanceiras = rmf.data || [];
-  pecasPedidos = rpp.data || [];
-  pecasTentativas = rpt.data || [];
-  parceiroLinks = rpl.data || [];
-  divulgacoes = rdv.data || [];
-  vagas = rvg.data || [];
-  vagasCandidatas = rvc.data || [];
-  motoristaObservacoes = rmo.data || [];
+  motoristas = aplicarConsulta("motoristas", rm, motoristas);
+  documentosMotorista = aplicarConsulta("documentos_motorista", rd, documentosMotorista);
+  clientesTransporte = aplicarConsulta("clientes_transporte", rc, clientesTransporte);
+  viagens = aplicarConsulta("viagens", rv, viagens);
+  avaliacoes = aplicarConsulta("avaliacoes", ra, avaliacoes);
+  pagamentosMotorista = aplicarConsulta("pagamentos_motorista", rp, pagamentosMotorista);
+  pagamentosCliente = aplicarConsulta("pagamentos_cliente", rpay, pagamentosCliente);
+  parceiroContatos = aplicarConsulta("parceiro_contatos", rpc, parceiroContatos);
+  parceiroInteracoes = aplicarConsulta("parceiro_interacoes", rpi, parceiroInteracoes);
+  parceiroEnderecos = aplicarConsulta("parceiro_enderecos", rpe, parceiroEnderecos);
+  leadInteracoes = aplicarConsulta("lead_interacoes", rli, leadInteracoes);
+  vendas = aplicarConsulta("vendas", rvd, vendas);
+  vendaParcelas = aplicarConsulta("venda_parcelas", rvp, vendaParcelas);
+  contasPagar = aplicarConsulta("contas_pagar", rcp, contasPagar);
+  metasFinanceiras = aplicarConsulta("metas_financeiras", rmf, metasFinanceiras);
+  pecasPedidos = aplicarConsulta("pecas_pedidos", rpp, pecasPedidos);
+  pecasTentativas = aplicarConsulta("pecas_tentativas", rpt, pecasTentativas);
+  parceiroLinks = aplicarConsulta("parceiro_links", rpl, parceiroLinks);
+  divulgacoes = aplicarConsulta("divulgacoes", rdv, divulgacoes);
+  vagas = aplicarConsulta("vagas", rvg, vagas);
+  vagasCandidatas = aplicarConsulta("vagas_candidatas", rvc, vagasCandidatas);
+  motoristaObservacoes = aplicarConsulta("motorista_observacoes", rmo, motoristaObservacoes);
 
   renderAll();
+
+  // Avisa que alguma coisa não veio, em vez de mostrar tela vazia como se
+  // não houvesse nada cadastrado.
+  if(tabelasComFalha.length){
+    logErroCliente("Falha ao carregar: " + tabelasComFalha.join(", "), "carregarDados");
+    showToast("Parte dos dados não carregou (" + tabelasComFalha.length + "). Recarregue a página.", true);
+  }
 }
 
 // Nav
@@ -4202,7 +4219,7 @@ function renderResumoFinanceiro(){
 
 function closeModal(id){ document.getElementById(id).classList.remove("open"); }
 let toastTimer;
-function showToast(msg){
+function showToast(msg, erro){
   let el = document.getElementById("toast");
   if(!el){
     el = document.createElement("div");
@@ -4211,9 +4228,11 @@ function showToast(msg){
     document.body.appendChild(el);
   }
   el.textContent = msg || "Salvo!";
+  // Aviso de erro fica vermelho e mais tempo na tela que o "Salvo!" verde.
+  el.style.background = erro ? "var(--red)" : "";
   clearTimeout(toastTimer);
   el.classList.add("show");
-  toastTimer = setTimeout(()=>el.classList.remove("show"), 2200);
+  toastTimer = setTimeout(()=>el.classList.remove("show"), erro ? 6000 : 2200);
 }
 
 function exportarDados(){
