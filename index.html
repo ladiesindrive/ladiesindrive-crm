@@ -39,6 +39,7 @@ body{
 .sidebar{
   width:200px; background:linear-gradient(180deg,#d6336c,#b02358);
   color:#fff; flex-shrink:0; padding:20px 0; display:flex; flex-direction:column;
+  max-height:100vh; overflow-y:auto;
 }
 .sidebar h1{font-size:16px; padding:0 18px 16px; margin:0; border-bottom:1px solid rgba(255,255,255,.25); font-weight:700;}
 .sidebar h1 span{display:block; font-size:11px; font-weight:400; opacity:.8; margin-top:2px;}
@@ -48,7 +49,10 @@ body{
 }
 .nav-item:hover{background:rgba(255,255,255,.1);}
 .nav-item.active{background:rgba(255,255,255,.18); border-left-color:#fff; font-weight:600; opacity:1;}
-.nav-logout{margin-top:auto; border-top:1px solid rgba(255,255,255,.25); opacity:.85;}
+.nav-logout{border-top:1px solid rgba(255,255,255,.25); opacity:.85;}
+.nav-atualizar{margin-top:auto; border-top:1px solid rgba(255,255,255,.25); opacity:.85; padding-top:9px; padding-bottom:9px; font-size:12.5px;}
+.nav-atualizar span{font-size:10.5px; opacity:.75; font-weight:400;}
+.nav-atualizar span:not(:empty)::before{content:" · ";}
 .main{flex:1; padding:26px 32px; max-width:1180px;}
 .pagehead{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;}
 .pagehead h2{margin:0 0 4px; font-size:20px;}
@@ -282,7 +286,10 @@ tr.tr-click:hover{background:#fff7fa;}
   <div class="topbar">
     <button type="button" id="btn-menu" aria-label="Abrir menu">☰</button>
     <span class="topbar-brand">Ladies in Drive</span>
-    <button type="button" id="btn-logout-mobile" class="js-logout" aria-label="Sair">🚪</button>
+    <span>
+      <button type="button" id="btn-atualizar-mobile" aria-label="Atualizar dados">🔄</button>
+      <button type="button" id="btn-logout-mobile" class="js-logout" aria-label="Sair">🚪</button>
+    </span>
   </div>
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
   <div class="sidebar" id="sidebar">
@@ -299,6 +306,7 @@ tr.tr-click:hover{background:#fff7fa;}
     <div class="nav-item" data-tab="financeiro">💵 Financeiro</div>
     <div class="nav-item" data-tab="servicos">🔧 Serviços</div>
     <div class="nav-item" data-tab="config">⚙️ Dados</div>
+    <div class="nav-item nav-atualizar" id="btn-atualizar" title="Buscar de novo os dados no servidor">🔄 Atualizar<span id="lbl-atualizado"></span></div>
     <div class="nav-item nav-logout js-logout" id="btn-logout">🚪 Sair</div>
   </div>
   <div class="main">
@@ -1767,6 +1775,7 @@ async function carregarDadosInterno(){
   motoristaObservacoes = aplicarConsulta("motorista_observacoes", rmo, motoristaObservacoes);
 
   renderAll();
+  marcarAtualizado();
 
   // Avisa que alguma coisa não veio, em vez de mostrar tela vazia como se
   // não houvesse nada cadastrado.
@@ -1775,6 +1784,62 @@ async function carregarDadosInterno(){
     showToast("Parte dos dados não carregou (" + tabelasComFalha.length + "). Recarregue a página.", true);
   }
 }
+
+// ===== ATUALIZAÇÃO DOS DADOS =====
+// O painel busca tudo uma vez, ao abrir, e trabalha em cima da memória. O que
+// muda por fora (motorista concluindo viagem no painel dela, cliente pedindo
+// viagem pelo site, n8n marcando mensagem enviada) só aparecia depois de F5 —
+// e essa memória velha chegou a criar pagamento duplicado, porque o CRM não
+// enxergava a linha que o painel da motorista tinha acabado de inserir.
+//
+// Só as tabelas que mudam por fora entram na recarga automática: as ~28 do
+// carregamento inicial de minuto em minuto seriam carga demais pro banco no
+// plano gratuito, ainda mais somado ao n8n consultando ele o tempo todo.
+const TABELAS_AUTO = ["leads", "clientes_transporte", "viagens", "motoristas", "pagamentos_motorista", "avaliacoes"];
+const INTERVALO_AUTO_MS = 60000;
+let atualizandoDados = false;
+let ultimaAtualizacao = null;
+
+function marcarAtualizado(){
+  ultimaAtualizacao = new Date();
+  renderRotuloAtualizacao();
+}
+function renderRotuloAtualizacao(){
+  const el = document.getElementById("lbl-atualizado");
+  if(!el) return;
+  if(!ultimaAtualizacao){ el.textContent = ""; return; }
+  const min = Math.floor((Date.now() - ultimaAtualizacao.getTime()) / 60000);
+  el.textContent = min < 1 ? "agora mesmo" : (min < 60 ? `há ${min} min` : `há ${Math.floor(min/60)}h`);
+}
+async function atualizarDados(manual){
+  if(atualizandoDados) return;
+  atualizandoDados = true;
+  const btn = document.getElementById("btn-atualizar");
+  if(btn) btn.style.opacity = ".5";
+  recargaSilenciosa = !manual;
+  try{
+    await recarregarTabelas(...TABELAS_AUTO);
+    marcarAtualizado();
+    if(manual) showToast("Dados atualizados!");
+  } finally {
+    recargaSilenciosa = false;
+    atualizandoDados = false;
+    if(btn) btn.style.opacity = "";
+  }
+}
+document.getElementById("btn-atualizar").addEventListener("click", ()=>atualizarDados(true));
+document.getElementById("btn-atualizar-mobile").addEventListener("click", ()=>atualizarDados(true));
+
+// A recarga automática pula quando tem modal aberto (senão o renderAll troca
+// os dados embaixo de um cadastro que você está preenchendo) e quando a aba
+// está em segundo plano (não adianta buscar dado que ninguém está olhando).
+setInterval(function(){
+  if(document.hidden) return;
+  if(document.querySelector(".modal-backdrop.open")) return;
+  if(document.querySelector(".app").style.display !== "flex") return;
+  atualizarDados(false);
+}, INTERVALO_AUTO_MS);
+setInterval(renderRotuloAtualizacao, 30000);
 
 // Nav
 document.querySelectorAll(".nav-item[data-tab]").forEach(el=>{
@@ -1820,13 +1885,17 @@ const TABELA_ATUALIZA = {
 // as ~28 tabelas inteiras a cada Salvar/Excluir — reduz a carga no banco
 // (plano gratuito, compute Nano), que fica sob pressão com o uso normal do
 // dia a dia somado ao n8n consultando ele a cada poucos minutos.
+// Ligado só durante a recarga automática de fundo: lá um alerta de timeout
+// apareceria sozinho de minuto em minuto numa internet ruim, sem você ter
+// pedido nada. Na recarga que você mesma manda fazer, o alerta continua.
+let recargaSilenciosa = false;
 async function recarregarTabelas(...nomes){
   const timeoutMs = 15000;
   const timeout = new Promise(resolve => setTimeout(()=>resolve({ timeout: true }), timeoutMs));
   const busca = Promise.all(nomes.map(nome => sb.from(nome).select("*").order("id").then(r=>({ nome, ...r }))));
   const resultado = await Promise.race([busca.then(rs=>({ timeout: false, rs })), timeout]);
   if(resultado.timeout){
-    alert("Demorou demais pra atualizar os dados. Confere sua internet e tenta de novo — se continuar acontecendo, recarregue a página.");
+    if(!recargaSilenciosa) alert("Demorou demais pra atualizar os dados. Confere sua internet e tenta de novo — se continuar acontecendo, recarregue a página.");
     return;
   }
   resultado.rs.forEach(r=>{
