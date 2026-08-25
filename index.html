@@ -3674,7 +3674,7 @@ function atualizarStatusOferta(){
   } else if(cotado !== "" && !confirmado){
     el.textContent = "🔒 Oferta fechada: tem preço cotado e a cliente ainda não confirmou. Se o valor já foi acertado por fora, marque 'Preço já acertado com a cliente' na seção de cotação pra liberar agora.";
   } else if(marcadas){
-    el.textContent = "✅ Oferta aberta: " + (marcadas > 1 ? marcadas + " motoristas marcadas veem" : "a motorista marcada vê") + " essa corrida no painel e recebe aviso no WhatsApp em até 5 min.";
+    el.textContent = "✅ Oferta aberta: " + (marcadas > 1 ? marcadas + " motoristas marcadas veem" : "a motorista marcada vê") + " essa corrida no painel e recebe aviso no WhatsApp em até 3 min.";
   } else {
     el.textContent = "Marque agora quem pode pegar essa corrida. A oferta abre sozinha pra elas quando a cliente confirmar o valor.";
   }
