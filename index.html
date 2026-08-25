@@ -1112,12 +1112,13 @@ tr.tr-click:hover{background:#fff7fa;}
       <div class="full">
         <label>Motorista(s) <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
         <div id="vg-motoristas-wrap" style="display:flex; flex-wrap:wrap; gap:6px; max-height:140px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px;"></div>
+        <div id="vg-oferta-status" style="margin-top:6px; font-size:12.5px; color:var(--muted);"></div>
       </div>
       <div><label>Tipo de serviço</label><select id="vg-tipo-servico"></select></div>
       <div class="full" id="vg-evento-wrap"><label>Descrição do evento</label><input type="text" id="vg-evento-descricao" placeholder="Só se Tipo de serviço = Evento"></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-motorista-preferida" style="width:auto;"> Motorista preferida da cliente</label></div>
       <div><label>Canal de recepção</label><select id="vg-canal"></select></div>
-      <div><label>Status</label><select id="vg-viagem-status"></select></div>
+      <div><label>Status</label><select id="vg-viagem-status" onchange="atualizarStatusOferta()"></select></div>
       <div class="full"><label>Endereço de origem</label><input type="text" id="vg-origem-endereco"></div>
       <div class="full"><label>Endereço de destino</label><input type="text" id="vg-destino-endereco"></div>
       <div class="full"><button type="button" class="btn ghost" style="font-size:12.5px;" onclick="abrirRotaMaps()">📍 Ver rota no Google Maps</button></div>
@@ -1154,6 +1155,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Preço cotado <span style="font-weight:400; color:var(--muted);">(cobrado da cliente)</span></label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-preco-cotado" step="0.01" oninput="recalcularComissaoCotacao()"></div></div>
       <div><label>Repasse motorista <span style="font-weight:400; color:var(--muted);">(oferta, aparece pra ela antes de aceitar)</span></label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-preco-motorista" step="0.01" oninput="recalcularComissaoCotacao()"></div></div>
       <div><label>Comissão Ladies in Drive <span style="font-weight:400; color:var(--muted);">(calculada: cotado − repasse)</span></label><input type="text" id="vg-comissao-ladies" readonly style="background:var(--border); cursor:not-allowed;"></div>
+      <div class="full"><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-preco-confirmado" style="width:auto;" onchange="atualizarStatusOferta()"> Preço já acertado com a cliente <span style="color:var(--muted);">(libera a oferta pras motoristas sem esperar a resposta no WhatsApp)</span></label></div>
       <div class="full" id="vg-status-preco-cliente" style="display:none; font-size:12.5px; color:var(--muted);"></div>
       <div class="full"><label>Motivo (se não fechou)</label><textarea id="vg-motivo-perda" rows="2" placeholder="Ex: preço, motorista indisponível, cliente desistiu, prazo, concorrência..."></textarea></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-preparacao" style="width:auto;"> Preparação pré-viagem confirmada</label></div>
@@ -3626,6 +3628,7 @@ function recalcularComissaoCotacao(){
     campoPgValor.dataset.autoValor = repasseStr;
   }
   recalcularComissaoPagamento();
+  atualizarStatusOferta();
 }
 function recalcularComissaoPagamento(){
   const recebidoStr = document.getElementById("vg-lid-valor").value;
@@ -3650,7 +3653,31 @@ function nomesMotoristasViagem(v){
 }
 function renderMotoristasCheckboxes(selecionados){
   const wrap = document.getElementById("vg-motoristas-wrap");
-  wrap.innerHTML = motoristas.map(m=>`<label class="chip-check"><input type="checkbox" value="${m.id}" ${selecionados.includes(m.id)?"checked":""}> ${escapeHtml(m.nome)}</label>`).join("") || `<span style="color:var(--muted); font-size:12.5px;">Nenhuma motorista cadastrada ainda</span>`;
+  wrap.innerHTML = motoristas.map(m=>`<label class="chip-check"><input type="checkbox" value="${m.id}" ${selecionados.includes(m.id)?"checked":""} onchange="atualizarStatusOferta()"> ${escapeHtml(m.nome)}</label>`).join("") || `<span style="color:var(--muted); font-size:12.5px;">Nenhuma motorista cadastrada ainda</span>`;
+}
+// Espelha no CRM a regra "oferta_liberada_para_motoristas" do banco
+// (schema_oferta_apos_confirmacao_preco.sql): enquanto tiver preço cotado sem
+// confirmação da cliente, as motoristas marcadas não veem a corrida.
+function atualizarStatusOferta(){
+  const el = document.getElementById("vg-oferta-status");
+  if(!el) return;
+  const status = document.getElementById("vg-viagem-status").value;
+  const cotado = document.getElementById("vg-preco-cotado").value;
+  const confirmado = document.getElementById("vg-preco-confirmado").checked;
+  const marcadas = document.querySelectorAll("#vg-motoristas-wrap input[type=checkbox]:checked").length;
+  if(status === "Aguardando cliente confirmar preço"){
+    el.textContent = "🔒 Oferta fechada: esperando a cliente responder o preço no WhatsApp. Quem você marcar aqui só vê a corrida quando ela aceitar.";
+  } else if(status === "Preço recusado pela cliente"){
+    el.textContent = "🔒 Oferta fechada: a cliente pediu ajuste. Corrija o valor e volte o status pra 'Aguardando cliente confirmar preço' pra reenviar.";
+  } else if(status === "Cancelada"){
+    el.textContent = "🔒 Viagem cancelada, nenhuma motorista vê essa oferta.";
+  } else if(cotado !== "" && !confirmado){
+    el.textContent = "🔒 Oferta fechada: tem preço cotado e a cliente ainda não confirmou. Se o valor já foi acertado por fora, marque 'Preço já acertado com a cliente' na seção de cotação pra liberar agora.";
+  } else if(marcadas){
+    el.textContent = "✅ Oferta aberta: " + (marcadas > 1 ? marcadas + " motoristas marcadas veem" : "a motorista marcada vê") + " essa corrida no painel e recebe aviso no WhatsApp em até 5 min.";
+  } else {
+    el.textContent = "Marque agora quem pode pegar essa corrida. A oferta abre sozinha pra elas quando a cliente confirmar o valor.";
+  }
 }
 function formatarDataBR(dataISO){
   if(!dataISO) return null;
@@ -3739,6 +3766,7 @@ function openViagemModal(id){
   document.getElementById("vg-valor-km").value = v.valor_km ?? TARIFA_KM_CLIENTE;
   document.getElementById("vg-preco-cotado").value = v.preco_cotado ?? "";
   document.getElementById("vg-preco-motorista").value = v.preco_motorista ?? "";
+  document.getElementById("vg-preco-confirmado").checked = !!v.preco_confirmado_cliente;
   const statusPreco = document.getElementById("vg-status-preco-cliente");
   if(v.preco_confirmado_cliente){
     statusPreco.style.display = "block";
@@ -3775,6 +3803,7 @@ function openViagemModal(id){
   document.getElementById("vg-pg-comprovante").value = pg.comprovante_url || "";
   document.getElementById("vg-pg-notas").value = pg.notas || "";
   recalcularComissaoCotacao();
+  atualizarStatusOferta();
 
   document.getElementById("btn-excluir-viagem").style.display = id ? "inline-block" : "none";
   document.getElementById("viagem-modal").classList.add("open");
@@ -3805,6 +3834,14 @@ async function saveViagem(){
     valor_km: document.getElementById("vg-valor-km").value === "" ? null : Number(document.getElementById("vg-valor-km").value),
     preco_cotado: document.getElementById("vg-preco-cotado").value === "" ? null : Number(document.getElementById("vg-preco-cotado").value),
     preco_motorista: document.getElementById("vg-preco-motorista").value === "" ? null : Number(document.getElementById("vg-preco-motorista").value),
+    preco_confirmado_cliente: document.getElementById("vg-preco-confirmado").checked,
+    // Marcar na mão libera a oferta na hora; desmarcar volta a travar. Se a
+    // cliente já tinha confirmado pelo WhatsApp, preserva a data original.
+    preco_confirmado_em: (()=>{
+      if(!document.getElementById("vg-preco-confirmado").checked) return null;
+      const atual = viagens.find(x=>x.id===editingViagemId);
+      return (atual && atual.preco_confirmado_em) ? atual.preco_confirmado_em : new Date().toISOString();
+    })(),
     motivo_perda: document.getElementById("vg-motivo-perda").value,
     preparacao_confirmada: document.getElementById("vg-preparacao").checked,
     saida_confirmada: document.getElementById("vg-saida").checked,
