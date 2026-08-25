@@ -1170,6 +1170,16 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-saida" style="width:auto;"> Saída do veículo confirmada</label></div>
       <div id="vg-liberar-manual-wrap" style="display:none;"><label style="visibility:hidden;">.</label><button type="button" class="btn secondary small" onclick="liberarViagemManualmente()">Liberar viagem manualmente</button></div>
       <div class="full" id="vg-local-motorista" style="display:none; font-size:12.5px; color:var(--muted);"></div>
+      <div class="full" id="vg-reenvio-wrap" style="display:none;">
+        <div id="vg-reenvio-codigo" style="display:none; margin-bottom:8px;">
+          <button type="button" class="btn secondary small" onclick="reenviarCodigoCliente()">📨 Reenviar código pra cliente</button>
+          <span id="vg-reenvio-codigo-info" style="font-size:12px; color:var(--muted); margin-left:8px;"></span>
+        </div>
+        <div id="vg-reenvio-oferta" style="display:none;">
+          <button type="button" class="btn secondary small" onclick="reenviarAvisoOfertas()">📨 Reenviar aviso pras motoristas</button>
+          <span id="vg-reenvio-oferta-info" style="font-size:12px; color:var(--muted); margin-left:8px;"></span>
+        </div>
+      </div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-grupo-whats" style="width:auto;"> Grupo de WhatsApp criado</label></div>
     </div>
 
@@ -1493,6 +1503,7 @@ let documentosMotorista = [];
 let motoristaObservacoes = [];
 let clientesTransporte = [];
 let viagens = [];
+let viagemOfertas = [];
 let avaliacoes = [];
 let pagamentosMotorista = [];
 let pagamentosCliente = [];
@@ -1727,7 +1738,7 @@ async function carregarDadosInterno(){
 
   // Módulo de Transporte — tolerante a erro (ex: SQL ainda não rodado),
   // pra não travar o resto do painel enquanto isso.
-  const [rm, rd, rc, rv, ra, rp, rpay, rpc, rpi, rpe, rli, rvd, rvp, rcp, rmf, rpp, rpt, rpl, rdv, rvg, rvc, rmo] = await Promise.all([
+  const [rm, rd, rc, rv, ra, rp, rpay, rpc, rpi, rpe, rli, rvd, rvp, rcp, rmf, rpp, rpt, rpl, rdv, rvg, rvc, rmo, rvo] = await Promise.all([
     sb.from("motoristas").select("*").order("id"),
     sb.from("documentos_motorista").select("*").order("id"),
     sb.from("clientes_transporte").select("*").order("id"),
@@ -1750,6 +1761,7 @@ async function carregarDadosInterno(){
     sb.from("vagas").select("*").order("id"),
     sb.from("vagas_candidatas").select("*").order("id"),
     sb.from("motorista_observacoes").select("*").order("id"),
+    sb.from("viagem_ofertas").select("*").order("id"),
   ]);
   motoristas = aplicarConsulta("motoristas", rm, motoristas);
   documentosMotorista = aplicarConsulta("documentos_motorista", rd, documentosMotorista);
@@ -1773,6 +1785,7 @@ async function carregarDadosInterno(){
   vagas = aplicarConsulta("vagas", rvg, vagas);
   vagasCandidatas = aplicarConsulta("vagas_candidatas", rvc, vagasCandidatas);
   motoristaObservacoes = aplicarConsulta("motorista_observacoes", rmo, motoristaObservacoes);
+  viagemOfertas = aplicarConsulta("viagem_ofertas", rvo, viagemOfertas);
 
   renderAll();
   marcarAtualizado();
@@ -1795,7 +1808,7 @@ async function carregarDadosInterno(){
 // Só as tabelas que mudam por fora entram na recarga automática: as ~28 do
 // carregamento inicial de minuto em minuto seriam carga demais pro banco no
 // plano gratuito, ainda mais somado ao n8n consultando ele o tempo todo.
-const TABELAS_AUTO = ["leads", "clientes_transporte", "viagens", "motoristas", "pagamentos_motorista", "avaliacoes"];
+const TABELAS_AUTO = ["leads", "clientes_transporte", "viagens", "viagem_ofertas", "motoristas", "pagamentos_motorista", "avaliacoes"];
 const INTERVALO_AUTO_MS = 60000;
 let atualizandoDados = false;
 let ultimaAtualizacao = null;
@@ -1880,6 +1893,7 @@ const TABELA_ATUALIZA = {
   vagas: v => vagas = v,
   vagas_candidatas: v => vagasCandidatas = v,
   motorista_observacoes: v => motoristaObservacoes = v,
+  viagem_ofertas: v => viagemOfertas = v,
 };
 // Atualiza só as tabelas que uma ação realmente mudou, em vez de recarregar
 // as ~28 tabelas inteiras a cada Salvar/Excluir — reduz a carga no banco
@@ -3907,6 +3921,8 @@ function openViagemModal(id){
     localWrap.innerHTML = "";
   }
 
+  renderReenvios(id, v);
+
   const pgc = pagamentosCliente.find(p=>p.viagem_id===id) || {};
   document.getElementById("vg-lid-valor").value = pgc.valor_recebido ?? "";
   document.getElementById("vg-lid-forma").value = pgc.forma_pagamento || "";
@@ -4022,6 +4038,69 @@ async function saveViagem(){
   showToast("Salvo!");
   closeModal("viagem-modal");
   await recarregarTabelas("viagens", "pagamentos_cliente", "pagamentos_motorista");
+}
+// ===== REENVIO DE WHATSAPP =====
+// As duas mensagens automáticas param sozinhas depois de 3 tentativas (trava
+// contra mensagem repetida, 25/08/2026). Quando a Evolution estava fora do ar,
+// ou quando a oferta nasceu já marcada como avisada, não existia jeito de
+// disparar de novo sem SQL. E as funções do banco exigem sessão logada de
+// staff, então elas só funcionam daqui de dentro mesmo, não pelo SQL Editor.
+// Nenhum dos dois botões manda mensagem na hora: eles zeram a marcação e quem
+// manda é o n8n, no ciclo seguinte dele.
+function descricaoEnvioCodigo(enviadoEm, tentativas){
+  const t = tentativas || 0;
+  if(enviadoEm) return "já enviado em " + new Date(enviadoEm).toLocaleString("pt-BR");
+  if(t >= 3) return "3 tentativas usadas, o envio automático parou";
+  return t ? `${t} tentativa${t > 1 ? "s" : ""} até agora, ainda tentando` : "ainda não enviado, está na fila";
+}
+function renderReenvios(id, v){
+  const wrap = document.getElementById("vg-reenvio-wrap");
+  const boxCodigo = document.getElementById("vg-reenvio-codigo");
+  const boxOferta = document.getElementById("vg-reenvio-oferta");
+  const ativa = id && v.status !== "Cancelada";
+
+  const mostraCodigo = !!(ativa && v.codigo_inicio && !v.saida_confirmada);
+  boxCodigo.style.display = mostraCodigo ? "block" : "none";
+  if(mostraCodigo){
+    document.getElementById("vg-reenvio-codigo-info").textContent =
+      descricaoEnvioCodigo(v.codigo_enviado_cliente_em, v.codigo_envio_tentativas);
+  }
+
+  // Uma oferta por motorista: o reenvio vale pras que ainda não responderam.
+  const pendentes = ativa ? viagemOfertas.filter(o => o.viagem_id === id && o.desfecho === "Pendente") : [];
+  const mostraOferta = !!(ativa && !v.motorista_id_confirmada && pendentes.length);
+  boxOferta.style.display = mostraOferta ? "block" : "none";
+  if(mostraOferta){
+    const semResposta = `${pendentes.length} motorista${pendentes.length > 1 ? "s" : ""} sem resposta`;
+    const avisadas = pendentes.filter(o => o.avisada_em).length;
+    const travadas = pendentes.filter(o => !o.avisada_em && (o.aviso_tentativas || 0) >= 3).length;
+    let estado;
+    if(travadas) estado = `${travadas} com 3 tentativas usadas, o envio parou`;
+    else if(avisadas === pendentes.length) estado = "aviso já enviado";
+    else if(avisadas) estado = `${avisadas} já avisada${avisadas > 1 ? "s" : ""}, o resto na fila`;
+    else estado = "ainda na fila pra enviar";
+    document.getElementById("vg-reenvio-oferta-info").textContent = `${semResposta} · ${estado}`;
+  }
+
+  wrap.style.display = (mostraCodigo || mostraOferta) ? "block" : "none";
+}
+async function reenviarCodigoCliente(){
+  if(!editingViagemId) return;
+  if(!confirm("Reenviar pra cliente a mensagem com o código, o carro e a placa?\n\nEla não sai agora: o envio automático manda em até 5 minutos.")) return;
+  const { error } = await sb.rpc("reenviar_codigo_cliente", { p_viagem_id: editingViagemId });
+  if(error){ alert("Erro ao liberar o reenvio: " + error.message); return; }
+  showToast("Reenvio liberado! A cliente recebe em até 5 minutos.");
+  closeModal("viagem-modal");
+  await recarregarTabelas("viagens");
+}
+async function reenviarAvisoOfertas(){
+  if(!editingViagemId) return;
+  if(!confirm("Reenviar o aviso de corrida pras motoristas que ainda não responderam?\n\nEle não sai agora: o envio automático manda em até 3 minutos.")) return;
+  const { error } = await sb.rpc("reenviar_aviso_ofertas", { p_viagem_id: editingViagemId });
+  if(error){ alert("Erro ao liberar o reenvio: " + error.message); return; }
+  showToast("Reenvio liberado! As motoristas recebem em até 3 minutos.");
+  closeModal("viagem-modal");
+  await recarregarTabelas("viagem_ofertas");
 }
 async function liberarViagemManualmente(){
   if(!editingViagemId) return;
