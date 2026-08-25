@@ -3940,9 +3940,13 @@ async function saveViagem(){
   const temDadoPagamento = pgPayload.valor_repassado != null || pgPayload.comissao_plataforma != null || pgPayload.forma_pagamento || pgPayload.data_prevista_pagamento || pgPayload.data_pagamento || pgPayload.comprovante_url || pgPayload.notas;
   const existente = pagamentosMotorista.find(p=>p.viagem_id===viagemId);
   if(temDadoPagamento || existente){
+    // upsert em vez de insert: a motorista pode ter concluído a viagem no
+    // painel dela depois que essa página carregou, e aí "existente" é null
+    // aqui mas já existe linha no banco — foi assim que a viagem 21 ganhou
+    // dois pagamentos e apareceu duplicada no histórico dela (25/08/2026).
     const { error } = existente
       ? await sb.from("pagamentos_motorista").update(pgPayload).eq("id", existente.id)
-      : await sb.from("pagamentos_motorista").insert(pgPayload);
+      : await sb.from("pagamentos_motorista").upsert(pgPayload, { onConflict: "viagem_id" });
     if(error){ alert("Erro ao salvar pagamento: " + error.message); return; }
   }
 
