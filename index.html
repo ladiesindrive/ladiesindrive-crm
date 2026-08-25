@@ -1161,6 +1161,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-preparacao" style="width:auto;"> Preparação pré-viagem confirmada</label></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-saida" style="width:auto;"> Saída do veículo confirmada</label></div>
       <div id="vg-liberar-manual-wrap" style="display:none;"><label style="visibility:hidden;">.</label><button type="button" class="btn secondary small" onclick="liberarViagemManualmente()">Liberar viagem manualmente</button></div>
+      <div class="full" id="vg-local-motorista" style="display:none; font-size:12.5px; color:var(--muted);"></div>
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-grupo-whats" style="width:auto;"> Grupo de WhatsApp criado</label></div>
     </div>
 
@@ -1445,6 +1446,35 @@ function botaoWhats(numero, nome){
   const link = linkWhats(numero, nome ? `Olá, ${nome.split(' ')[0]}! Aqui é a Jú, da Ladies in Drive.` : null);
   if(!link) return '';
   return `<a class="icon-btn" href="${link}" target="_blank" title="Chamar no WhatsApp" onclick="event.stopPropagation()">💬</a>`;
+}
+
+// ===== LOCALIZAÇÃO DA MOTORISTA =====
+// O painel dela (site/motorista.html) grava lat/lng de minuto em minuto, mas
+// só enquanto o painel está aberto na frente e o toggle "Disponível" ligado —
+// o navegador congela o timer quando a tela apaga. Por isso o ponto nunca
+// aparece sozinho: vem sempre com a idade do lado, porque um ponto de 40
+// minutos atrás é onde ela estava quando fechou o painel, não onde ela está.
+const LOCAL_FRESCA_MIN = 10;
+function idadeLocalizacaoMin(m){
+  if(!m || !m.localizacao_atualizada_em) return null;
+  const min = Math.floor((Date.now() - new Date(m.localizacao_atualizada_em).getTime()) / 60000);
+  return min < 0 ? 0 : min;
+}
+function textoIdadeLocalizacao(min){
+  if(min === null) return "sem horário";
+  if(min < 1) return "agora";
+  if(min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  return h < 24 ? `há ${h}h` : `há ${Math.floor(h / 24)}d`;
+}
+function linkMapaMotorista(m, separador){
+  if(!m || m.lat == null || m.lng == null) return "";
+  const min = idadeLocalizacaoMin(m);
+  const fresca = min !== null && min <= LOCAL_FRESCA_MIN;
+  const cor = fresca ? "var(--green)" : "var(--amber)";
+  const aviso = fresca ? "" : " (posição antiga)";
+  return `<a href="https://www.google.com/maps?q=${m.lat},${m.lng}" target="_blank" onclick="event.stopPropagation()" title="Abrir no Google Maps${aviso}">📍 Ver no mapa</a>`
+    + `${separador || "<br>"}<span style="color:${cor}; font-size:12px;">${textoIdadeLocalizacao(min)}</span>`;
 }
 
 let leads = [];
@@ -3118,7 +3148,8 @@ function renderTransporteMotoristas(){
   const statusF = fs.value;
   renderCabecalho("thead-motoristas", [
     {label:"Nome", campo:"nome"}, {label:"Contato", campo:"whatsapp"}, {label:"Região / Veículo", campo:"regiao"},
-    {label:"Documentos", campo:null}, {label:"Status", campo:"status"}, {label:"Avaliação", campo:null}, {label:"", campo:null}
+    {label:"Documentos", campo:null}, {label:"Status", campo:"status"}, {label:"Avaliação", campo:null},
+    {label:"Localização", campo:null}, {label:"", campo:null}
   ], "motoristas");
   const filtradas = aplicarOrdenacao("motoristas", motoristas.filter(m=>!statusF || m.status===statusF));
 
@@ -3133,9 +3164,10 @@ function renderTransporteMotoristas(){
       <td>${emDia?'<span class="tag urg-baixa">Em dia</span>':`<span class="tag urg-alta">${faltam} pendente${faltam>1?"s":""}</span>`}</td>
       <td><span class="status-badge ${MOTORISTA_ETAPA_CLASS[m.status]||''}">${m.status}</span></td>
       <td>${media?media+" ★":"-"}</td>
+      <td>${linkMapaMotorista(m) || "<span style='color:var(--muted);'>-</span>"}</td>
       <td onclick="event.stopPropagation()">${botaoWhats(m.whatsapp, m.nome)} <button class="icon-btn" onclick="openMotoristaModal(${m.id})">✏️</button> <button class="icon-btn" onclick="deleteMotorista(${m.id})">🗑️</button></td>
     </tr>`;
-  }).join("") || `<tr><td class="empty" colspan="7">Nenhuma motorista cadastrada ainda</td></tr>`;
+  }).join("") || `<tr><td class="empty" colspan="8">Nenhuma motorista cadastrada ainda</td></tr>`;
 }
 
 // ===== LEITURA DE CNH/CRLV COM IA =====
@@ -3788,6 +3820,23 @@ function openViagemModal(id){
   document.getElementById("vg-saida").checked = !!v.saida_confirmada;
   document.getElementById("vg-grupo-whats").checked = !!v.grupo_whatsapp_criado;
   document.getElementById("vg-liberar-manual-wrap").style.display = (id && !v.saida_confirmada) ? "block" : "none";
+
+  // Onde está a motorista que aceitou essa viagem, pra você acompanhar sem
+  // sair do CRM. Só aparece depois que alguém aceitou: antes disso a viagem
+  // ainda está ofertada pra várias e não existe "a motorista dela".
+  const localWrap = document.getElementById("vg-local-motorista");
+  const motoViagem = v.motorista_id_confirmada ? motoristas.find(m=>m.id===v.motorista_id_confirmada) : null;
+  const mapa = linkMapaMotorista(motoViagem, " · ");
+  if(mapa){
+    localWrap.style.display = "block";
+    localWrap.innerHTML = `<strong>${escapeHtml(motoViagem.nome)}</strong>: ${mapa}`;
+  } else if(motoViagem){
+    localWrap.style.display = "block";
+    localWrap.innerHTML = `📍 ${escapeHtml(motoViagem.nome)} ainda não enviou localização (o painel dela precisa estar aberto com "Disponível" ligado).`;
+  } else {
+    localWrap.style.display = "none";
+    localWrap.innerHTML = "";
+  }
 
   const pgc = pagamentosCliente.find(p=>p.viagem_id===id) || {};
   document.getElementById("vg-lid-valor").value = pgc.valor_recebido ?? "";
