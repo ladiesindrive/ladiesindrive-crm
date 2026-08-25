@@ -1333,8 +1333,8 @@ const MOTORISTA_ETAPA_CLASS = {"Candidatura recebida":"indigo","Em entrevista":"
 const DOCUMENTOS_OBRIGATORIOS_MOTORISTA = ["CNH","CRLV","Antecedentes Criminais","Comprovante de Endereço"];
 const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Adolescente","Idoso","Recorrente","Diário","Evento"];
 const CANAL_RECEPCAO = ["Telefone","Redes sociais","Site","E-mail"];
-const VIAGEM_STATUS = ["Solicitada","Aguardando cliente confirmar preço","Preço recusado pela cliente","Confirmada","Em andamento","Concluída","Cancelada"];
-const VIAGEM_STATUS_CLASS = {"Solicitada":"blue","Aguardando cliente confirmar preço":"amber","Preço recusado pela cliente":"red","Confirmada":"purple","Em andamento":"teal","Concluída":"green","Cancelada":"gray"};
+const VIAGEM_STATUS = ["Solicitada","Aguardando cliente confirmar preço","Preço recusado pela cliente","Aguardando aceite de motorista","Confirmada","Em andamento","Concluída","Cancelada"];
+const VIAGEM_STATUS_CLASS = {"Solicitada":"blue","Aguardando cliente confirmar preço":"amber","Preço recusado pela cliente":"red","Aguardando aceite de motorista":"indigo","Confirmada":"purple","Em andamento":"teal","Concluída":"green","Cancelada":"gray"};
 const LINK_ACOMPANHAMENTO_BASE = "https://www.ladiesindrive.com.br/acompanhar.html?t=";
 // Tarifas sugeridas pra calcular preço a partir da distância (km).
 // Ponto de partida baseado em pesquisa de mercado (motorista particular/executivo
@@ -3671,6 +3671,8 @@ function atualizarStatusOferta(){
     el.textContent = "🔒 Oferta fechada: a cliente pediu ajuste. Corrija o valor e volte o status pra 'Aguardando cliente confirmar preço' pra reenviar.";
   } else if(status === "Cancelada"){
     el.textContent = "🔒 Viagem cancelada, nenhuma motorista vê essa oferta.";
+  } else if(status === "Aguardando aceite de motorista"){
+    el.textContent = "⏳ Oferta aberta: " + (marcadas > 1 ? marcadas + " motoristas já foram avisadas e" : "a motorista marcada já foi avisada e") + " a corrida está esperando alguém clicar em Aceitar. Quando isso acontecer o status vira 'Confirmada' sozinho.";
   } else if(cotado !== "" && !confirmado){
     el.textContent = "🔒 Oferta fechada: tem preço cotado e a cliente ainda não confirmou. Se o valor já foi acertado por fora, marque 'Preço já acertado com a cliente' na seção de cotação pra liberar agora.";
   } else if(marcadas){
