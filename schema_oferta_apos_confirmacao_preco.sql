@@ -1,4 +1,4 @@
--- Ladies in Drive — a oferta só chega na motorista depois que a cliente
+-- Go Ladies — a oferta só chega na motorista depois que a cliente
 -- aceita o valor, e aí chega sozinha.
 --
 -- Problema que isso corrige: a oferta era criada no instante em que você

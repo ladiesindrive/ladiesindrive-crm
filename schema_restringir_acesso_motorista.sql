@@ -1,4 +1,4 @@
--- Ladies in Drive — fecha a brecha real: hoje uma conta de motorista
+-- Go Ladies — fecha a brecha real: hoje uma conta de motorista
 -- (linkada em motoristas.auth_user_id) consegue logar no CRM e enxergar
 -- TODAS as tabelas de negócio (leads, parceiros, orçamentos, financeiro,
 -- vagas etc.), porque a política delas é "qualquer autenticado pode tudo",

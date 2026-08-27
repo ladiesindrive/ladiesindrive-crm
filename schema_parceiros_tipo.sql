@@ -1,4 +1,4 @@
--- Ladies in Drive — Tipo de parceria (Mensalidade / Patrocínio / Embaixadora)
+-- Go Ladies — Tipo de parceria (Mensalidade / Patrocínio / Embaixadora)
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não altera nenhuma linha existente (coluna nova, opcional).
 

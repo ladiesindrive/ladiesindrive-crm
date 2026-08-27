@@ -1,4 +1,4 @@
--- Ladies in Drive — confirmação do preço com a cliente antes de oferecer a
+-- Go Ladies — confirmação do preço com a cliente antes de oferecer a
 -- viagem pras motoristas. Depois que você cota preço/tempo/km e muda o
 -- status pra "Aguardando cliente confirmar preço", o n8n manda um WhatsApp
 -- com botões pra cliente aceitar ou pedir ajuste. Se ela aceita, a viagem

@@ -1,4 +1,4 @@
--- Ladies in Drive — módulo Peças (teste manual de intermediação/busca de autopeças)
+-- Go Ladies — módulo Peças (teste manual de intermediação/busca de autopeças)
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não altera nenhuma tabela existente.
 

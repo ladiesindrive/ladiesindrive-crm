@@ -1,4 +1,4 @@
--- Ladies in Drive — Peças: tipo de cliente (Pessoa física / Empresa)
+-- Go Ladies — Peças: tipo de cliente (Pessoa física / Empresa)
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não altera nenhuma linha existente (coluna nova, com default).
 

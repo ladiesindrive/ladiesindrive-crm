@@ -1,4 +1,4 @@
--- Ladies in Drive — Pedidos de orçamento de transporte
+-- Go Ladies — Pedidos de orçamento de transporte
 -- Adiciona à tabela "viagens" já existente: horário previsto de chegada,
 -- distância (km) e motivo de não fechamento (quando a viagem é cancelada).
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run

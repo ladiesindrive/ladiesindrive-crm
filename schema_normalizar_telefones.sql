@@ -1,4 +1,4 @@
--- Ladies in Drive — Padroniza os números de contato já cadastrados pro
+-- Go Ladies — Padroniza os números de contato já cadastrados pro
 -- mesmo formato que o painel já aplica ao digitar: (DD) NNNNN-NNNN
 -- (celular, 11 dígitos) ou (DD) NNNN-NNNN (fixo, 10 dígitos).
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run

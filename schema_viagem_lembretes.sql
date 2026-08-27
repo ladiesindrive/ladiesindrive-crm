@@ -1,4 +1,4 @@
--- Ladies in Drive — log de lembretes de viagem enviados por WhatsApp
+-- Go Ladies — log de lembretes de viagem enviados por WhatsApp
 -- (n8n), pra não mandar o mesmo alerta duas vezes. Usado pelos workflows
 -- de aviso 1h/30min/15min antes da partida e pelo alerta crítico de
 -- corrida atrasada sem confirmação.

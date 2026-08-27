@@ -1,4 +1,4 @@
--- Ladies in Drive — Situação do EAR vira texto (era boolean)
+-- Go Ladies — Situação do EAR vira texto (era boolean)
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Antes: cnh_ear só guardava sim/não (true/false).
 -- Depois: guarda o texto exato usado no site e no CRM ("Já tenho EAR",

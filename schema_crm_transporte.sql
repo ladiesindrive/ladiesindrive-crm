@@ -1,4 +1,4 @@
--- Ladies in Drive — Módulo de Transporte (motoristas, clientes de viagem,
+-- Go Ladies — Módulo de Transporte (motoristas, clientes de viagem,
 -- viagens, avaliações e pagamentos)
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não altera nenhuma tabela existente (leads, parceiros, orcamentos, candidatas).

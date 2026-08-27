@@ -1,4 +1,4 @@
--- Ladies in Drive — corrige registrar_pedido_viagem: quando o WhatsApp já
+-- Go Ladies — corrige registrar_pedido_viagem: quando o WhatsApp já
 -- tem cadastro, a função reaproveitava o cliente existente mas nunca
 -- atualizava o nome. Resultado: um teste antigo com nome errado (ex:
 -- "teste 1") ficava "grudado" no cliente pra sempre, mesmo enviando o

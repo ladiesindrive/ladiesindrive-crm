@@ -1,4 +1,4 @@
--- Ladies in Drive — Site e redes sociais dos parceiros
+-- Go Ladies — Site e redes sociais dos parceiros
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não altera nenhuma tabela existente.
 

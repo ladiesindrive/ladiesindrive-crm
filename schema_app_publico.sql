@@ -1,4 +1,4 @@
--- Ladies in Drive — App público de transporte: pedido de viagem sem login,
+-- Go Ladies — App público de transporte: pedido de viagem sem login,
 -- rastreio por link, preço no momento do despacho, e painel da motorista.
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não apaga nenhuma coluna/tabela existente.

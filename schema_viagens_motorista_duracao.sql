@@ -1,4 +1,4 @@
--- Ladies in Drive — expõe a duração prevista da viagem (min) pra função que
+-- Go Ladies — expõe a duração prevista da viagem (min) pra função que
 -- alimenta o painel da motorista (crm/schema_viagens_motorista_com_cliente.sql),
 -- pra ela ver o tempo previsto no cartão da corrida, não só a distância.
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run.

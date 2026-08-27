@@ -1,4 +1,4 @@
--- Ladies in Drive — endurecimento de segurança (achados da auditoria OWASP,
+-- Go Ladies — endurecimento de segurança (achados da auditoria OWASP,
 -- 21/08/2026). Rodar uma vez em: Supabase → SQL Editor → New query → colar
 -- tudo → Run.
 

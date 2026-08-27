@@ -1,4 +1,4 @@
--- Ladies in Drive — código de início de viagem (4 dígitos), avaliação
+-- Go Ladies — código de início de viagem (4 dígitos), avaliação
 -- mútua opcional entre motorista e cliente, e cálculo automático da data
 -- de repasse quinzenal (dia 05 e dia 20). Plano aprovado em 21/08/2026,
 -- retomado depois da confirmação de preço com a cliente
@@ -85,7 +85,7 @@ begin
   end if;
 
   if v_tentativas >= 5 then
-    raise exception 'Muitas tentativas erradas. Peça pra Ladies in Drive liberar manualmente pelo CRM.';
+    raise exception 'Muitas tentativas erradas. Peça pra Go Ladies liberar manualmente pelo CRM.';
   end if;
 
   if p_codigo = v_codigo then
@@ -118,7 +118,7 @@ set search_path = public
 as $$
 begin
   if auth.role() <> 'authenticated' or public.motorista_id_atual() is not null then
-    raise exception 'Só a equipe Ladies in Drive logada pode liberar viagem manualmente.';
+    raise exception 'Só a equipe Go Ladies logada pode liberar viagem manualmente.';
   end if;
 
   update public.viagens

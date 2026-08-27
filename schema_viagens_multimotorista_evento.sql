@@ -1,4 +1,4 @@
--- Ladies in Drive — Viagens: múltiplas motoristas por viagem e tipo de
+-- Go Ladies — Viagens: múltiplas motoristas por viagem e tipo de
 -- serviço "Evento" com descrição própria.
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não apaga a coluna antiga motorista_id (fica sem uso, mas os dados continuam lá).

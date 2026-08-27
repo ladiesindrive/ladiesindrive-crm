@@ -1,4 +1,4 @@
--- Ladies in Drive — elimina a duplicação de Antecedentes Criminais (antes
+-- Go Ladies — elimina a duplicação de Antecedentes Criminais (antes
 -- rastreado tanto em motoristas.antecedentes_data/status quanto, às vezes,
 -- também como uma linha solta em documentos_motorista). Passa a existir só
 -- em documentos_motorista, junto com o novo tipo "Comprovante de Endereço".

@@ -1,4 +1,4 @@
--- Ladies in Drive — Histórico de ofertas de viagem por motorista.
+-- Go Ladies — Histórico de ofertas de viagem por motorista.
 -- Hoje, quando uma corrida é oferecida a várias motoristas e uma aceita, o
 -- campo viagens.motorista_ids é SOBRESCRITO só com a vencedora — o registro
 -- de quem mais foi chamada se perde. Esta tabela guarda cada oferta de forma

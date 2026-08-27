@@ -1,4 +1,4 @@
--- Ladies in Drive — Banco de Talentos com curadoria (vagas de empresas parceiras)
+-- Go Ladies — Banco de Talentos com curadoria (vagas de empresas parceiras)
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não altera nenhuma tabela existente.
 

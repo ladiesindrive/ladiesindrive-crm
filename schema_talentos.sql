@@ -1,4 +1,4 @@
--- Ladies in Drive — Banco de Talentos (captação de motoristas parceiras)
+-- Go Ladies — Banco de Talentos (captação de motoristas parceiras)
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não altera nenhuma tabela existente (leads, parceiros, orcamentos).
 

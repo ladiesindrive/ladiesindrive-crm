@@ -1,4 +1,4 @@
--- Ladies in Drive — Observações da motorista (texto livre + data da conversa)
+-- Go Ladies — Observações da motorista (texto livre + data da conversa)
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não altera nenhuma tabela existente.
 

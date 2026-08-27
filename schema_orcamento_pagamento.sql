@@ -1,4 +1,4 @@
--- Ladies in Drive — Pagamento direto no cadastro de Orçamento: forma de
+-- Go Ladies — Pagamento direto no cadastro de Orçamento: forma de
 -- pagamento, à vista/parcelado, se já foi pago, data prevista e data
 -- realizada. Ao aceitar um orçamento, esses dados geram sozinhos a venda
 -- e a(s) parcela(s) em Financeiro (sem precisar repetir na seção Vendas).

@@ -1,4 +1,4 @@
--- Ladies in Drive — funções novas pro painel ampliado da motorista:
+-- Go Ladies — funções novas pro painel ampliado da motorista:
 -- histórico completo de ofertas (aceitas ou não, com motivo), recusar uma
 -- oferta, e ver cursos/eventos marcados pra ela. Depende de
 -- schema_viagem_ofertas.sql, schema_pagamento_motorista_previsto.sql e

@@ -1,4 +1,4 @@
--- Ladies in Drive — correção de segurança encontrada testando
+-- Go Ladies — correção de segurança encontrada testando
 -- schema_confirmacao_codigo_avaliacao.sql: "liberar_viagem_manualmente"
 -- só checava "não é motorista", e um pedido sem login nenhum (anon) também
 -- passa nesse teste — na prática, QUALQUER pessoa com a chave pública do
@@ -25,7 +25,7 @@ set search_path = public
 as $$
 begin
   if auth.role() <> 'authenticated' or public.motorista_id_atual() is not null then
-    raise exception 'Só a equipe Ladies in Drive logada pode liberar viagem manualmente.';
+    raise exception 'Só a equipe Go Ladies logada pode liberar viagem manualmente.';
   end if;
 
   update public.viagens

@@ -1,4 +1,4 @@
--- Ladies in Drive — Viagens: separa data de horário de partida/chegada, e
+-- Go Ladies — Viagens: separa data de horário de partida/chegada, e
 -- adiciona dias da semana (pra clientes fixas, ex: segunda a sexta).
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não apaga as colunas antigas data_hora/data_hora_chegada (ficam sem uso).

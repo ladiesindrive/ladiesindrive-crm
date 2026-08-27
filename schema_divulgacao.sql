@@ -1,4 +1,4 @@
--- Ladies in Drive — Divulgação (Eventos e Cursos: próprios, de terceiros e com comissão)
+-- Go Ladies — Divulgação (Eventos e Cursos: próprios, de terceiros e com comissão)
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não altera nenhuma tabela existente.
 

@@ -1,4 +1,4 @@
--- Ladies in Drive — funções de apoio pros workflows de n8n de lembrete de
+-- Go Ladies — funções de apoio pros workflows de n8n de lembrete de
 -- viagem (1h/30min/15min antes da partida) e confirmação da motorista pelo
 -- WhatsApp. Chamadas pelo n8n com a service_role key (bypassa RLS), nunca
 -- pela chave pública do app — mesmo padrão de motoristas_disponiveis_proximas

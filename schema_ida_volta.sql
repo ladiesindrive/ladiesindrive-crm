@@ -1,4 +1,4 @@
--- Ladies in Drive — captura data/horário de retorno quando a cliente marca
+-- Go Ladies — captura data/horário de retorno quando a cliente marca
 -- "ida e volta" no formulário do site, e permite endereço diferente no
 -- retorno (ex: aeroporto → hotel). Se ela deixar em branco, o site já manda
 -- o trajeto invertido (destino vira origem do retorno, e vice-versa) —

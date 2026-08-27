@@ -1,4 +1,4 @@
--- Ladies in Drive — o painel da motorista não pode ler a tabela
+-- Go Ladies — o painel da motorista não pode ler a tabela
 -- clientes_transporte direto (é staff-only por segurança, desde a correção
 -- que impede motorista de ver dados de negócio). Esta função devolve só o
 -- necessário pra ela avaliar a oferta: nome da cliente + dados da viagem,

@@ -1,4 +1,4 @@
--- Ladies in Drive — permite oferecer uma viagem pra várias motoristas
+-- Go Ladies — permite oferecer uma viagem pra várias motoristas
 -- candidatas (motorista_ids já suporta isso) e garante que só a PRIMEIRA
 -- que clicar em "Aceitar" fica com a corrida, mesmo que duas cliquem ao
 -- mesmo tempo — a trava é o próprio banco de dados (UPDATE com bloqueio de

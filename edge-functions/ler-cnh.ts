@@ -1,4 +1,4 @@
-// Ladies in Drive — Edge Function "ler-cnh"
+// Go Ladies — Edge Function "ler-cnh"
 // Lê uma foto ou PDF da CNH da motorista com IA (Claude) e devolve os dados
 // prontos pra preencher o cadastro. Não salva nada sozinha — quem chama
 // decide o que fazer com o resultado.

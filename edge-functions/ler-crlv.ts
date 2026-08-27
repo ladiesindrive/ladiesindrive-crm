@@ -1,4 +1,4 @@
-// Ladies in Drive — Edge Function "ler-crlv"
+// Go Ladies — Edge Function "ler-crlv"
 // Lê uma foto ou PDF do CRLV (documento do carro) da motorista com IA
 // (Claude) e devolve os dados prontos pra preencher o cadastro. Não salva
 // nada sozinha — quem chama decide o que fazer com o resultado.

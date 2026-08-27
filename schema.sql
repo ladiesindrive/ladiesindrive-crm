@@ -1,4 +1,4 @@
--- Ladies in Drive CRM — schema inicial (Supabase / Postgres)
+-- Go Ladies CRM — schema inicial (Supabase / Postgres)
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 
 create table public.leads (

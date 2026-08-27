@@ -1,4 +1,4 @@
--- Ladies in Drive — mostra motorista (nome, carro, placa) pra cliente na
+-- Go Ladies — mostra motorista (nome, carro, placa) pra cliente na
 -- página pública de acompanhamento (site/acompanhar.html), só depois que
 -- a motorista aceita a corrida (não enquanto está só ofertada a várias).
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run.

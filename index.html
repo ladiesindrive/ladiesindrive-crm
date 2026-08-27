@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://ilhuhbcklvcdrggovmth.supabase.co; connect-src 'self' https://ilhuhbcklvcdrggovmth.supabase.co wss://ilhuhbcklvcdrggovmth.supabase.co https://cdn.jsdelivr.net; base-uri 'self'; form-action 'self'; object-src 'none';">
-<title>Ladies in Drive — Painel Administrativo</title>
+<title>Go Ladies — Painel Administrativo</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#d6336c">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -263,7 +263,7 @@ tr.tr-click:hover{background:#fff7fa;}
 
 <div id="login-screen">
   <form id="login-form">
-    <h2>Ladies in Drive</h2>
+    <h2>Go Ladies</h2>
     <p class="sub">Painel administrativo</p>
     <div id="login-erro"></div>
     <div class="campo">
@@ -285,7 +285,7 @@ tr.tr-click:hover{background:#fff7fa;}
 <div class="app">
   <div class="topbar">
     <button type="button" id="btn-menu" aria-label="Abrir menu">☰</button>
-    <span class="topbar-brand">Ladies in Drive</span>
+    <span class="topbar-brand">Go Ladies</span>
     <span>
       <button type="button" id="btn-atualizar-mobile" aria-label="Atualizar dados">🔄</button>
       <button type="button" id="btn-logout-mobile" class="js-logout" aria-label="Sair">🚪</button>
@@ -293,7 +293,7 @@ tr.tr-click:hover{background:#fff7fa;}
   </div>
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
   <div class="sidebar" id="sidebar">
-    <h1>Ladies in Drive<span>Painel administrativo</span></h1>
+    <h1>Go Ladies<span>Painel administrativo</span></h1>
     <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
     <div class="nav-item" data-tab="leads">🧲 Leads</div>
     <div class="nav-item" data-tab="clientes">💗 Clientes</div>
@@ -1162,7 +1162,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label>Valor por km</label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-valor-km" step="0.01" oninput="recalcularCotacao()"></div></div>
       <div><label>Preço cotado <span style="font-weight:400; color:var(--muted);">(cobrado da cliente)</span></label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-preco-cotado" step="0.01" oninput="recalcularComissaoCotacao()"></div></div>
       <div><label>Repasse motorista <span style="font-weight:400; color:var(--muted);">(oferta, aparece pra ela antes de aceitar)</span></label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-preco-motorista" step="0.01" oninput="recalcularComissaoCotacao()"></div></div>
-      <div><label>Comissão Ladies in Drive <span style="font-weight:400; color:var(--muted);">(calculada: cotado − repasse)</span></label><input type="text" id="vg-comissao-ladies" readonly style="background:var(--border); cursor:not-allowed;"></div>
+      <div><label>Comissão Go Ladies <span style="font-weight:400; color:var(--muted);">(calculada: cotado − repasse)</span></label><input type="text" id="vg-comissao-ladies" readonly style="background:var(--border); cursor:not-allowed;"></div>
       <div class="full"><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-preco-confirmado" style="width:auto;" onchange="atualizarStatusOferta()"> Preço já acertado com a cliente <span style="color:var(--muted);">(libera a oferta pras motoristas sem esperar a resposta no WhatsApp)</span></label></div>
       <div class="full" id="vg-status-preco-cliente" style="display:none; font-size:12.5px; color:var(--muted);"></div>
       <div class="full"><label>Motivo (se não fechou)</label><textarea id="vg-motivo-perda" rows="2" placeholder="Ex: preço, motorista indisponível, cliente desistiu, prazo, concorrência..."></textarea></div>
@@ -1183,7 +1183,7 @@ tr.tr-click:hover{background:#fff7fa;}
       <div><label style="visibility:hidden;">.</label><label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink); font-weight:400;"><input type="checkbox" id="vg-grupo-whats" style="width:auto;"> Grupo de WhatsApp criado</label></div>
     </div>
 
-    <h4 style="font-size:13px; margin:18px 0 8px; border-top:1px solid var(--border); padding-top:14px;">💵 Pagamento da cliente à Ladies in Drive</h4>
+    <h4 style="font-size:13px; margin:18px 0 8px; border-top:1px solid var(--border); padding-top:14px;">💵 Pagamento da cliente à Go Ladies</h4>
     <div class="formgrid">
       <div><label>Valor recebido <span style="font-weight:400; color:var(--muted);">(realizado — previsto é o Preço cotado)</span></label><div class="campo-moeda"><span class="prefixo">R$</span><input type="number" id="vg-lid-valor" step="0.01" oninput="recalcularComissaoPagamento()"></div></div>
       <div><label>Forma de pagamento</label><select id="vg-lid-forma"><option value="">-</option><option>Pix</option><option>Dinheiro</option><option>Transferência</option><option>Outro</option></select></div>
@@ -1461,7 +1461,7 @@ function linkWhats(numero, mensagem){
   return `https://wa.me/${digits}${texto}`;
 }
 function botaoWhats(numero, nome){
-  const link = linkWhats(numero, nome ? `Olá, ${nome.split(' ')[0]}! Aqui é a Jú, da Ladies in Drive.` : null);
+  const link = linkWhats(numero, nome ? `Olá, ${nome.split(' ')[0]}! Aqui é a Jú, da Go Ladies.` : null);
   if(!link) return '';
   return `<a class="icon-btn" href="${link}" target="_blank" title="Chamar no WhatsApp" onclick="event.stopPropagation()">💬</a>`;
 }
@@ -4479,7 +4479,7 @@ function exportarDados(){
   const blob = new Blob([JSON.stringify({leads,parceiros,orcamentos}, null, 2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = "ladies-in-drive-dados.json"; a.click();
+  a.href = url; a.download = "go-ladies-dados.json"; a.click();
   URL.revokeObjectURL(url);
 }
 async function removerExemplos(){

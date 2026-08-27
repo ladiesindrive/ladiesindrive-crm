@@ -1,4 +1,4 @@
--- Ladies in Drive — Contatos e histórico de conversa dos parceiros
+-- Go Ladies — Contatos e histórico de conversa dos parceiros
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não altera a tabela "parceiros" existente.
 

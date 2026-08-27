@@ -1,4 +1,4 @@
--- Ladies in Drive — trava de segurança contra WhatsApp repetido.
+-- Go Ladies — trava de segurança contra WhatsApp repetido.
 --
 -- Incidente de 25/08/2026: o workflow do código de início mandou a mesma
 -- mensagem pra cliente de minuto em minuto. Causa: o nó "Marcar Como
@@ -178,7 +178,7 @@ set search_path = public
 as $$
 begin
   if auth.role() <> 'authenticated' or public.motorista_id_atual() is not null then
-    raise exception 'Só a equipe Ladies in Drive logada pode reenviar o código.';
+    raise exception 'Só a equipe Go Ladies logada pode reenviar o código.';
   end if;
 
   update public.viagens
@@ -198,7 +198,7 @@ set search_path = public
 as $$
 begin
   if auth.role() <> 'authenticated' or public.motorista_id_atual() is not null then
-    raise exception 'Só a equipe Ladies in Drive logada pode reenviar o aviso de oferta.';
+    raise exception 'Só a equipe Go Ladies logada pode reenviar o aviso de oferta.';
   end if;
 
   update public.viagem_ofertas

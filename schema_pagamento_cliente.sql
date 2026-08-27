@@ -1,4 +1,4 @@
--- Ladies in Drive — Pagamento da cliente diretamente à Ladies in Drive
+-- Go Ladies — Pagamento da cliente diretamente à Go Ladies
 -- Fluxo real: a cliente paga a LID, e a LID repassa à motorista a cada
 -- 15 dias (inicialmente). Espelha a estrutura de pagamentos_motorista,
 -- mas do lado da cliente — previsto fica em viagens.preco_cotado,

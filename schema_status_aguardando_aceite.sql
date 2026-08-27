@@ -1,4 +1,4 @@
--- Ladies in Drive — status novo "Aguardando aceite de motorista".
+-- Go Ladies — status novo "Aguardando aceite de motorista".
 --
 -- Problema que isso resolve: o status "Solicitada" acumulava dois momentos
 -- bem diferentes da viagem. Um era "acabou de entrar pelo site, ninguém

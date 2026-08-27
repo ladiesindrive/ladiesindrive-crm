@@ -1,4 +1,4 @@
--- Ladies in Drive — Módulo Financeiro (vendas/parcelas, contas a pagar,
+-- Go Ladies — Módulo Financeiro (vendas/parcelas, contas a pagar,
 -- metas) + aniversário de leads e parceiros
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run
 -- Não altera dados existentes; só adiciona tabelas e 2 colunas novas.

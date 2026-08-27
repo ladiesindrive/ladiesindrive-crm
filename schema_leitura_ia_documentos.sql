@@ -1,4 +1,4 @@
--- Ladies in Drive — leitura por IA de CNH e CRLV no cadastro de motorista:
+-- Go Ladies — leitura por IA de CNH e CRLV no cadastro de motorista:
 -- campos novos pra guardar o que a IA extrai, bucket de Storage pra guardar
 -- o arquivo em si, e coluna de URL na tabela de documentos já existente.
 -- Rodar uma vez em: Supabase → SQL Editor → New query → colar tudo → Run.

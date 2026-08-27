@@ -1,4 +1,4 @@
--- Ladies in Drive — registro automático de erros do navegador (login
+-- Go Ladies — registro automático de erros do navegador (login
 -- travando, ações travando, exceções JS não tratadas) direto no Supabase,
 -- pra dar pra investigar depois sem precisar pegar o problema acontecendo
 -- ao vivo com o F12 aberto.
