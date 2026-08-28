@@ -751,7 +751,7 @@ tr.tr-click:hover{background:#fff7fa;}
         </div>
       </div>
       <div><label>Região atendida</label><input type="text" id="p-regiao"></div>
-      <div><label>Selo Ladies Approved</label><select id="p-selo"><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+      <div><label>Selo Go Ladies</label><select id="p-selo"><option value="sim">Sim</option><option value="nao">Não</option></select></div>
       <div><label>Status</label><select id="p-status"></select></div>
       <div class="full">
         <label>Tipo de parceria <span style="font-weight:400; color:var(--muted);">(pode marcar mais de uma)</span></label>
@@ -2050,7 +2050,7 @@ function renderParceiros(){
   renderCabecalho("thead-parceiros", [
     {label:"Nome", campo:"nome"}, {label:"Categorias", campo:"categoria"}, {label:"Região", campo:"regiao"},
     {label:"Tipo de parceria", campo:"tipo_parceria"},
-    {label:"Selo Ladies Approved", campo:"selo"}, {label:"Status", campo:"status"}, {label:"Último contato", campo:null}, {label:"", campo:null}
+    {label:"Selo Go Ladies", campo:"selo"}, {label:"Status", campo:"status"}, {label:"Último contato", campo:null}, {label:"", campo:null}
   ], "parceiros");
   const lista = aplicarOrdenacao("parceiros", parceiros.filter(p=>!tipoF || (p.tipo_parceria||"").split(",").map(s=>s.trim()).includes(tipoF)));
   document.getElementById("parceiros-body").innerHTML = lista.map(p=>{
@@ -2061,7 +2061,7 @@ function renderParceiros(){
       <td>${escapeHtml(p.categoria||"-")}</td>
       <td>${escapeHtml(p.regiao||"-")}</td>
       <td>${(p.tipo_parceria||"").split(",").map(s=>s.trim()).filter(Boolean).map(t=>`<span class="tag ${TIPO_PARCERIA_CLASS[t]||''}">${t}</span>`).join(" ")||"-"}</td>
-      <td>${p.selo==="sim"?'<span class="badge-seal">✓ Ladies Approved</span>':'-'}</td>
+      <td>${p.selo==="sim"?'<span class="badge-seal">✓ Go Ladies</span>':'-'}</td>
       <td><span class="status-badge ${PARCEIRO_ETAPA_CLASS[p.status]||''}">${p.status||"-"}</span></td>
       <td>${ultimoContato||"-"}</td>
       <td onclick="event.stopPropagation()">${botaoWhats(celular, p.nome)} <button class="icon-btn" onclick="openParceiroModal(${p.id})">✏️</button> <button class="icon-btn" onclick="deleteParceiro(${p.id})">🗑️</button></td>
