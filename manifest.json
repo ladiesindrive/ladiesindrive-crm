@@ -1,6 +1,6 @@
 {
   "name": "Go Ladies - Painel Administrativo",
-  "short_name": "LID CRM",
+  "short_name": "Go Ladies CRM",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
