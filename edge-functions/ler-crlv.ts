@@ -16,13 +16,24 @@
 
 import Anthropic from "npm:@anthropic-ai/sdk";
 
-// Só o painel do CRM chama essa function — restringe CORS a esses domínios
-// em vez de aceitar qualquer origem.
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://crm.ladiesindrive.com.br",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+// Só o painel do CRM chama essa function, então o CORS aceita só o endereço
+// dele em vez de qualquer origem. Os dois hostnames ficam liberados durante a
+// troca de domínio: o antigo redireciona pro novo, mas quem tiver o link velho
+// aberto no celular continua conseguindo enviar a foto.
+const ORIGENS_LIBERADAS = [
+  "https://crm.goladies.com.br",
+  "https://crm.ladiesindrive.com.br",
+];
+
+function montarCors(req: Request) {
+  const origem = req.headers.get("origin") ?? "";
+  return {
+    "Access-Control-Allow-Origin": ORIGENS_LIBERADAS.includes(origem) ? origem : ORIGENS_LIBERADAS[0],
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
 
 const TIPOS_ACEITOS: Record<string, string> = {
   "image/jpeg": "image/jpeg",
@@ -34,6 +45,8 @@ const TIPOS_ACEITOS: Record<string, string> = {
 const TAMANHO_MAXIMO_BYTES = 10 * 1024 * 1024; // 10MB
 
 Deno.serve(async (req) => {
+  const corsHeaders = montarCors(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }

@@ -1354,7 +1354,7 @@ const TIPO_SERVICO_VIAGEM = ["Padrão","Criança","Adolescente","Idoso","Recorre
 const CANAL_RECEPCAO = ["Telefone","Redes sociais","Site","E-mail"];
 const VIAGEM_STATUS = ["Solicitada","Aguardando cliente confirmar preço","Preço recusado pela cliente","Aguardando aceite de motorista","Confirmada","Em andamento","Concluída","Cancelada"];
 const VIAGEM_STATUS_CLASS = {"Solicitada":"blue","Aguardando cliente confirmar preço":"amber","Preço recusado pela cliente":"red","Aguardando aceite de motorista":"indigo","Confirmada":"purple","Em andamento":"teal","Concluída":"green","Cancelada":"gray"};
-const LINK_ACOMPANHAMENTO_BASE = "https://www.ladiesindrive.com.br/acompanhar.html?t=";
+const LINK_ACOMPANHAMENTO_BASE = "https://www.goladies.com.br/acompanhar.html?t=";
 // Tarifas sugeridas pra calcular preço a partir da distância (km).
 // Ponto de partida baseado em pesquisa de mercado (motorista particular/executivo
 // e apps de transporte em POA, ago/2026) — ajustar aqui conforme fechar viagens reais.
@@ -1662,7 +1662,7 @@ async function tratarMudancaAutenticacao(session){
       const resultado = await checarNaoEhMotorista();
       if(resultado === "motorista"){
         limparStaffConfirmado();
-        loginErro.textContent = "Este login é de motorista — use o painel dela em ladiesindrive.com.br/motorista.html, não o CRM.";
+        loginErro.textContent = "Este login é de motorista, use o painel dela em goladies.com.br/motorista.html, não o CRM.";
         loginErro.style.display = "block";
         await sb.auth.signOut({ scope: "local" });
       }
@@ -1682,7 +1682,7 @@ async function tratarMudancaAutenticacao(session){
       return;
     }
     if(resultado === "motorista"){
-      loginErro.textContent = "Este login é de motorista — use o painel dela em ladiesindrive.com.br/motorista.html, não o CRM.";
+      loginErro.textContent = "Este login é de motorista, use o painel dela em goladies.com.br/motorista.html, não o CRM.";
       loginErro.style.display = "block";
       await sb.auth.signOut({ scope: "local" });
       return;
